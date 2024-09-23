@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GitHub Repo to Text</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+</head>
+<body class="bg-gray-100 min-h-screen p-4 md:p-8">
+    <div class="max-w-4xl mx-auto bg-white rounded-lg shadow-md p-6">
+        <h1 class="text-3xl font-bold mb-6 text-center text-gray-800">GitHub Repository to Text File</h1>
+        <form id="repoForm" class="space-y-4">
+            <div>
+                <label for="repoUrl" class="block text-sm font-medium text-gray-700">GitHub Repository URL:</label>
+                <input type="text" id="repoUrl" name="repoUrl" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
+            </div>
+            <div>
+                <label for="ref" class="block text-sm font-medium text-gray-700">Ref (branch/tag/commit sha):</label>
+                <input type="text" id="ref" name="ref" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
+            </div>
+            <div>
+                <label for="path" class="block text-sm font-medium text-gray-700">Path (subdirectory):</label>
+                <input type="text" id="path" name="path" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
+            </div>
+            <div>
+                <label for="accessToken" class="block text-sm font-medium text-gray-700">Personal Access Token:</label>
+                <input type="text" id="accessToken" name="accessToken" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
+            </div>
+            <button type="submit" class="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline flex items-center justify-center">
+                <i data-lucide="folder-search" class="w-5 h-5 mr-2"></i>
+                Fetch Directory Structure
+            </button>
+        </form>
+        <div id="directoryStructure" class="mt-6"></div>
+        <button id="generateTextButton" class="mt-4 w-full bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline hidden flex items-center justify-center">
+            <i data-lucide="file-text" class="w-5 h-5 mr-2"></i>
+            Generate Text File
+        </button>
+        <textarea id="outputText" rows="20" class="mt-4 w-full p-2 border rounded-md" readonly></textarea>
+        <div class="mt-4 flex space-x-4">
+            <button id="copyButton" class="flex-1 bg-indigo-500 hover:bg-indigo-600 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline hidden flex items-center justify-center">
+                <i data-lucide="copy" class="w-5 h-5 mr-2"></i>
+                Copy to Clipboard
+            </button>
+            <button id="downloadButton" class="flex-1 bg-purple-500 hover:bg-purple-600 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline hidden flex items-center justify-center">
+                <i data-lucide="download" class="w-5 h-5 mr-2"></i>
+                Download
+            </button>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
