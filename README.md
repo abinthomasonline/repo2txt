@@ -1,18 +1,18 @@
 # GitHub Repo to Text Converter
 
-This project provides a web-based tool that converts GitHub repository contents into a single formatted text file, designed to create prompts for Large Language Models (LLMs). It simplifies the process of transforming repository structure and contents into a format suitable for LLM input, making it easier to generate code-related prompts or context for AI-assisted programming tasks.
+This web-based tool converts GitHub repository contents into a formatted text file for Large Language Model (LLM) prompts. It streamlines the process of transforming repository data into LLM-friendly input.
 
 ## Features
 
-- Fetch and display the directory structure of a GitHub repository
-- Allow users to select specific files or directories to include
-- Generate a formatted text file containing the selected repository contents
-- Copy the generated text to clipboard
-- Download the generated text as a file
-- Support for private repositories using GitHub Personal Access Tokens
-- Runs entirely in the user's browser, ensuring data privacy and security
+- Display GitHub repository structure
+- Select files/directories to include
+- Generate formatted text file
+- Copy text to clipboard
+- Download generated text
+- Support for private repositories
+- Browser-based for privacy and security
 
-This tool is implemented as a static website that operates completely within the user's browser. No server-side processing is involved, making it a safe and secure option for handling potentially sensitive repository data.
+This tool runs entirely in the browser, ensuring data security without server-side processing.
 
 ## Contributing
 
