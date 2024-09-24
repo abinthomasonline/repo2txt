@@ -2,6 +2,8 @@
 
 This web-based tool converts GitHub repository contents into a formatted text file for Large Language Model (LLM) prompts. It streamlines the process of transforming repository data into LLM-friendly input.
 
+https://repo2txt.simplebasedomain.com/
+
 ## Features
 
 - Display GitHub repository structure
