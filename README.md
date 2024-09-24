@@ -10,6 +10,9 @@ This project provides a web-based tool that converts GitHub repository contents 
 - Copy the generated text to clipboard
 - Download the generated text as a file
 - Support for private repositories using GitHub Personal Access Tokens
+- Runs entirely in the user's browser, ensuring data privacy and security
+
+This tool is implemented as a static website that operates completely within the user's browser. No server-side processing is involved, making it a safe and secure option for handling potentially sensitive repository data.
 
 ## Contributing
 
