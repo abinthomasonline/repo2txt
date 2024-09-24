@@ -6,7 +6,7 @@ document.getElementById('repoForm').addEventListener('submit', async function (e
     const accessToken = document.getElementById('accessToken').value;
 
     const outputText = document.getElementById('outputText');
-    outputText.value = 'Fetching repository contents...';
+    outputText.value = '';
 
     try {
         const { owner, repo, refFromUrl, pathFromUrl } = parseRepoUrl(repoUrl);
@@ -17,7 +17,7 @@ document.getElementById('repoForm').addEventListener('submit', async function (e
         const tree = await fetchRepoTree(owner, repo, sha, accessToken);
 
         displayDirectoryStructure(tree);
-        document.getElementById('generateTextButton').style.display = 'block';
+        document.getElementById('generateTextButton').style.display = 'flex';
     } catch (error) {
         outputText.value = `Error fetching repository contents: ${error.message}\n\nPlease ensure:\n1. The repository URL is correct and accessible.\n2. You have the necessary permissions to access the repository.\n3. If it's a private repository, you've provided a valid access token.\n4. The specified branch/tag and path (if any) exist in the repository.`;
     }
@@ -26,7 +26,7 @@ document.getElementById('repoForm').addEventListener('submit', async function (e
 document.getElementById('generateTextButton').addEventListener('click', async function () {
     const accessToken = document.getElementById('accessToken').value;
     const outputText = document.getElementById('outputText');
-    outputText.value = 'Generating text file...';
+    outputText.value = '';
 
     try {
         const selectedFiles = getSelectedFiles();
@@ -37,8 +37,8 @@ document.getElementById('generateTextButton').addEventListener('click', async fu
         const formattedText = formatRepoContents(fileContents);
         outputText.value = formattedText;
 
-        document.getElementById('copyButton').style.display = 'block';
-        document.getElementById('downloadButton').style.display = 'block';
+        document.getElementById('copyButton').style.display = 'flex';
+        document.getElementById('downloadButton').style.display = 'flex';
     } catch (error) {
         outputText.value = `Error generating text file: ${error.message}\n\nPlease ensure:\n1. You have selected at least one file from the directory structure.\n2. Your access token (if provided) is valid and has the necessary permissions.\n3. You have a stable internet connection.\n4. The GitHub API is accessible and functioning normally.`;
     }
@@ -64,12 +64,13 @@ document.getElementById('downloadButton').addEventListener('click', function () 
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = 'repository.txt';
+    a.download = 'file.txt';
     a.click();
     URL.revokeObjectURL(url);
 });
 
 function parseRepoUrl(url) {
+    url = url.replace(/\/$/, '');
     const urlPattern = /^https:\/\/github\.com\/([^\/]+)\/([^\/]+)(\/tree\/([^\/]+)(\/(.+))?)?$/;
     const match = url.match(urlPattern);
     if (!match) {
@@ -84,7 +85,7 @@ function parseRepoUrl(url) {
 }
 
 async function fetchRepoSha(owner, repo, ref, path, token) {
-    const url = `https://api.github.com/repos/${owner}/${repo}/contents/${path}${ref ? `?ref=${ref}` : ''}`;
+    const url = `https://api.github.com/repos/${owner}/${repo}/contents/${path ? `${path}` : ''}${ref ? `?ref=${ref}` : ''}`;
     const headers = {
         'Accept': 'application/vnd.github.object+json'
     };
@@ -285,7 +286,7 @@ function formatRepoContents(contents) {
         for (const [name, subNode] of Object.entries(node)) {
             result += `${prefix}${name}\n`;
             if (subNode) {
-                result += buildIndex(subNode, `${prefix}  `);
+                result += buildIndex(subNode, `${prefix}    `);
             }
         }
         return result;
@@ -297,7 +298,7 @@ function formatRepoContents(contents) {
         text += `\n\n---\nFile: ${item.path}\n---\n\n${item.text}\n`;
     });
 
-    return `------\nIndex:\n------\n\n${index}${text}`;
+    return `--------------------\nDirectory Structure:\n--------------------\n\n${index}${text}`;
 }
 
 function sortContents(contents) {
@@ -321,4 +322,23 @@ function sortContents(contents) {
 
 document.addEventListener('DOMContentLoaded', function() {
     lucide.createIcons();
+
+    // Add event listener for the showMoreInfo button
+    const showMoreInfoButton = document.getElementById('showMoreInfo');
+    const tokenInfo = document.getElementById('tokenInfo');
+
+    showMoreInfoButton.addEventListener('click', function() {
+        tokenInfo.classList.toggle('hidden');
+        
+        // Change the icon based on the visibility state
+        const icon = this.querySelector('[data-lucide]');
+        if (icon) {
+            if (tokenInfo.classList.contains('hidden')) {
+                icon.setAttribute('data-lucide', 'info');
+            } else {
+                icon.setAttribute('data-lucide', 'x');
+            }
+            lucide.createIcons();
+        }
+    });
 });

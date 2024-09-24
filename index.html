@@ -8,33 +8,47 @@
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
 </head>
-<body class="bg-gray-100 min-h-screen p-4 md:p-8">
-    <div class="max-w-4xl mx-auto bg-white rounded-lg shadow-md p-6">
-        <h1 class="text-3xl font-bold mb-6 text-center text-gray-800">GitHub Repository to Text File</h1>
+<body class="bg-gray-100 min-h-screen p-4 md:p-8 text-gray-600">
+    <div class="max-w-4xl mx-auto bg-white rounded-lg shadow-md p-6 relative">
+        <a href="https://github.com/yourusername/yourrepository" target="_blank" class="absolute top-2 right-2">
+            <i data-lucide="github" class="w-8 h-8 text-gray-600 hover:text-gray-800"></i>
+        </a>
+        <h1 class="text-3xl font-bold mb-2 text-center text-gray-600">GitHub to Plain Text</h1>
+        <p class="text-lg text-center text-gray-500 mb-6">Convert Code in GitHub to a Single Formatted Text File</p>
         <form id="repoForm" class="space-y-4">
             <div>
-                <label for="repoUrl" class="block text-sm font-medium text-gray-700">GitHub Repository URL:</label>
-                <input type="text" id="repoUrl" name="repoUrl" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
+                <label for="repoUrl" class="block text-sm font-medium text-gray-600">GitHub URL:</label>
+                <input type="text" id="repoUrl" name="repoUrl" required class="mt-1 block w-full rounded-md border border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 h-10 px-2">
+            </div>
+            <div class="hidden">
+                <label for="ref" class="block text-sm font-medium text-gray-600">Ref (branch/tag/commit sha):</label>
+                <input type="text" id="ref" name="ref" class="mt-1 block w-full rounded-md border border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 h-10 px-2">
+            </div>
+            <div class="hidden">
+                <label for="path" class="block text-sm font-medium text-gray-600">Path (subdirectory):</label>
+                <input type="text" id="path" name="path" class="mt-1 block w-full rounded-md border border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 h-10 px-2">
             </div>
             <div>
-                <label for="ref" class="block text-sm font-medium text-gray-700">Ref (branch/tag/commit sha):</label>
-                <input type="text" id="ref" name="ref" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
+                <label for="accessToken" class="block text-sm font-medium text-gray-600 flex items-center">
+                    Personal Access Token (optional):
+                    <button type="button" id="showMoreInfo" class="ml-2 text-blue-500 hover:text-blue-700">
+                        <i data-lucide="info" class="w-4 h-4"></i>
+                    </button>
+                </label>
+                <div id="tokenInfo" class="hidden mt-2">
+                    <p class="text-sm text-gray-500">[This code runs in your browser. We don't use or store your token.]</p>
+                    <p class="mt-1"><a href="https://github.com/settings/tokens/new?description=repo2file&scopes=repo" target="_blank" class="text-sm text-gray-500 hover:text-gray-700"><i data-lucide="external-link" class="w-5 h-5 inline-block"></i> Get your token</a></p>
+                </div>
+                <input type="text" id="accessToken" name="accessToken" class="mt-1 block w-full rounded-md border border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 h-10 px-2">
+                
             </div>
-            <div>
-                <label for="path" class="block text-sm font-medium text-gray-700">Path (subdirectory):</label>
-                <input type="text" id="path" name="path" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
-            </div>
-            <div>
-                <label for="accessToken" class="block text-sm font-medium text-gray-700">Personal Access Token:</label>
-                <input type="text" id="accessToken" name="accessToken" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
-            </div>
-            <button type="submit" class="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline flex items-center justify-center">
+            <button type="submit" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline flex items-center justify-center">
                 <i data-lucide="folder-search" class="w-5 h-5 mr-2"></i>
                 Fetch Directory Structure
             </button>
         </form>
         <div id="directoryStructure" class="mt-6"></div>
-        <button id="generateTextButton" class="mt-4 w-full bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline hidden flex items-center justify-center">
+        <button id="generateTextButton" class="mt-4 bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline hidden flex items-center justify-center">
             <i data-lucide="file-text" class="w-5 h-5 mr-2"></i>
             Generate Text File
         </button>
