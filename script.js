@@ -151,7 +151,10 @@ function displayDirectoryStructure(tree) {
         const li = document.createElement('li');
         const checkbox = document.createElement('input');
         checkbox.type = 'checkbox';
-        checkbox.checked = true;
+        const commonExtensions = ['.js', '.py', '.java', '.cpp', '.html', '.css', '.ts', '.jsx', '.tsx'];
+        const fileName = name.toLowerCase();
+        const isCommonFile = commonExtensions.some(ext => fileName.endsWith(ext));
+        checkbox.checked = isCommonFile;
         checkbox.className = 'mr-2';
         
         if (typeof item === 'object' && (!item.type || typeof item.type !== 'string')) {
