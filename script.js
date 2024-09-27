@@ -286,12 +286,17 @@ function formatRepoContents(contents) {
     // Function to recursively build the index
     function buildIndex(node, prefix = '') {
         let result = '';
-        for (const [name, subNode] of Object.entries(node)) {
-            result += `${prefix}${name}\n`;
+        const entries = Object.entries(node);
+        entries.forEach(([name, subNode], index) => {
+            const isLastItem = index === entries.length - 1;
+            const linePrefix = isLastItem ? '└── ' : '├── ';
+            const childPrefix = isLastItem ? '    ' : '│   ';
+            
+            result += `${prefix}${linePrefix}${name}\n`;
             if (subNode) {
-                result += buildIndex(subNode, `${prefix}    `);
+                result += buildIndex(subNode, `${prefix}${childPrefix}`);
             }
-        }
+        });
         return result;
     }
 
@@ -301,7 +306,7 @@ function formatRepoContents(contents) {
         text += `\n\n---\nFile: ${item.path}\n---\n\n${item.text}\n`;
     });
 
-    return `--------------------\nDirectory Structure:\n--------------------\n\n${index}${text}`;
+    return `Directory Structure:\n\n${index}\n${text}`;
 }
 
 function sortContents(contents) {
