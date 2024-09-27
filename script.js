@@ -136,10 +136,14 @@ function displayDirectoryStructure(tree) {
     const directoryStructure = {};
 
     tree.forEach(item => {
+        item.path = item.path.startsWith('/') ? item.path : '/' + item.path;
         const pathParts = item.path.split('/');
         let currentLevel = directoryStructure;
 
         pathParts.forEach((part, index) => {
+            if (part === '') {
+                part = './';
+            }
             if (!currentLevel[part]) {
                 currentLevel[part] = index === pathParts.length - 1 ? item : {};
             }
@@ -194,6 +198,7 @@ function displayDirectoryStructure(tree) {
 
         li.className = 'my-2';
         parentUl.appendChild(li);
+        updateParentCheckbox(checkbox);
     }
 
     for (const [name, item] of Object.entries(directoryStructure)) {
@@ -207,7 +212,10 @@ function displayDirectoryStructure(tree) {
     });
 
     function updateParentCheckbox(checkbox) {
+        if (!checkbox) return;
         const li = checkbox.closest('li');
+        if (!li) return;
+        if (!li.parentElement) return;
         const parentLi = li.parentElement.closest('li');
         if (!parentLi) return;
 
@@ -291,7 +299,11 @@ function formatRepoContents(contents) {
             const isLastItem = index === entries.length - 1;
             const linePrefix = isLastItem ? '└── ' : '├── ';
             const childPrefix = isLastItem ? '    ' : '│   ';
-            
+
+            if (name === '') {
+                name = './';
+            }
+
             result += `${prefix}${linePrefix}${name}\n`;
             if (subNode) {
                 result += buildIndex(subNode, `${prefix}${childPrefix}`);
