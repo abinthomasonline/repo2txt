@@ -165,6 +165,13 @@ function displayDirectoryStructure(tree) {
             // Directory
             checkbox.classList.add('directory-checkbox');
             li.appendChild(checkbox);
+
+            // Add collapse/expand button
+            const collapseButton = document.createElement('button');
+            collapseButton.innerHTML = '<i data-lucide="chevron-down" class="w-4 h-4"></i>';
+            collapseButton.className = 'mr-1 focus:outline-none';
+            li.appendChild(collapseButton);
+
             const folderIcon = document.createElement('i');
             folderIcon.setAttribute('data-lucide', 'folder');
             folderIcon.className = 'inline-block w-4 h-4 mr-1';
@@ -184,6 +191,18 @@ function displayDirectoryStructure(tree) {
                     childBox.checked = this.checked;
                     childBox.indeterminate = false;
                 });
+            });
+
+            // Add collapse/expand functionality
+            collapseButton.addEventListener('click', function() {
+                ul.classList.toggle('hidden');
+                const icon = this.querySelector('[data-lucide]');
+                if (ul.classList.contains('hidden')) {
+                    icon.setAttribute('data-lucide', 'chevron-right');
+                } else {
+                    icon.setAttribute('data-lucide', 'chevron-down');
+                }
+                lucide.createIcons();
             });
         } else {
             // File
