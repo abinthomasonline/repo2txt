@@ -20,6 +20,13 @@ This web-based tool converts GitHub repository contents into a formatted text fi
 
 This tool runs entirely in the browser, ensuring data security without server-side processing.
 
+
+## To do
+
+- Filter files by extension
+- Download zip of selected files
+- Support for local directories
+
 ## Contributing
 
 Contributions are welcome! Please feel free to submit a Pull Request.
