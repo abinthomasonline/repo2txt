@@ -56,8 +56,6 @@ document.getElementById('generateTextButton').addEventListener('click', async fu
 // Event listener for downloading zip file
 document.getElementById('downloadZipButton').addEventListener('click', async function () {
     const accessToken = document.getElementById('accessToken').value;
-    const outputText = document.getElementById('outputText');
-    outputText.value = '';
 
     try {
         const selectedFiles = getSelectedFiles();
@@ -67,6 +65,7 @@ document.getElementById('downloadZipButton').addEventListener('click', async fun
         const fileContents = await fetchFileContents(selectedFiles, accessToken);
         await createAndDownloadZip(fileContents);
     } catch (error) {
+        const outputText = document.getElementById('outputText');
         outputText.value = `Error generating zip file: ${error.message}\n\n` +
             "Please ensure:\n" +
             "1. You have selected at least one file from the directory structure.\n" +
