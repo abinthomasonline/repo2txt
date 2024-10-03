@@ -1,8 +1,8 @@
-# GitHub Repo to Text Converter
+# GitHub Repo to Text Converter (Local Directory Supported)
 
 https://repo2txt.simplebasedomain.com/
 
-This web-based tool converts GitHub repository contents into a formatted text file for Large Language Model (LLM) prompts. It streamlines the process of transforming repository data into LLM-friendly input.
+This web-based tool converts GitHub repository (or local directory) contents  into a formatted text file for Large Language Model (LLM) prompts. It streamlines the process of transforming repository data into LLM-friendly input.
 
 ![demo.gif](demo.gif)
 
@@ -19,13 +19,13 @@ This web-based tool converts GitHub repository contents into a formatted text fi
 - Support for private repositories
 - Browser-based for privacy and security
 - Download zip of selected files
+- Local directory support
 
 This tool runs entirely in the browser, ensuring data security without server-side processing.
 
 
 ## To do
 
-- Support for local directories
 - Compile tailwind css (gh action maybe?)
 
 ## Contributing
