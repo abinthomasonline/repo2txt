@@ -1,3 +1,4 @@
+// Event listener for form submission
 document.getElementById('repoForm').addEventListener('submit', async function (e) {
     e.preventDefault();
     const repoUrl = document.getElementById('repoUrl').value;
@@ -9,6 +10,7 @@ document.getElementById('repoForm').addEventListener('submit', async function (e
     outputText.value = '';
 
     try {
+        // Parse repository URL and fetch repository contents
         const { owner, repo, refFromUrl, pathFromUrl } = parseRepoUrl(repoUrl);
         const finalRef = ref || refFromUrl;
         const finalPath = path || pathFromUrl;
@@ -19,10 +21,16 @@ document.getElementById('repoForm').addEventListener('submit', async function (e
         displayDirectoryStructure(tree);
         document.getElementById('generateTextButton').style.display = 'flex';
     } catch (error) {
-        outputText.value = `Error fetching repository contents: ${error.message}\n\nPlease ensure:\n1. The repository URL is correct and accessible.\n2. You have the necessary permissions to access the repository.\n3. If it's a private repository, you've provided a valid access token.\n4. The specified branch/tag and path (if any) exist in the repository.`;
+        outputText.value = `Error fetching repository contents: ${error.message}\n\n` +
+            "Please ensure:\n" +
+            "1. The repository URL is correct and accessible.\n" +
+            "2. You have the necessary permissions to access the repository.\n" +
+            "3. If it's a private repository, you've provided a valid access token.\n" +
+            "4. The specified branch/tag and path (if any) exist in the repository.";
     }
 });
 
+// Event listener for generating text file
 document.getElementById('generateTextButton').addEventListener('click', async function () {
     const accessToken = document.getElementById('accessToken').value;
     const outputText = document.getElementById('outputText');
@@ -40,20 +48,25 @@ document.getElementById('generateTextButton').addEventListener('click', async fu
         document.getElementById('copyButton').style.display = 'flex';
         document.getElementById('downloadButton').style.display = 'flex';
     } catch (error) {
-        outputText.value = `Error generating text file: ${error.message}\n\nPlease ensure:\n1. You have selected at least one file from the directory structure.\n2. Your access token (if provided) is valid and has the necessary permissions.\n3. You have a stable internet connection.\n4. The GitHub API is accessible and functioning normally.`;
+        outputText.value = `Error generating text file: ${error.message}\n\n` +
+            "Please ensure:\n" +
+            "1. You have selected at least one file from the directory structure.\n" +
+            "2. Your access token (if provided) is valid and has the necessary permissions.\n" +
+            "3. You have a stable internet connection.\n" +
+            "4. The GitHub API is accessible and functioning normally.";
     }
 });
 
+// Event listener for copying text to clipboard
 document.getElementById('copyButton').addEventListener('click', function () {
     const outputText = document.getElementById('outputText');
     outputText.select();
-    navigator.clipboard.writeText(outputText.value).then(() => {
-        console.log('Text copied to clipboard');
-    }).catch(err => {
-        console.error('Failed to copy text: ', err);
-    });
+    navigator.clipboard.writeText(outputText.value)
+        .then(() => console.log('Text copied to clipboard'))
+        .catch(err => console.error('Failed to copy text: ', err));
 });
 
+// Event listener for downloading text file
 document.getElementById('downloadButton').addEventListener('click', function () {
     const outputText = document.getElementById('outputText').value;
     if (!outputText.trim()) {
@@ -69,12 +82,14 @@ document.getElementById('downloadButton').addEventListener('click', function () 
     URL.revokeObjectURL(url);
 });
 
+// Parse GitHub repository URL
 function parseRepoUrl(url) {
     url = url.replace(/\/$/, '');
     const urlPattern = /^https:\/\/github\.com\/([^\/]+)\/([^\/]+)(\/tree\/([^\/]+)(\/(.+))?)?$/;
     const match = url.match(urlPattern);
     if (!match) {
-        throw new Error('Invalid GitHub repository URL. Please ensure the URL is in the correct format: https://github.com/owner/repo or https://github.com/owner/repo/tree/branch/path');
+        throw new Error('Invalid GitHub repository URL. Please ensure the URL is in the correct format: ' +
+            'https://github.com/owner/repo or https://github.com/owner/repo/tree/branch/path');
     }
     return {
         owner: match[1],
@@ -84,6 +99,7 @@ function parseRepoUrl(url) {
     };
 }
 
+// Fetch repository SHA
 async function fetchRepoSha(owner, repo, ref, path, token) {
     const url = `https://api.github.com/repos/${owner}/${repo}/contents/${path ? `${path}` : ''}${ref ? `?ref=${ref}` : ''}`;
     const headers = {
@@ -94,18 +110,13 @@ async function fetchRepoSha(owner, repo, ref, path, token) {
     }
     const response = await fetch(url, { headers });
     if (!response.ok) {
-        if (response.status === 403 && response.headers.get('X-RateLimit-Remaining') === '0') {
-            throw new Error('GitHub API rate limit exceeded. Please try again later or provide a valid access token to increase your rate limit.');
-        }
-        if (response.status === 404) {
-            throw new Error(`Repository, branch, or path not found. Please check that the URL, branch/tag, and path are correct and accessible.`);
-        }
-        throw new Error(`Failed to fetch repository SHA. Status: ${response.status}. Please check your input and try again.`);
+        handleFetchError(response);
     }
     const data = await response.json();
     return data.sha;
 }
 
+// Fetch repository tree
 async function fetchRepoTree(owner, repo, sha, token) {
     const url = `https://api.github.com/repos/${owner}/${repo}/git/trees/${sha}?recursive=1`;
     const headers = {
@@ -116,15 +127,24 @@ async function fetchRepoTree(owner, repo, sha, token) {
     }
     const response = await fetch(url, { headers });
     if (!response.ok) {
-        if (response.status === 403 && response.headers.get('X-RateLimit-Remaining') === '0') {
-            throw new Error('GitHub API rate limit exceeded. Please try again later or provide a valid access token to increase your rate limit.');
-        }
-        throw new Error(`Failed to fetch repository tree. Status: ${response.status}. Please check your input and try again.`);
+        handleFetchError(response);
     }
     const data = await response.json();
     return data.tree;
 }
 
+// Handle fetch errors
+function handleFetchError(response) {
+    if (response.status === 403 && response.headers.get('X-RateLimit-Remaining') === '0') {
+        throw new Error('GitHub API rate limit exceeded. Please try again later or provide a valid access token to increase your rate limit.');
+    }
+    if (response.status === 404) {
+        throw new Error(`Repository, branch, or path not found. Please check that the URL, branch/tag, and path are correct and accessible.`);
+    }
+    throw new Error(`Failed to fetch repository data. Status: ${response.status}. Please check your input and try again.`);
+}
+
+// Display directory structure
 function displayDirectoryStructure(tree) {
     tree = tree.filter(item => item.type === 'blob');
     tree = sortContents(tree);
@@ -265,11 +285,13 @@ function displayDirectoryStructure(tree) {
     lucide.createIcons();
 }
 
+// Get selected files from the directory structure
 function getSelectedFiles() {
     const checkboxes = document.querySelectorAll('#directoryStructure input[type="checkbox"]:checked:not(.directory-checkbox)');
     return Array.from(checkboxes).map(checkbox => JSON.parse(checkbox.value));
 }
 
+// Fetch contents of selected files
 async function fetchFileContents(files, token) {
     const headers = {
         'Accept': 'application/vnd.github.v3.raw'
@@ -280,10 +302,7 @@ async function fetchFileContents(files, token) {
     const contents = await Promise.all(files.map(async file => {
         const response = await fetch(file.url, { headers });
         if (!response.ok) {
-            if (response.status === 403 && response.headers.get('X-RateLimit-Remaining') === '0') {
-                throw new Error(`GitHub API rate limit exceeded while fetching ${file.path}. Please try again later or provide a valid access token to increase your rate limit.`);
-            }
-            throw new Error(`Failed to fetch content for ${file.path}. Status: ${response.status}. Please check your permissions and try again.`);
+            handleFetchError(response);
         }
         const text = await response.text();
         return { url: file.url, path: file.path, text };
@@ -291,6 +310,7 @@ async function fetchFileContents(files, token) {
     return contents;
 }
 
+// Format repository contents into a single text
 function formatRepoContents(contents) {
     let text = '';
     let index = '';
@@ -310,7 +330,7 @@ function formatRepoContents(contents) {
         });
     });
 
-    // Function to recursively build the index
+    // Build the index recursively
     function buildIndex(node, prefix = '') {
         let result = '';
         const entries = Object.entries(node);
@@ -319,9 +339,7 @@ function formatRepoContents(contents) {
             const linePrefix = isLastItem ? '└── ' : '├── ';
             const childPrefix = isLastItem ? '    ' : '│   ';
 
-            if (name === '') {
-                name = './';
-            }
+            name = name === '' ? './' : name;
 
             result += `${prefix}${linePrefix}${name}\n`;
             if (subNode) {
@@ -340,8 +358,9 @@ function formatRepoContents(contents) {
     return `Directory Structure:\n\n${index}\n${text}`;
 }
 
+// Sort contents alphabetically and by directory/file
 function sortContents(contents) {
-    contents.sort((a, b) => {
+    return contents.sort((a, b) => {
         const aPath = a.path.split('/');
         const bPath = b.path.split('/');
         const minLength = Math.min(aPath.length, bPath.length);
@@ -356,9 +375,9 @@ function sortContents(contents) {
 
         return aPath.length - bPath.length;
     });
-    return contents;
 }
 
+// Initialize Lucide icons and set up event listeners
 document.addEventListener('DOMContentLoaded', function() {
     lucide.createIcons();
 
@@ -372,11 +391,7 @@ document.addEventListener('DOMContentLoaded', function() {
         // Change the icon based on the visibility state
         const icon = this.querySelector('[data-lucide]');
         if (icon) {
-            if (tokenInfo.classList.contains('hidden')) {
-                icon.setAttribute('data-lucide', 'info');
-            } else {
-                icon.setAttribute('data-lucide', 'x');
-            }
+            icon.setAttribute('data-lucide', tokenInfo.classList.contains('hidden') ? 'info' : 'x');
             lucide.createIcons();
         }
     });
