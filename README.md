@@ -27,6 +27,7 @@ This tool runs entirely in the browser, ensuring data security without server-si
 ## To do
 
 - Compile tailwind css (gh action maybe?)
+- python bindings
 
 ## Contributing
 
