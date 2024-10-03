@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Local Directory to Plain Text Converter | Convert Local Directories to Text</title>
+    <meta name="description" content="Convert local directories to plain text files easily. Our tool helps you transform local files into a single formatted text file for better readability and analysis.">
+    <meta name="keywords" content="local directory, code converter, plain text, file analysis">
+    <meta name="author" content="abinthomasonline">
+    <link rel="canonical" href="https://repo2txt.simplebasedomain.com/local.html">
+    <meta property="og:title" content="Local Directory to Plain Text Converter">
+    <meta property="og:description" content="Convert local directories to plain text files easily. Transform files into a single formatted text file.">
+    <meta property="og:url" content="https://repo2txt.simplebasedomain.com/local.html">
+    <meta property="og:type" content="website">
+    <link rel="icon" href="/favicon.ico" type="image/x-icon">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-CYF86LN5WM"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+
+        gtag('config', 'G-CYF86LN5WM');
+    </script>
+    <script src="js/jszip.min.js"></script>
+    <style>
+        input[type=file]::file-selector-button {
+            font-weight: 500;
+            font-size: 14px;
+            background-color: rgb(59, 130, 246);
+            color: rgb(255, 255, 255);
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        input[type=file]::file-selector-button:hover {
+            background-color: rgb(37, 99, 235);
+        }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen p-4 md:p-8 text-gray-600">
+    <div class="max-w-4xl mx-auto bg-white rounded-lg shadow-md p-6 relative">
+        <a href="https://github.com/abinthomasonline/repo2txt" target="_blank" class="absolute top-2 right-2">
+            <i data-lucide="github" class="w-8 h-8 text-gray-600 hover:text-gray-800"></i>
+        </a>
+        <h1 class="text-3xl font-bold mb-2 text-center text-gray-600">Local Directory to Plain Text</h1>
+        <p class="text-lg text-center text-gray-500 mb-6">Convert Local Directory to a Single Formatted Text File</p>
+        
+        <div class="mb-4">
+            <label for="directoryPicker" class="block text-sm font-medium text-gray-600">Select Directory:</label>
+            <input type="file" id="directoryPicker" webkitdirectory directory multiple class="mt-1 block w-full">
+        </div>
+
+        <div class="mb-4 hidden">
+            <label for="gitignoreContent" class="block text-sm font-medium text-gray-600">.gitignore:</label>
+            <textarea id="gitignoreContent" rows="5" class="mt-1 block w-full rounded-md border border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 p-2"></textarea>
+        </div>
+
+        <div id="extentionCheckboxes" class="mt-4"></div>
+        <div id="directoryStructure" class="mt-6"></div>
+
+        <button id="generateTextButton" class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline hidden flex items-center justify-center">
+            <i data-lucide="file-text" class="w-5 h-5 mr-2"></i>
+            Generate Text File
+        </button>
+
+        <textarea id="outputText" rows="20" class="mt-4 w-full p-2 border rounded-md font-mono" readonly></textarea>
+
+        <div class="mt-4 flex space-x-4">
+            <button id="copyButton" class="flex-1 bg-indigo-500 hover:bg-indigo-600 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline hidden flex items-center justify-center">
+                <i data-lucide="copy" class="w-5 h-5 mr-2"></i>
+                Copy to Clipboard
+            </button>
+            <button id="downloadButton" class="flex-1 bg-purple-500 hover:bg-purple-600 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline hidden flex items-center justify-center">
+                <i data-lucide="download" class="w-5 h-5 mr-2"></i>
+                Download Text File
+            </button>
+        </div>
+    </div>
+    <script type="module" src="js/local.js"></script>
+</body>
+</html>

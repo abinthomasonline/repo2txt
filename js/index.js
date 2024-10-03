@@ -524,7 +524,7 @@ async function createAndDownloadZip(fileContents) {
     const url = URL.createObjectURL(content);
     const a = document.createElement('a');
     a.href = url;
-    a.download = 'repository_files.zip';
+    a.download = 'partial_repo.zip';
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
