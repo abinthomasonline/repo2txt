@@ -26,6 +26,7 @@ This tool runs entirely in the browser, ensuring data security without server-si
 ## To do
 
 - Support for local directories
+- Compile tailwind css (gh action maybe?)
 
 ## Contributing
 
