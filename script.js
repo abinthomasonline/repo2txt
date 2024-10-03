@@ -148,7 +148,10 @@ function displayDirectoryStructure(tree) {
     const rootUl = document.createElement('ul');
     container.appendChild(rootUl);
 
+    const commonExtensions = ['.js', '.py', '.java', '.cpp', '.html', '.css', '.ts', '.jsx', '.tsx'];
+
     const directoryStructure = {};
+    const extentionCheckboxes = {};
 
     tree.forEach(item => {
         item.path = item.path.startsWith('/') ? item.path : '/' + item.path;
@@ -170,10 +173,6 @@ function displayDirectoryStructure(tree) {
         const li = document.createElement('li');
         const checkbox = document.createElement('input');
         checkbox.type = 'checkbox';
-        const commonExtensions = ['.js', '.py', '.java', '.cpp', '.html', '.css', '.ts', '.jsx', '.tsx'];
-        const fileName = name.toLowerCase();
-        const isCommonFile = commonExtensions.some(ext => fileName.endsWith(ext));
-        checkbox.checked = isCommonFile;
         checkbox.className = 'mr-2';
         
         if (typeof item === 'object' && (!item.type || typeof item.type !== 'string')) {
@@ -222,6 +221,21 @@ function displayDirectoryStructure(tree) {
         } else {
             // File
             checkbox.value = JSON.stringify({ url: item.url, path: item.path });
+            
+            const extension = name.split('.').pop().toLowerCase();
+            const isCommonFile = commonExtensions.includes('.' + extension);
+            checkbox.checked = isCommonFile;
+            if (!(extension in extentionCheckboxes)) {
+                const extCheckbox = document.createElement('input');
+                extCheckbox.type = 'checkbox';
+                extCheckbox.className = 'mr-1';
+                extCheckbox.value = extension;
+                extentionCheckboxes[extension] = {
+                    checkbox: extCheckbox,
+                    children: []
+                }
+            }
+            extentionCheckboxes[extension].children.push(checkbox);
             li.appendChild(checkbox);
             const fileIcon = document.createElement('i');
             fileIcon.setAttribute('data-lucide', 'file');
@@ -233,15 +247,47 @@ function displayDirectoryStructure(tree) {
         li.className = 'my-2';
         parentUl.appendChild(li);
         updateParentCheckbox(checkbox);
+        updateExtentionCheckboxes();
     }
 
     for (const [name, item] of Object.entries(directoryStructure)) {
         createTreeNode(name, item, rootUl);
     }
+
+    const extentionCheckboxesContainer = document.getElementById('extentionCheckboxes');
+    extentionCheckboxesContainer.innerHTML = '';
+    extentionCheckboxesContainer.className = 'mt-4';
+    const extentionCheckboxesContainerLabel = document.createElement('label');
+    extentionCheckboxesContainerLabel.innerHTML = 'Filter by file extensions:';
+    extentionCheckboxesContainerLabel.className = 'block text-sm font-medium text-gray-600';
+    extentionCheckboxesContainer.appendChild(extentionCheckboxesContainerLabel);
+    const extentionCheckboxesContainerUl = document.createElement('ul');
+    extentionCheckboxesContainer.appendChild(extentionCheckboxesContainerUl);
+    extentionCheckboxesContainerUl.className = 'mt-1';
+    const sortedExtensions = Object.entries(extentionCheckboxes).sort((a, b) => b[1].children.length - a[1].children.length);
+    for (const [extension, checkbox] of sortedExtensions) {
+        const extCheckbox = checkbox.checkbox;
+        const extCheckboxLi = document.createElement('li');
+        extCheckboxLi.className = 'inline-block mr-4';
+        extCheckboxLi.appendChild(extCheckbox);
+        extCheckboxLi.appendChild(document.createTextNode('.' + extension));
+        extentionCheckboxesContainerUl.appendChild(extCheckboxLi);
+        extCheckbox.addEventListener('change', function() {
+            const children = checkbox.children;
+            children.forEach(child => {
+                child.checked = this.checked;
+                child.indeterminate = false;
+                updateParentCheckbox(child);
+            });
+        });
+    }
+
+
     // Add event listener to container for checkbox changes
     container.addEventListener('change', function(event) {
         if (event.target.type === 'checkbox') {
             updateParentCheckbox(event.target);
+            updateExtentionCheckboxes();
         }
     });
 
@@ -275,6 +321,24 @@ function displayDirectoryStructure(tree) {
 
         // Recursively update parent checkboxes
         updateParentCheckbox(parentCheckbox);
+    }
+
+    function updateExtentionCheckboxes() {
+        for (const [extension, checkbox] of Object.entries(extentionCheckboxes)) {
+            const children = checkbox.children;
+            const checkedCount = Array.from(children).filter(cb => cb.checked).length;
+
+            if (checkedCount === 0) {
+                checkbox.checkbox.checked = false;
+                checkbox.checkbox.indeterminate = false;
+            } else if (checkedCount === children.length) {
+                checkbox.checkbox.checked = true;
+                checkbox.checkbox.indeterminate = false;
+            } else {
+                checkbox.checkbox.checked = false;
+                checkbox.checkbox.indeterminate = true;
+            }
+        }
     }
 
     lucide.createIcons();

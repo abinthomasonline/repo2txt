@@ -12,6 +12,7 @@ This web-based tool converts GitHub repository contents into a formatted text fi
 
 - Display GitHub repository structure
 - Select files/directories to include
+- Filter files by extensions
 - Generate formatted text file
 - Copy text to clipboard
 - Download generated text
@@ -23,7 +24,6 @@ This tool runs entirely in the browser, ensuring data security without server-si
 
 ## To do
 
-- Filter files by extension
 - Download zip of selected files
 - Support for local directories
 
