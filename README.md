@@ -18,13 +18,13 @@ This web-based tool converts GitHub repository contents into a formatted text fi
 - Download generated text
 - Support for private repositories
 - Browser-based for privacy and security
+- Download zip of selected files
 
 This tool runs entirely in the browser, ensuring data security without server-side processing.
 
 
 ## To do
 
-- Download zip of selected files
 - Support for local directories
 
 ## Contributing

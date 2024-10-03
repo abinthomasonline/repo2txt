@@ -15,6 +15,7 @@ document.getElementById('repoForm').addEventListener('submit', async function (e
 
         displayDirectoryStructure(tree);
         document.getElementById('generateTextButton').style.display = 'flex';
+        document.getElementById('downloadZipButton').style.display = 'flex';
     } catch (error) {
         outputText.value = `Error fetching repository contents: ${error.message}\n\n` +
             "Please ensure:\n" +
@@ -52,6 +53,29 @@ document.getElementById('generateTextButton').addEventListener('click', async fu
     }
 });
 
+// Event listener for downloading zip file
+document.getElementById('downloadZipButton').addEventListener('click', async function () {
+    const accessToken = document.getElementById('accessToken').value;
+    const outputText = document.getElementById('outputText');
+    outputText.value = '';
+
+    try {
+        const selectedFiles = getSelectedFiles();
+        if (selectedFiles.length === 0) {
+            throw new Error('No files selected');
+        }
+        const fileContents = await fetchFileContents(selectedFiles, accessToken);
+        await createAndDownloadZip(fileContents);
+    } catch (error) {
+        outputText.value = `Error generating zip file: ${error.message}\n\n` +
+            "Please ensure:\n" +
+            "1. You have selected at least one file from the directory structure.\n" +
+            "2. Your access token (if provided) is valid and has the necessary permissions.\n" +
+            "3. You have a stable internet connection.\n" +
+            "4. The GitHub API is accessible and functioning normally.";
+    }
+});
+
 // Event listener for copying text to clipboard
 document.getElementById('copyButton').addEventListener('click', function () {
     const outputText = document.getElementById('outputText');
@@ -72,7 +96,7 @@ document.getElementById('downloadButton').addEventListener('click', function () 
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = 'file.txt';
+    a.download = 'prompt.txt';
     a.click();
     URL.revokeObjectURL(url);
 });
@@ -485,4 +509,25 @@ function updateInfoIcon(button, tokenInfo) {
         icon.setAttribute('data-lucide', tokenInfo.classList.contains('hidden') ? 'info' : 'x');
         lucide.createIcons();
     }
+}
+
+// Create and download zip file
+async function createAndDownloadZip(fileContents) {
+    const zip = new JSZip();
+
+    fileContents.forEach(file => {
+        // Remove leading slash if present
+        const filePath = file.path.startsWith('/') ? file.path.slice(1) : file.path;
+        zip.file(filePath, file.text);
+    });
+
+    const content = await zip.generateAsync({type: "blob"});
+    const url = URL.createObjectURL(content);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'repository_files.zip';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
 }
