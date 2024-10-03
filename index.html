@@ -46,14 +46,6 @@
                 <label for="repoUrl" class="block text-sm font-medium text-gray-600">GitHub URL:</label>
                 <input type="text" id="repoUrl" name="repoUrl" required class="mt-1 block w-full rounded-md border border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 h-10 px-2">
             </div>
-            <div class="hidden">
-                <label for="ref" class="block text-sm font-medium text-gray-600">Ref (branch/tag/commit sha):</label>
-                <input type="text" id="ref" name="ref" class="mt-1 block w-full rounded-md border border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 h-10 px-2">
-            </div>
-            <div class="hidden">
-                <label for="path" class="block text-sm font-medium text-gray-600">Path (subdirectory):</label>
-                <input type="text" id="path" name="path" class="mt-1 block w-full rounded-md border border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 h-10 px-2">
-            </div>
             <div>
                 <label for="accessToken" class="block text-sm font-medium text-gray-600 flex items-center">
                     Personal Access Token (optional - for private repositories and higher rate limits):
@@ -66,7 +58,6 @@
                     <p class="mt-1"><a href="https://github.com/settings/tokens/new?description=repo2file&scopes=repo" target="_blank" class="text-sm text-gray-500 hover:text-gray-700"><i data-lucide="external-link" class="w-5 h-5 inline-block"></i> Get your token</a></p>
                 </div>
                 <input type="text" id="accessToken" name="accessToken" class="mt-1 block w-full rounded-md border border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 h-10 px-2">
-                
             </div>
             <button type="submit" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline flex items-center justify-center">
                 <i data-lucide="folder-search" class="w-5 h-5 mr-2"></i>

@@ -2,8 +2,6 @@
 document.getElementById('repoForm').addEventListener('submit', async function (e) {
     e.preventDefault();
     const repoUrl = document.getElementById('repoUrl').value;
-    const ref = document.getElementById('ref').value || '';
-    const path = document.getElementById('path').value || '';
     const accessToken = document.getElementById('accessToken').value;
 
     const outputText = document.getElementById('outputText');
@@ -12,10 +10,7 @@ document.getElementById('repoForm').addEventListener('submit', async function (e
     try {
         // Parse repository URL and fetch repository contents
         const { owner, repo, refFromUrl, pathFromUrl } = parseRepoUrl(repoUrl);
-        const finalRef = ref || refFromUrl;
-        const finalPath = path || pathFromUrl;
-
-        const sha = await fetchRepoSha(owner, repo, finalRef, finalPath, accessToken);
+        const sha = await fetchRepoSha(owner, repo, refFromUrl, pathFromUrl, accessToken);
         const tree = await fetchRepoTree(owner, repo, sha, accessToken);
 
         displayDirectoryStructure(tree);
