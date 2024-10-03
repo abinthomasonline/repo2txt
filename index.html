@@ -20,6 +20,34 @@
         .directory-checkbox + button:hover {
             color: #4a5568;
         }
+        /* New Styles for Extension Input */
+        #extensionInputContainer {
+            margin-top: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        #extensionList {
+            margin-top: 10px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+        }
+        .extension-item {
+            background-color: #edf2f7;
+            padding: 5px 10px;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .remove-extension {
+            background: none;
+            border: none;
+            color: #e53e3e;
+            cursor: pointer;
+            padding: 0;
+        }
     </style>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
@@ -73,6 +101,19 @@
                 Fetch Directory Structure
             </button>
         </form>
+
+        <!-- New Extension Input Section -->
+        <div id="extensionInputContainer">
+            <input type="text" id="newExtension" placeholder="Add extension (e.g., .rs)" class="block w-full rounded-md border border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 h-10 px-2">
+            <button id="addExtensionButton" class="bg-indigo-500 hover:bg-indigo-600 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
+                Add
+            </button>
+        </div>
+        <ul id="extensionList" class="flex flex-wrap mt-2">
+            <!-- Dynamically added extensions will appear here -->
+        </ul>
+        <!-- End of Extension Input Section -->
+
         <div id="directoryStructure" class="mt-6"></div>
         <button id="generateTextButton" class="mt-4 bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline hidden flex items-center justify-center">
             <i data-lucide="file-text" class="w-5 h-5 mr-2"></i>

@@ -1,3 +1,77 @@
+// Initial list of common file extensions
+let commonExtensions = ['.js', '.py', '.java', '.cpp', '.html', '.css', '.ts', '.jsx', '.tsx'];
+
+// Function to normalize extension input
+function normalizeExtension(ext) {
+    ext = ext.trim().toLowerCase();
+    if (!ext.startsWith('.')) {
+        ext = '.' + ext;
+    }
+    return ext;
+}
+
+// Function to render the list of added extensions
+function renderExtensionList() {
+    const extensionList = document.getElementById('extensionList');
+    extensionList.innerHTML = '';
+    commonExtensions.forEach((ext, index) => {
+        const li = document.createElement('li');
+        li.className = 'extension-item';
+        
+        const span = document.createElement('span');
+        span.textContent = ext;
+        li.appendChild(span);
+        
+        const removeButton = document.createElement('button');
+        removeButton.className = 'remove-extension';
+        removeButton.innerHTML = '<i data-lucide="x" class="w-4 h-4"></i>';
+        removeButton.title = 'Remove extension';
+        removeButton.addEventListener('click', () => {
+            commonExtensions.splice(index, 1);
+            renderExtensionList();
+            updateDirectoryStructure();
+        });
+        li.appendChild(removeButton);
+        
+        extensionList.appendChild(li);
+    });
+    lucide.createIcons();
+}
+
+// Function to update directory structure based on current extensions
+function updateDirectoryStructure() {
+    const checkboxes = document.querySelectorAll('#directoryStructure input[type="checkbox"]');
+    checkboxes.forEach(checkbox => {
+        if (!checkbox.classList.contains('directory-checkbox')) {
+            const fileInfo = JSON.parse(checkbox.value);
+            const filePath = fileInfo.path.toLowerCase();
+            const isCommonFile = commonExtensions.some(ext => filePath.endsWith(ext));
+            checkbox.checked = isCommonFile;
+        }
+    });
+}
+
+// Event listener for adding new extensions
+document.getElementById('addExtensionButton').addEventListener('click', function() {
+    const newExtInput = document.getElementById('newExtension');
+    const newExt = normalizeExtension(newExtInput.value);
+    if (newExt && !commonExtensions.includes(newExt)) {
+        commonExtensions.push(newExt);
+        newExtInput.value = '';
+        renderExtensionList();
+        updateDirectoryStructure();
+    }
+});
+
+// Allow adding extension by pressing Enter key
+document.getElementById('newExtension').addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') {
+        e.preventDefault();
+        document.getElementById('addExtensionButton').click();
+    }
+});
+
+// Event listener for the repository form submission
 document.getElementById('repoForm').addEventListener('submit', async function (e) {
     e.preventDefault();
     const repoUrl = document.getElementById('repoUrl').value;
@@ -23,6 +97,7 @@ document.getElementById('repoForm').addEventListener('submit', async function (e
     }
 });
 
+// Event listener for generating the text file
 document.getElementById('generateTextButton').addEventListener('click', async function () {
     const accessToken = document.getElementById('accessToken').value;
     const outputText = document.getElementById('outputText');
@@ -44,6 +119,7 @@ document.getElementById('generateTextButton').addEventListener('click', async fu
     }
 });
 
+// Event listener for copying to clipboard
 document.getElementById('copyButton').addEventListener('click', function () {
     const outputText = document.getElementById('outputText');
     outputText.select();
@@ -54,6 +130,7 @@ document.getElementById('copyButton').addEventListener('click', function () {
     });
 });
 
+// Event listener for downloading the text file
 document.getElementById('downloadButton').addEventListener('click', function () {
     const outputText = document.getElementById('outputText').value;
     if (!outputText.trim()) {
@@ -69,6 +146,7 @@ document.getElementById('downloadButton').addEventListener('click', function () 
     URL.revokeObjectURL(url);
 });
 
+// Function to parse the GitHub repository URL
 function parseRepoUrl(url) {
     url = url.replace(/\/$/, '');
     const urlPattern = /^https:\/\/github\.com\/([^\/]+)\/([^\/]+)(\/tree\/([^\/]+)(\/(.+))?)?$/;
@@ -84,6 +162,7 @@ function parseRepoUrl(url) {
     };
 }
 
+// Function to fetch repository SHA
 async function fetchRepoSha(owner, repo, ref, path, token) {
     const url = `https://api.github.com/repos/${owner}/${repo}/contents/${path ? `${path}` : ''}${ref ? `?ref=${ref}` : ''}`;
     const headers = {
@@ -106,6 +185,7 @@ async function fetchRepoSha(owner, repo, ref, path, token) {
     return data.sha;
 }
 
+// Function to fetch repository tree
 async function fetchRepoTree(owner, repo, sha, token) {
     const url = `https://api.github.com/repos/${owner}/${repo}/git/trees/${sha}?recursive=1`;
     const headers = {
@@ -125,6 +205,7 @@ async function fetchRepoTree(owner, repo, sha, token) {
     return data.tree;
 }
 
+// Function to display the directory structure
 function displayDirectoryStructure(tree) {
     tree = tree.filter(item => item.type === 'blob');
     tree = sortContents(tree);
@@ -155,7 +236,6 @@ function displayDirectoryStructure(tree) {
         const li = document.createElement('li');
         const checkbox = document.createElement('input');
         checkbox.type = 'checkbox';
-        const commonExtensions = ['.js', '.py', '.java', '.cpp', '.html', '.css', '.ts', '.jsx', '.tsx'];
         const fileName = name.toLowerCase();
         const isCommonFile = commonExtensions.some(ext => fileName.endsWith(ext));
         checkbox.checked = isCommonFile;
@@ -265,11 +345,13 @@ function displayDirectoryStructure(tree) {
     lucide.createIcons();
 }
 
+// Function to get selected files
 function getSelectedFiles() {
     const checkboxes = document.querySelectorAll('#directoryStructure input[type="checkbox"]:checked:not(.directory-checkbox)');
     return Array.from(checkboxes).map(checkbox => JSON.parse(checkbox.value));
 }
 
+// Function to fetch file contents
 async function fetchFileContents(files, token) {
     const headers = {
         'Accept': 'application/vnd.github.v3.raw'
@@ -291,6 +373,7 @@ async function fetchFileContents(files, token) {
     return contents;
 }
 
+// Function to format repository contents into text
 function formatRepoContents(contents) {
     let text = '';
     let index = '';
@@ -340,6 +423,7 @@ function formatRepoContents(contents) {
     return `Directory Structure:\n\n${index}\n${text}`;
 }
 
+// Function to sort contents
 function sortContents(contents) {
     contents.sort((a, b) => {
         const aPath = a.path.split('/');
@@ -361,6 +445,7 @@ function sortContents(contents) {
 
 document.addEventListener('DOMContentLoaded', function() {
     lucide.createIcons();
+    renderExtensionList();
 
     // Add event listener for the showMoreInfo button
     const showMoreInfoButton = document.getElementById('showMoreInfo');
