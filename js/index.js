@@ -105,23 +105,34 @@ document.getElementById('downloadButton').addEventListener('click', function () 
 // Parse GitHub repository URL
 function parseRepoUrl(url) {
     url = url.replace(/\/$/, '');
-    const urlPattern = /^https:\/\/github\.com\/([^\/]+)\/([^\/]+)(\/tree\/([^\/]+)(\/(.+))?)?$/;
+    const urlPattern = /^https:\/\/github\.com\/([^\/]+)\/([^\/]+)(\/tree\/(.+))?$/;
     const match = url.match(urlPattern);
     if (!match) {
         throw new Error('Invalid GitHub repository URL. Please ensure the URL is in the correct format: ' +
             'https://github.com/owner/repo or https://github.com/owner/repo/tree/branch/path');
     }
+    const owner = match[1];
+    const repo = match[2];
+    const refAndPath = match[4];
+    let refFromUrl = null;
+    let pathFromUrl = null;
+    if (refAndPath) {
+        refFromUrl = refAndPath;
+        pathFromUrl = '';
+    }
+
     return {
-        owner: match[1],
-        repo: match[2],
-        refFromUrl: match[4],
-        pathFromUrl: match[6]
+        owner,
+        repo,
+        refFromUrl,
+        pathFromUrl
     };
 }
 
+
 // Fetch repository SHA
 async function fetchRepoSha(owner, repo, ref, path, token) {
-    const url = `https://api.github.com/repos/${owner}/${repo}/contents/${path ? `${path}` : ''}${ref ? `?ref=${ref}` : ''}`;
+    const url = `https://api.github.com/repos/${owner}/${repo}/contents${path ? `/${path}` : ''}${ref ? `?ref=${ref}` : ''}`;
     const headers = {
         'Accept': 'application/vnd.github.object+json'
     };
@@ -135,6 +146,7 @@ async function fetchRepoSha(owner, repo, ref, path, token) {
     const data = await response.json();
     return data.sha;
 }
+
 
 // Fetch repository tree
 async function fetchRepoTree(owner, repo, sha, token) {
