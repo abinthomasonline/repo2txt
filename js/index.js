@@ -1,4 +1,4 @@
-import { displayDirectoryStructure, sortContents, getSelectedFiles, formatRepoContents } from './utils.js';
+import { displayDirectoryStructure, getSelectedFiles, formatRepoContents } from './utils.js';
 
 // Event listener for form submission
 document.getElementById('repoForm').addEventListener('submit', async function (e) {
@@ -11,7 +11,23 @@ document.getElementById('repoForm').addEventListener('submit', async function (e
 
     try {
         // Parse repository URL and fetch repository contents
-        const { owner, repo, refFromUrl, pathFromUrl } = parseRepoUrl(repoUrl);
+        const { owner, repo, lastString } = parseRepoUrl(repoUrl);
+        let refFromUrl = '';
+        let pathFromUrl = '';
+
+        if (lastString) {
+            const references = await getReferences(owner, repo, accessToken);
+            const allRefs = [...references.branches, ...references.tags];
+            
+            const matchingRef = allRefs.find(ref => lastString.startsWith(ref));
+            if (matchingRef) {
+                refFromUrl = matchingRef;
+                pathFromUrl = lastString.slice(matchingRef.length + 1);
+            } else {
+                refFromUrl = lastString;
+            }
+        }
+
         const sha = await fetchRepoSha(owner, repo, refFromUrl, pathFromUrl, accessToken);
         const tree = await fetchRepoTree(owner, repo, sha, accessToken);
 
@@ -105,7 +121,7 @@ document.getElementById('downloadButton').addEventListener('click', function () 
 // Parse GitHub repository URL
 function parseRepoUrl(url) {
     url = url.replace(/\/$/, '');
-    const urlPattern = /^https:\/\/github\.com\/([^\/]+)\/([^\/]+)(\/tree\/([^\/]+)(\/(.+))?)?$/;
+    const urlPattern = /^https:\/\/github\.com\/([^\/]+)\/([^\/]+)(\/tree\/(.+))?$/;
     const match = url.match(urlPattern);
     if (!match) {
         throw new Error('Invalid GitHub repository URL. Please ensure the URL is in the correct format: ' +
@@ -114,8 +130,34 @@ function parseRepoUrl(url) {
     return {
         owner: match[1],
         repo: match[2],
-        refFromUrl: match[4],
-        pathFromUrl: match[6]
+        lastString: match[4] || ''
+    };
+}
+
+// Fetch repository references
+async function getReferences(owner, repo, token) {
+    const headers = {
+        'Accept': 'application/vnd.github+json'
+    };
+    if (token) {
+        headers['Authorization'] = `token ${token}`;
+    }
+
+    const [branchesResponse, tagsResponse] = await Promise.all([
+        fetch(`https://api.github.com/repos/${owner}/${repo}/git/matching-refs/heads/`, { headers }),
+        fetch(`https://api.github.com/repos/${owner}/${repo}/git/matching-refs/tags/`, { headers })
+    ]);
+
+    if (!branchesResponse.ok || !tagsResponse.ok) {
+        throw new Error('Failed to fetch references');
+    }
+
+    const branches = await branchesResponse.json();
+    const tags = await tagsResponse.json();
+
+    return {
+        branches: branches.map(b => b.ref.split("/").slice(2).join("/")),
+        tags: tags.map(t => t.ref.split("/").slice(2).join("/"))
     };
 }
 
