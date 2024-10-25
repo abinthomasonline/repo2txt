@@ -226,6 +226,72 @@ function displayDirectoryStructure(tree) {
         }
     }
 
+    function toggleAllFiles() {
+        const checkboxes = document.querySelectorAll('#directoryStructure input[type="checkbox"]');
+        const allChecked = Array.from(checkboxes).every(cb => cb.checked);
+        const someChecked = Array.from(checkboxes).some(cb => cb.checked);
+        
+        // If some or none are checked, check all. If all are checked, uncheck all
+        const newState = !allChecked;
+        
+        // Update the select all button icon immediately
+        const selectAllButton = document.getElementById('selectAllButton');
+        const icon = selectAllButton.querySelector('[data-lucide]');
+        icon.setAttribute('data-lucide', newState ? 'check-square' : 'square');
+        lucide.createIcons();
+        
+        checkboxes.forEach(checkbox => {
+            checkbox.checked = newState;
+            checkbox.indeterminate = false;
+            updateParentCheckbox(checkbox);
+        });
+        updateExtensionCheckboxes();
+        return newState;
+    }
+
+    // Show and setup Select All button
+    const selectAllButton = document.getElementById('selectAllButton');
+    if (selectAllButton) {
+        // Create span for text if it doesn't exist
+        let textSpan = selectAllButton.querySelector('span');
+        if (!textSpan) {
+            textSpan = document.createElement('span');
+            selectAllButton.appendChild(textSpan);
+        }
+        
+        // Check initial state of checkboxes
+        const checkboxes = document.querySelectorAll('#directoryStructure input[type="checkbox"]');
+        const allChecked = Array.from(checkboxes).every(cb => cb.checked);
+        let allSelected = allChecked;
+        
+        // Set initial button text and icon
+        const icon = selectAllButton.querySelector('[data-lucide]');
+        if (allSelected) {
+            icon.setAttribute('data-lucide', 'check-square');
+            textSpan.textContent = 'Deselect All Files';
+        } else {
+            icon.setAttribute('data-lucide', 'square');
+            textSpan.textContent = 'Select All Files';
+        }
+        
+        selectAllButton.style.display = 'flex';
+
+        selectAllButton.addEventListener('click', function() {
+            const newState = toggleAllFiles();
+            allSelected = newState;
+            
+            // Update button text and icon based on state
+            if (allSelected) {
+                icon.setAttribute('data-lucide', 'check-square');
+                textSpan.textContent = 'Deselect All Files';
+            } else {
+                icon.setAttribute('data-lucide', 'square');
+                textSpan.textContent = 'Select All Files';
+            }
+            lucide.createIcons();
+        });
+    }
+
     lucide.createIcons();
 }
 
