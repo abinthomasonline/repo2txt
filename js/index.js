@@ -1,10 +1,37 @@
 import { displayDirectoryStructure, getSelectedFiles, formatRepoContents } from './utils.js';
 
+// Load saved token on page load
+document.addEventListener('DOMContentLoaded', function() {
+    lucide.createIcons();
+    setupShowMoreInfoButton();
+    loadSavedToken();
+});
+
+// Load saved token from local storage
+function loadSavedToken() {
+    const savedToken = localStorage.getItem('githubAccessToken');
+    if (savedToken) {
+        document.getElementById('accessToken').value = savedToken;
+    }
+}
+
+// Save token to local storage
+function saveToken(token) {
+    if (token) {
+        localStorage.setItem('githubAccessToken', token);
+    } else {
+        localStorage.removeItem('githubAccessToken');
+    }
+}
+
 // Event listener for form submission
 document.getElementById('repoForm').addEventListener('submit', async function (e) {
     e.preventDefault();
     const repoUrl = document.getElementById('repoUrl').value;
     const accessToken = document.getElementById('accessToken').value;
+
+    // Save token automatically
+    saveToken(accessToken);
 
     const outputText = document.getElementById('outputText');
     outputText.value = '';
@@ -49,6 +76,9 @@ document.getElementById('generateTextButton').addEventListener('click', async fu
     const accessToken = document.getElementById('accessToken').value;
     const outputText = document.getElementById('outputText');
     outputText.value = '';
+
+    // Save token automatically
+    saveToken(accessToken);
 
     try {
         const selectedFiles = getSelectedFiles();
@@ -224,12 +254,6 @@ async function fetchFileContents(files, token) {
     }));
     return contents;
 }
-
-// Initialize Lucide icons and set up event listeners
-document.addEventListener('DOMContentLoaded', function() {
-    lucide.createIcons();
-    setupShowMoreInfoButton();
-});
 
 function setupShowMoreInfoButton() {
     const showMoreInfoButton = document.getElementById('showMoreInfo');
