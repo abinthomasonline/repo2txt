@@ -1,7 +1,11 @@
 import { displayDirectoryStructure, sortContents, getSelectedFiles, formatRepoContents } from './utils.js';
+import { extractZipContents } from './zip-utils.js';
 
 // Event listener for directory selection
 document.getElementById('directoryPicker').addEventListener('change', handleDirectorySelection);
+
+// Event listener for zip file selection
+document.getElementById('zipPicker').addEventListener('change', handleZipSelection);
 
 async function handleDirectorySelection(event) {
     const files = event.target.files;
@@ -40,6 +44,30 @@ async function handleDirectorySelection(event) {
 
     if (!tree.some(file => file.path.endsWith('.gitignore'))) {
         filterAndDisplayTree(tree, gitignoreContent);
+    }
+}
+
+// Handle zip file selection
+async function handleZipSelection(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    try {
+        // Clear the directory picker
+        document.getElementById('directoryPicker').value = '';
+
+        // Extract zip contents
+        const { tree, gitignoreContent } = await extractZipContents(file);
+        
+        // Filter and display the tree
+        filterAndDisplayTree(tree, gitignoreContent);
+    } catch (error) {
+        const outputText = document.getElementById('outputText');
+        outputText.value = `Error processing zip file: ${error.message}\n\n` +
+            "Please ensure:\n" +
+            "1. The zip file is not corrupted.\n" +
+            "2. The zip file contains text files that can be read.\n" +
+            "3. The zip file format is supported (.zip, .rar, .7z).\n";
     }
 }
 
@@ -82,15 +110,21 @@ document.getElementById('generateTextButton').addEventListener('click', async fu
     }
 });
 
-// Fetch contents of selected files
+// Modify fetchFileContents to handle both URL and text content
 async function fetchFileContents(files) {
     const contents = await Promise.all(files.map(async file => {
-        const response = await fetch(file.url);
-        if (!response.ok) {
-            throw new Error(`Failed to fetch file: ${file.path}`);
+        if (file.text) {
+            // File already has text content (from zip)
+            return file;
+        } else {
+            // Fetch content from URL (from directory)
+            const response = await fetch(file.url);
+            if (!response.ok) {
+                throw new Error(`Failed to fetch file: ${file.path}`);
+            }
+            const text = await response.text();
+            return { url: file.url, path: file.path, text };
         }
-        const text = await response.text();
-        return { url: file.url, path: file.path, text };
     }));
     return contents;
 }
@@ -119,12 +153,48 @@ function isIgnored(filePath, gitignoreRules) {
     });
 }
 
+// Function to copy text to clipboard with fallback
+function copyToClipboard(text) {
+    // Try using the modern Clipboard API first
+    if (navigator.clipboard && window.isSecureContext) {
+        return navigator.clipboard.writeText(text)
+            .then(() => console.log('Text copied to clipboard'))
+            .catch(err => {
+                console.error('Failed to copy text: ', err);
+                return false;
+            });
+    } else {
+        // Fallback to older execCommand method
+        try {
+            const textArea = document.createElement('textarea');
+            textArea.value = text;
+            textArea.style.position = 'fixed';
+            textArea.style.left = '-999999px';
+            textArea.style.top = '-999999px';
+            document.body.appendChild(textArea);
+            textArea.focus();
+            textArea.select();
+            const success = document.execCommand('copy');
+            textArea.remove();
+            if (success) {
+                console.log('Text copied to clipboard');
+                return Promise.resolve();
+            } else {
+                console.error('Failed to copy text');
+                return Promise.reject(new Error('execCommand returned false'));
+            }
+        } catch (err) {
+            console.error('Failed to copy text: ', err);
+            return Promise.reject(err);
+        }
+    }
+}
+
 // Event listener for copying text to clipboard
 document.getElementById('copyButton').addEventListener('click', function () {
     const outputText = document.getElementById('outputText');
     outputText.select();
-    navigator.clipboard.writeText(outputText.value)
-        .then(() => console.log('Text copied to clipboard'))
+    copyToClipboard(outputText.value)
         .catch(err => console.error('Failed to copy text: ', err));
 });
 
@@ -143,4 +213,3 @@ document.getElementById('downloadButton').addEventListener('click', function () 
     a.click();
     URL.revokeObjectURL(url);
 });
-
