@@ -68,7 +68,7 @@ function displayDirectoryStructure(tree) {
     }
 
     function createFileNode(li, checkbox, name, item) {
-        checkbox.value = JSON.stringify({ url: item.url, path: item.path });
+        checkbox.value = JSON.stringify({ url: item.url, path: item.path, urlType: item.urlType });
         
         const extension = name.split('.').pop().toLowerCase();
         const isCommonFile = commonExtensions.includes('.' + extension);

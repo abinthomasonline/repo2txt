@@ -1,6 +1,9 @@
 import { displayDirectoryStructure, sortContents, getSelectedFiles, formatRepoContents } from './utils.js';
 import { extractZipContents } from './zip-utils.js';
 
+// Add at the top of the file with other imports
+let pathZipMap = {};
+
 // Event listener for directory selection
 document.getElementById('directoryPicker').addEventListener('change', handleDirectorySelection);
 
@@ -14,10 +17,11 @@ async function handleDirectorySelection(event) {
     const gitignoreContent = ['.git/**']
     const tree = [];
     for (let file of files) {
-        const filePath = file.webkitRelativePath.split('/').slice(1).join('/');
+        const filePath = file.webkitRelativePath.startsWith('/') ? file.webkitRelativePath.slice(1) : file.webkitRelativePath;
         tree.push({
             path: filePath,
             type: 'blob',
+            urlType: 'directory',
             url: URL.createObjectURL(file)
         });
         if (file.webkitRelativePath.endsWith('.gitignore')) {
@@ -25,7 +29,7 @@ async function handleDirectorySelection(event) {
             gitignoreReader.onload = function(e) {
                 const content = e.target.result;
                 const lines = content.split('\n');
-                const gitignorePath = file.webkitRelativePath.split('/').slice(1, -1).join('/');
+                const gitignorePath = file.webkitRelativePath.split('/').slice(0, -1).join('/');
                 lines.forEach(line => {
                     line = line.trim();
                     if (line && !line.startsWith('#')) {
@@ -41,10 +45,7 @@ async function handleDirectorySelection(event) {
             gitignoreReader.readAsText(file);
         }
     }
-
-    if (!tree.some(file => file.path.endsWith('.gitignore'))) {
-        filterAndDisplayTree(tree, gitignoreContent);
-    }
+    filterAndDisplayTree(tree, gitignoreContent);
 }
 
 // Handle zip file selection
@@ -56,8 +57,9 @@ async function handleZipSelection(event) {
         // Clear the directory picker
         document.getElementById('directoryPicker').value = '';
 
-        // Extract zip contents
-        const { tree, gitignoreContent } = await extractZipContents(file);
+        // Extract zip contents and update the global pathZipMap
+        const { tree, gitignoreContent, pathZipMap: extractedPathZipMap } = await extractZipContents(file);
+        pathZipMap = extractedPathZipMap;  // Update the global variable
         
         // Filter and display the tree
         filterAndDisplayTree(tree, gitignoreContent);
@@ -113,9 +115,10 @@ document.getElementById('generateTextButton').addEventListener('click', async fu
 // Modify fetchFileContents to handle both URL and text content
 async function fetchFileContents(files) {
     const contents = await Promise.all(files.map(async file => {
-        if (file.text) {
-            // File already has text content (from zip)
-            return file;
+        if (file.urlType === 'zip') {
+            const relativePath = file.path.startsWith('/') ? file.path.slice(1) : file.path;
+            const text = await pathZipMap[relativePath].async('text');
+            return { url: file.url, path: relativePath, text };
         } else {
             // Fetch content from URL (from directory)
             const response = await fetch(file.url);
@@ -136,20 +139,26 @@ document.addEventListener('DOMContentLoaded', function() {
 
 function isIgnored(filePath, gitignoreRules) {
     return gitignoreRules.some(rule => {
-        // Convert gitignore rule to regex
-        let pattern = rule.replace(/\./g, '\\.')  // Escape dots
-                          .replace(/\*/g, '.*')   // Convert * to .*
-                          .replace(/\?/g, '.')    // Convert ? to .
-                          .replace(/\/$/, '(/.*)?$')  // Handle directory matches
-                          .replace(/^\//, '^');   // Handle root-level matches
+        try {
+            // Convert gitignore rule to regex
+            let pattern = rule.replace(/\./g, '\\.')  // Escape dots
+                            .replace(/\*/g, '.*')   // Convert * to .*
+                            .replace(/\?/g, '.')    // Convert ? to .
+                            .replace(/\/$/, '(/.*)?$')  // Handle directory matches
+                            .replace(/^\//, '^');   // Handle root-level matches
 
-        // If the rule doesn't start with ^, it can match anywhere in the path
-        if (!pattern.startsWith('^')) {
-            pattern = `(^|/)${pattern}`;
+            // If the rule doesn't start with ^, it can match anywhere in the path
+            if (!pattern.startsWith('^')) {
+                pattern = `(^|/)${pattern}`;
+            }
+
+            const regex = new RegExp(pattern);
+            return regex.test(filePath);
+        } catch (error) {
+            console.log('Skipping ignore check for', filePath, 'with rule', rule);
+            console.log(error);
+            return false;
         }
-
-        const regex = new RegExp(pattern);
-        return regex.test(filePath);
     });
 }
 
