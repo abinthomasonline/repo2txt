@@ -25,6 +25,7 @@
         gtag('config', 'G-CYF86LN5WM');
     </script>
     <script src="js/jszip.min.js"></script>
+    <script async src="https://unpkg.com/gpt-tokenizer"></script>
     <style>
         input[type=file]::file-selector-button {
             font-weight: 500;
@@ -73,6 +74,8 @@
             <i data-lucide="file-text" class="w-5 h-5 mr-2"></i>
             Generate Text File
         </button>
+
+        <div id="tokenCount" class="mt-4 text-sm text-gray-500"></div>
 
         <textarea id="outputText" rows="20" class="mt-4 w-full p-2 border rounded-md font-mono" readonly></textarea>
 

@@ -25,6 +25,7 @@
         gtag('config', 'G-CYF86LN5WM');
     </script>
     <script src="js/jszip.min.js"></script>
+    <script async src="https://unpkg.com/gpt-tokenizer"></script>
 </head>
 <body class="bg-gray-100 min-h-screen p-4 md:p-8 text-gray-600">
     <div class="max-w-4xl mx-auto bg-white rounded-lg shadow-md p-6 relative">
@@ -73,6 +74,7 @@
                 Download Zip
             </button>
         </div>
+        <div id="tokenCount" class="mt-4 text-sm text-gray-500"></div>
         <textarea id="outputText" rows="20" class="mt-4 w-full p-2 border rounded-md font-mono" readonly></textarea>
         <div class="mt-4 flex space-x-4">
             <button id="copyButton" class="flex-1 bg-indigo-500 hover:bg-indigo-600 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline hidden flex items-center justify-center">

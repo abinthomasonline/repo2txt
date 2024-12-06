@@ -300,7 +300,16 @@ function formatRepoContents(contents) {
         text += `\n\n---\nFile: ${item.path}\n---\n\n${item.text}\n`;
     });
 
-    return `Directory Structure:\n\n${index}\n${text}`;
+    const formattedText = `Directory Structure:\n\n${index}\n${text}`;
+    try {
+        const { encode, decode } = GPTTokenizer_cl100k_base;
+        const tokensCount = encode(formattedText).length;
+        document.getElementById('tokenCount').innerHTML = `Approximate Token Count: ${tokensCount} <a href="https://github.com/niieani/gpt-tokenizer" target="_blank" class="text-blue-500 hover:text-blue-700 underline">(Using cl100k_base tokenizer)</a>`;
+    } catch (error) {
+        document.getElementById('tokenCount').innerHTML = '';
+        console.log(error);
+    }
+    return formattedText;
 }
 
 export { displayDirectoryStructure, sortContents, getSelectedFiles, formatRepoContents };
