@@ -90,6 +90,8 @@
             font-size: 13px;
             font-weight: 500;
             margin-bottom: 6px;
+            cursor: pointer;
+            user-select: none;
         }
 
         .info-button {
@@ -99,6 +101,7 @@
             margin-left: 4px;
             cursor: pointer;
             color: var(--primary-blue);
+            margin-left: auto;
         }
 
         .info-panel {
@@ -277,11 +280,11 @@
             <div class="form-group">
                 <label class="form-label">
                     Personal Access Token
-                    <button type="button" id="showMoreInfo" class="info-button">
-                        <i data-lucide="info" class="w-4 h-4"></i>
+                    <button type="button" id="showMoreInfo" class="info-button ml-auto">
+                        <i data-lucide="chevron-down" class="w-4 h-4"></i>
                     </button>
                 </label>
-                <div id="tokenInfo" class="info-panel hidden">
+                <div id="tokenInfo" class="info-panel">
                     <p>Your token will be saved locally for convenience.</p>
                     <a href="https://github.com/settings/tokens/new?description=repo2file&scopes=repo" 
                        target="_blank" class="text-blue-600">
@@ -289,7 +292,7 @@
                         Get your token
                     </a>
                 </div>
-                <input type="text" id="accessToken" class="input-field" placeholder="ghp_xxxxxxxxxxxx">
+                <input type="text" id="accessToken" class="input-field mt-2" placeholder="ghp_xxxxxxxxxxxx">
             </div>
 
             <button type="submit" class="button button-blue">

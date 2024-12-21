@@ -3,7 +3,7 @@ import { displayDirectoryStructure, getSelectedFiles, formatRepoContents } from 
 // Load saved token on page load
 document.addEventListener('DOMContentLoaded', function() {
     lucide.createIcons();
-    setupShowMoreInfoButton();
+    setupTokenInput();
     loadSavedToken();
 });
 
@@ -299,4 +299,60 @@ async function createAndDownloadZip(fileContents) {
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
+}
+
+function setupTokenInput() {
+    const tokenLabel = document.querySelector('.form-label');
+    const infoButton = document.getElementById('showMoreInfo');
+    const tokenInput = document.getElementById('accessToken');
+    const tokenInfo = document.getElementById('tokenInfo');
+    const tokenContainer = document.querySelector('.form-group');
+
+    // Initially hide the input and info
+    tokenInput.style.display = 'none';
+    tokenInfo.style.display = 'none';
+
+    // Function to toggle token input visibility
+    function toggleTokenInput(event) {
+        event.preventDefault();
+        event.stopPropagation();
+        const isVisible = tokenInput.style.display === 'block';
+        
+        // Toggle visibility
+        tokenInput.style.display = isVisible ? 'none' : 'block';
+        tokenInfo.style.display = isVisible ? 'none' : 'block';
+        
+        // Update icon
+        const icon = infoButton.querySelector('[data-lucide]');
+        if (icon) {
+            const newIcon = document.createElement('i');
+            newIcon.setAttribute('data-lucide', isVisible ? 'chevron-down' : 'chevron-up');
+            newIcon.className = 'w-4 h-4';
+            icon.parentNode.replaceChild(newIcon, icon);
+            lucide.createIcons();
+        }
+    }
+
+    // Add click handlers
+    tokenLabel.style.cursor = 'pointer';
+    tokenLabel.addEventListener('click', toggleTokenInput);
+    infoButton.addEventListener('click', toggleTokenInput);
+
+    // Close when clicking outside
+    document.addEventListener('click', (e) => {
+        if (!tokenContainer.contains(e.target)) {
+            tokenInput.style.display = 'none';
+            tokenInfo.style.display = 'none';
+            
+            // Update icon
+            const icon = infoButton.querySelector('[data-lucide]');
+            if (icon) {
+                const newIcon = document.createElement('i');
+                newIcon.setAttribute('data-lucide', 'chevron-down');
+                newIcon.className = 'w-4 h-4';
+                icon.parentNode.replaceChild(newIcon, icon);
+                lucide.createIcons();
+            }
+        }
+    });
 }

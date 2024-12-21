@@ -1,3 +1,65 @@
+// Add this function at the beginning of the file
+function setupTokenInput() {
+    const tokenLabel = document.querySelector('.form-label');
+    const infoButton = document.getElementById('showMoreInfo');
+    const tokenInput = document.getElementById('accessToken');
+    const tokenInfo = document.getElementById('tokenInfo');
+    const tokenContainer = document.querySelector('.form-group');
+
+    // Initially hide the input and info
+    tokenInput.style.display = 'none';
+    tokenInfo.style.display = 'none';
+
+    // Function to toggle token input visibility
+    function toggleTokenInput(event) {
+        event.stopPropagation();
+        const isVisible = tokenInput.style.display === 'block';
+        
+        // Toggle visibility
+        tokenInput.style.display = isVisible ? 'none' : 'block';
+        tokenInfo.style.display = isVisible ? 'none' : 'block';
+        
+        // Update icon
+        const icon = infoButton.querySelector('[data-lucide]');
+        if (icon) {
+            const newIcon = document.createElement('i');
+            newIcon.setAttribute('data-lucide', isVisible ? 'chevron-down' : 'chevron-up');
+            newIcon.className = 'w-4 h-4';
+            icon.parentNode.replaceChild(newIcon, icon);
+            lucide.createIcons();
+        }
+    }
+
+    // Add click handlers
+    tokenLabel.style.cursor = 'pointer';
+    tokenLabel.addEventListener('click', toggleTokenInput);
+    infoButton.addEventListener('click', toggleTokenInput);
+
+    // Close when clicking outside
+    document.addEventListener('click', (e) => {
+        if (!tokenContainer.contains(e.target)) {
+            tokenInput.style.display = 'none';
+            tokenInfo.style.display = 'none';
+            
+            // Update icon
+            const icon = infoButton.querySelector('[data-lucide]');
+            if (icon) {
+                const newIcon = document.createElement('i');
+                newIcon.setAttribute('data-lucide', 'chevron-down');
+                newIcon.className = 'w-4 h-4';
+                icon.parentNode.replaceChild(newIcon, icon);
+                lucide.createIcons();
+            }
+        }
+    });
+
+    // Hide initially after a short delay to ensure DOM is ready
+    setTimeout(() => {
+        tokenInput.style.display = 'none';
+        tokenInfo.style.display = 'none';
+    }, 0);
+}
+
 // Display directory structure
 function displayDirectoryStructure(tree) {
     tree = tree.filter(item => item.type === 'blob').sort(sortContents);
@@ -317,28 +379,24 @@ function displayDirectoryStructure(tree) {
         selectAllCheckbox.addEventListener('change', function() {
             const isChecked = this.checked;
             
-            // First, update all extension checkboxes in the dropdown
+            // Update all extension checkboxes in the dropdown
             const extensionCheckboxes = Array.from(listContainer.querySelectorAll('input[type="checkbox"]'))
                 .filter(cb => cb !== selectAllCheckbox);
             
+            // Update extension checkboxes
             extensionCheckboxes.forEach(checkbox => {
                 checkbox.checked = isChecked;
-            });
-
-            // Then, update all file checkboxes in the directory structure
-            Object.values(extensionCheckboxes).forEach(({ children }) => {
-                if (children) {
-                    children.forEach(child => {
-                        child.checked = isChecked;
-                        updateParentCheckbox(child);
-                    });
-                }
-            });
-
-            // Update each extension's file checkboxes
-            Object.values(extensionCheckboxes).forEach(checkbox => {
+                
+                // Trigger change event
                 const changeEvent = new Event('change', { bubbles: true });
                 checkbox.dispatchEvent(changeEvent);
+            });
+
+            // Update all file checkboxes in the directory structure
+            const allFileCheckboxes = document.querySelectorAll('#directoryStructure input[type="checkbox"]:not(.directory-checkbox)');
+            allFileCheckboxes.forEach(checkbox => {
+                checkbox.checked = isChecked;
+                updateParentCheckbox(checkbox);
             });
 
             // Update all directory checkboxes
@@ -346,33 +404,6 @@ function displayDirectoryStructure(tree) {
             allDirectoryCheckboxes.forEach(checkbox => {
                 checkbox.checked = isChecked;
                 checkbox.indeterminate = false;
-                
-                // Trigger change event on directory checkboxes
-                const changeEvent = new Event('change', { bubbles: true });
-                checkbox.dispatchEvent(changeEvent);
-            });
-
-            // Update all individual file checkboxes
-            const allFileCheckboxes = document.querySelectorAll('#directoryStructure input[type="checkbox"]:not(.directory-checkbox)');
-            allFileCheckboxes.forEach(checkbox => {
-                checkbox.checked = isChecked;
-                
-                // Trigger change event on file checkboxes
-                const changeEvent = new Event('change', { bubbles: true });
-                checkbox.dispatchEvent(changeEvent);
-                
-                // Update parent checkboxes
-                updateParentCheckbox(checkbox);
-            });
-
-            // Update extension checkboxes state
-            Object.entries(extensionCheckboxes).forEach(([extension, checkbox]) => {
-                if (checkbox.children) {
-                    checkbox.children.forEach(child => {
-                        child.checked = isChecked;
-                        updateParentCheckbox(child);
-                    });
-                }
             });
 
             // Force update the UI
@@ -482,4 +513,4 @@ function formatRepoContents(contents) {
     return formattedText;
 }
 
-export { displayDirectoryStructure, sortContents, getSelectedFiles, formatRepoContents };
+export { displayDirectoryStructure, sortContents, getSelectedFiles, formatRepoContents, setupTokenInput };
