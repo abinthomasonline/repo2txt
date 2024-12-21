@@ -1,10 +1,19 @@
 import { displayDirectoryStructure, getSelectedFiles, formatRepoContents } from './utils.js';
 
 // Load saved token on page load
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', async function() {
     lucide.createIcons();
     setupTokenInput();
     loadSavedToken();
+
+    // Check current URL and update header
+    try {
+        const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+        const isValid = isValidGithubRepo(tab.url);
+        updateHeaderStatus(isValid);
+    } catch (error) {
+        updateHeaderStatus(false);
+    }
 });
 
 // Load saved token from local storage
@@ -355,4 +364,25 @@ function setupTokenInput() {
             }
         }
     });
+}
+
+// Add this function to check if URL is a valid GitHub repo
+function isValidGithubRepo(url) {
+    try {
+        return url.startsWith('https://github.com/') && url.split('/').length >= 5;
+    } catch (error) {
+        return false;
+    }
+}
+
+// Add this function to update header background
+function updateHeaderStatus(isValid) {
+    const header = document.querySelector('.header');
+    if (isValid) {
+        header.classList.add('valid-repo');
+        header.classList.remove('invalid-repo');
+    } else {
+        header.classList.add('invalid-repo');
+        header.classList.remove('valid-repo');
+    }
 }

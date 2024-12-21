@@ -54,6 +54,17 @@
         .header {
             text-align: center;
             margin-bottom: 20px;
+            padding: 12px;
+            border-radius: 6px;
+            transition: background-color 0.3s ease;
+        }
+
+        .header.valid-repo {
+            background-color: #dcfce7;  /* Light green */
+        }
+
+        .header.invalid-repo {
+            background-color: #fee2e2;  /* Light red */
         }
 
         .header h1 {
@@ -285,6 +296,7 @@
                     </button>
                 </label>
                 <div id="tokenInfo" class="info-panel">
+                    <p>Token is optional, but will increase your rate limit from 60 to 5000 requests per hour</p>
                     <p>Your token will be saved locally for convenience.</p>
                     <a href="https://github.com/settings/tokens/new?description=repo2file&scopes=repo" 
                        target="_blank" class="text-blue-600">

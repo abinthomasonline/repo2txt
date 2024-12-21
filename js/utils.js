@@ -290,7 +290,15 @@ function displayDirectoryStructure(tree) {
         const listContainer = document.createElement('div');
         listContainer.className = 'extension-list';
 
-        // Add "Select All" checkbox
+        // Define media extensions
+        const mediaExtensions = new Set([
+            'jpg', 'jpeg', 'png', 'gif', 'bmp', 'ico', 'svg', 'webp',  // Images
+            'mp4', 'webm', 'mov', 'avi', 'wmv', 'flv', 'm4v',          // Videos
+            'mp3', 'wav', 'ogg', 'm4a', 'aac',                         // Audio
+            'ttf', 'otf', 'woff', 'woff2', 'eot',                      // Fonts
+        ]);
+
+        // Add "Select All" and "Select Non-Media" checkboxes
         const selectAllItem = document.createElement('div');
         selectAllItem.className = 'extension-item';
         const selectAllCheckbox = document.createElement('input');
@@ -302,6 +310,19 @@ function displayDirectoryStructure(tree) {
         selectAllItem.appendChild(selectAllCheckbox);
         selectAllItem.appendChild(selectAllLabel);
         listContainer.appendChild(selectAllItem);
+
+        // Add "Select Non-Media" option
+        const selectNonMediaItem = document.createElement('div');
+        selectNonMediaItem.className = 'extension-item';
+        const selectNonMediaCheckbox = document.createElement('input');
+        selectNonMediaCheckbox.type = 'checkbox';
+        selectNonMediaCheckbox.id = 'select-non-media-extensions';
+        const selectNonMediaLabel = document.createElement('label');
+        selectNonMediaLabel.htmlFor = 'select-non-media-extensions';
+        selectNonMediaLabel.textContent = 'Select Everything Non-Media';
+        selectNonMediaItem.appendChild(selectNonMediaCheckbox);
+        selectNonMediaItem.appendChild(selectNonMediaLabel);
+        listContainer.appendChild(selectNonMediaItem);
 
         // Add divider
         const divider = document.createElement('div');
@@ -381,7 +402,7 @@ function displayDirectoryStructure(tree) {
             
             // Update all extension checkboxes in the dropdown
             const extensionCheckboxes = Array.from(listContainer.querySelectorAll('input[type="checkbox"]'))
-                .filter(cb => cb !== selectAllCheckbox);
+                .filter(cb => cb !== selectAllCheckbox && cb !== selectNonMediaCheckbox);
             
             // Update extension checkboxes
             extensionCheckboxes.forEach(checkbox => {
@@ -410,14 +431,58 @@ function displayDirectoryStructure(tree) {
             updateSelectAllState();
         });
 
-        // Function to update select all checkbox state
+        // Handle select non-media functionality
+        selectNonMediaCheckbox.addEventListener('change', function() {
+            const isChecked = this.checked;
+            
+            // Update extension checkboxes
+            const extensionCheckboxes = Array.from(listContainer.querySelectorAll('input[type="checkbox"]'))
+                .filter(cb => cb !== selectAllCheckbox && cb !== selectNonMediaCheckbox);
+            
+            extensionCheckboxes.forEach(checkbox => {
+                const extension = checkbox.value;
+                const shouldCheck = isChecked && !mediaExtensions.has(extension);
+                checkbox.checked = shouldCheck;
+                
+                // Trigger change event
+                const changeEvent = new Event('change', { bubbles: true });
+                checkbox.dispatchEvent(changeEvent);
+            });
+
+            // Update all file checkboxes in the directory structure
+            const allFileCheckboxes = document.querySelectorAll('#directoryStructure input[type="checkbox"]:not(.directory-checkbox)');
+            allFileCheckboxes.forEach(checkbox => {
+                const fileExtension = checkbox.value && JSON.parse(checkbox.value).path.split('.').pop().toLowerCase();
+                const shouldCheck = isChecked && !mediaExtensions.has(fileExtension);
+                checkbox.checked = shouldCheck;
+                updateParentCheckbox(checkbox);
+            });
+
+            // Update all directory checkboxes
+            const allDirectoryCheckboxes = document.querySelectorAll('#directoryStructure .directory-checkbox');
+            allDirectoryCheckboxes.forEach(checkbox => {
+                checkbox.indeterminate = true;
+                updateParentCheckbox(checkbox);
+            });
+
+            // Update select all checkbox state
+            updateSelectAllState();
+        });
+
+        // Update the updateSelectAllState function to handle both checkboxes
         function updateSelectAllState() {
             const checkboxes = Array.from(listContainer.querySelectorAll('input[type="checkbox"]'))
-                .filter(cb => cb !== selectAllCheckbox);
+                .filter(cb => cb !== selectAllCheckbox && cb !== selectNonMediaCheckbox);
             const checkedCount = checkboxes.filter(cb => cb.checked).length;
             
             selectAllCheckbox.checked = checkedCount === checkboxes.length;
             selectAllCheckbox.indeterminate = checkedCount > 0 && checkedCount < checkboxes.length;
+            
+            // Update non-media checkbox state
+            const nonMediaBoxes = checkboxes.filter(cb => !mediaExtensions.has(cb.value));
+            const checkedNonMedia = nonMediaBoxes.filter(cb => cb.checked).length;
+            selectNonMediaCheckbox.checked = checkedNonMedia === nonMediaBoxes.length;
+            selectNonMediaCheckbox.indeterminate = checkedNonMedia > 0 && checkedNonMedia < nonMediaBoxes.length;
         }
 
         // Initial select all state
