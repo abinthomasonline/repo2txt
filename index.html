@@ -3,93 +3,87 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GitHub to Plain Text Converter | Convert Code Repositories to Text</title>
-    <meta name="description" content="Convert GitHub repositories to plain text files easily. Our tool helps you transform code into a single formatted text file for better readability and analysis.">
-    <meta name="keywords" content="GitHub, code converter, plain text, repository, code analysis">
-    <meta name="author" content="abinthomasonline">
-    <link rel="canonical" href="https://repo2txt.simplebasedomain.com/">
-    <meta property="og:title" content="GitHub to Plain Text Converter">
-    <meta property="og:description" content="Convert GitHub repositories to plain text files easily. Transform code into a single formatted text file.">
-    <meta property="og:url" content="https://repo2txt.simplebasedomain.com/">
-    <meta property="og:type" content="website">
-    <link rel="icon" href="/favicon.ico" type="image/x-icon">
-    <script src="https://cdn.tailwindcss.com"></script>
+    <title>GitHub to Plain Text Converter</title>
     <script src="js/lucide.min.js"></script>
-    <!-- Google tag (gtag.js) -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-CYF86LN5WM"></script>
-    <script>
-        window.dataLayer = window.dataLayer || [];
-        function gtag(){dataLayer.push(arguments);}
-        gtag('js', new Date());
-
-        gtag('config', 'G-CYF86LN5WM');
-    </script>
     <script src="js/jszip.min.js"></script>
-    <script async src="https://unpkg.com/gpt-tokenizer"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            width: 600px;
+            height: 600px;
+            overflow-y: auto;
+        }
+        /* Hide scrollbar for Chrome */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+    </style>
 </head>
-<body class="bg-gray-100 min-h-screen p-4 md:p-8 text-gray-600">
-    <div class="max-w-4xl mx-auto bg-white rounded-lg shadow-md p-6 relative">
+<body class="bg-gray-100 p-4 text-gray-600">
+    <div class="bg-white rounded-lg shadow-md p-6 relative">
         <a href="https://github.com/abinthomasonline/repo2txt" target="_blank" class="absolute top-2 right-2">
-            <i data-lucide="github" class="w-8 h-8 text-gray-600 hover:text-gray-800"></i>
+            <i data-lucide="github" class="w-6 h-6 text-gray-600 hover:text-gray-800"></i>
         </a>
-        <h1 class="text-3xl font-bold mb-2 text-center text-gray-600">GitHub to Plain Text</h1>
-        <p class="text-lg text-center text-gray-500 mb-6">Convert Code in GitHub to a Single Formatted Text File</p>
+        <h1 class="text-2xl font-bold mb-2 text-center text-gray-600">GitHub to Plain Text</h1>
+        <p class="text-sm text-center text-gray-500 mb-4">Convert Code in GitHub to a Single Formatted Text File</p>
         <form id="repoForm" class="space-y-4">
             <div>
                 <label for="repoUrl" class="block text-sm font-medium text-gray-600">GitHub URL:</label>
-                <input type="text" id="repoUrl" name="repoUrl" required class="mt-1 block w-full rounded-md border border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 h-10 px-2">
+                <input type="text" id="repoUrl" name="repoUrl" required class="mt-1 block w-full rounded-md border border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 h-8 px-2 text-sm">
             </div>
             <div>
                 <label for="accessToken" class="block text-sm font-medium text-gray-600 flex items-center">
-                    Personal Access Token (optional - for private repositories and higher rate limits):
+                    Personal Access Token:
                     <button type="button" id="showMoreInfo" class="ml-2 text-blue-500 hover:text-blue-700">
                         <i data-lucide="info" class="w-4 h-4"></i>
                     </button>
                 </label>
                 <div id="tokenInfo" class="hidden mt-2">
-                    <p class="text-sm text-gray-500">[This code runs in your browser. Your token will be saved locally for convenience.]</p>
-                    <p class="mt-1"><a href="https://github.com/settings/tokens/new?description=repo2file&scopes=repo" target="_blank" class="text-sm text-gray-500 hover:text-gray-700"><i data-lucide="external-link" class="w-5 h-5 inline-block"></i> Get your token</a></p>
+                    <p class="text-xs text-gray-500">Your token will be saved locally for convenience.</p>
+                    <p class="mt-1"><a href="https://github.com/settings/tokens/new?description=repo2file&scopes=repo" target="_blank" class="text-xs text-gray-500 hover:text-gray-700"><i data-lucide="external-link" class="w-4 h-4 inline-block"></i> Get your token</a></p>
                 </div>
-                <input type="text" id="accessToken" name="accessToken" class="mt-1 block w-full rounded-md border border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 h-10 px-2">
+                <input type="text" id="accessToken" name="accessToken" class="mt-1 block w-full rounded-md border border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 h-8 px-2 text-sm">
             </div>
-            <div>
-                <a href="/local.html" class="text-blue-500 hover:text-blue-700 underline">
-                    Convert From Local Directory Instead
-                </a>
-            </div>
-            <button type="submit" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline flex items-center justify-center">
-                <i data-lucide="folder-search" class="w-5 h-5 mr-2"></i>
+            <button type="submit" class="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline flex items-center justify-center text-sm">
+                <i data-lucide="folder-search" class="w-4 h-4 mr-2"></i>
                 Fetch Directory Structure
             </button>
         </form>
         <div id="extentionCheckboxes"></div>
-        <div id="directoryStructure" class="mt-6"></div>
-        <div class="mt-4 flex space-x-4">
-            <button id="generateTextButton" class="flex-1 bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline hidden flex items-center justify-center">
-                <i data-lucide="file-text" class="w-5 h-5 mr-2"></i>
-                Generate Text File
+        <div id="directoryStructure" class="mt-4 max-h-60 overflow-y-auto"></div>
+        <div class="mt-4 flex space-x-2">
+            <button id="generateTextButton" class="flex-1 bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline hidden flex items-center justify-center text-sm">
+                <i data-lucide="file-text" class="w-4 h-4 mr-2"></i>
+                Generate Text
             </button>
-            <button id="downloadZipButton" class="flex-1 bg-purple-500 hover:bg-purple-600 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline hidden flex items-center justify-center">
-                <i data-lucide="download" class="w-5 h-5 mr-2"></i>
+            <button id="downloadZipButton" class="flex-1 bg-purple-500 hover:bg-purple-600 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline hidden flex items-center justify-center text-sm">
+                <i data-lucide="download" class="w-4 h-4 mr-2"></i>
                 Download Zip
             </button>
         </div>
-        <div id="tokenCount" class="mt-4 text-sm text-gray-500"></div>
-        <textarea id="outputText" rows="20" class="mt-4 w-full p-2 border rounded-md font-mono" readonly></textarea>
-        <div class="mt-4 flex space-x-4">
-            <button id="copyButton" class="flex-1 bg-indigo-500 hover:bg-indigo-600 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline hidden flex items-center justify-center">
-                <i data-lucide="copy" class="w-5 h-5 mr-2"></i>
-                Copy to Clipboard
+        <div id="tokenCount" class="mt-2 text-xs text-gray-500"></div>
+        <textarea id="outputText" rows="10" class="mt-2 w-full p-2 border rounded-md font-mono text-sm" readonly></textarea>
+        <div class="mt-2 flex space-x-2">
+            <button id="copyButton" class="flex-1 bg-indigo-500 hover:bg-indigo-600 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline hidden flex items-center justify-center text-sm">
+                <i data-lucide="copy" class="w-4 h-4 mr-2"></i>
+                Copy
             </button>
-            <button id="downloadButton" class="flex-1 bg-purple-500 hover:bg-purple-600 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline hidden flex items-center justify-center">
-                <i data-lucide="download" class="w-5 h-5 mr-2"></i>
-                Download Text File
+            <button id="downloadButton" class="flex-1 bg-purple-500 hover:bg-purple-600 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline hidden flex items-center justify-center text-sm">
+                <i data-lucide="download" class="w-4 h-4 mr-2"></i>
+                Download Text
             </button>
         </div>
     </div>
-    <footer class="mt-8 text-center text-sm text-gray-500">
-        <p>If you encounter any errors, please email <a href="mailto:abinthomasonline@gmail.com" class="text-blue-500 hover:text-blue-700">abinthomasonline@gmail.com</a> or <a href="https://github.com/abinthomasonline/repo2txt/issues" target="_blank" class="text-blue-500 hover:text-blue-700">raise a GitHub issue</a>.</p>
-    </footer>
     <script type="module" src="js/index.js"></script>
 </body>
 </html>
