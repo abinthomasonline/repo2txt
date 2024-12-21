@@ -27,7 +27,6 @@ function saveToken(token) {
 // Event listener for form submission
 document.getElementById('repoForm').addEventListener('submit', async function (e) {
     e.preventDefault();
-    const repoUrl = document.getElementById('repoUrl').value;
     const accessToken = document.getElementById('accessToken').value;
 
     // Save token automatically
@@ -37,6 +36,14 @@ document.getElementById('repoForm').addEventListener('submit', async function (e
     outputText.value = '';
 
     try {
+        // Get current tab URL
+        const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+        const repoUrl = tab.url;
+
+        if (!repoUrl.startsWith('https://github.com/')) {
+            throw new Error('Please open this extension on a GitHub repository page');
+        }
+
         // Parse repository URL and fetch repository contents
         const { owner, repo, lastString } = parseRepoUrl(repoUrl);
         let refFromUrl = '';
@@ -62,12 +69,12 @@ document.getElementById('repoForm').addEventListener('submit', async function (e
         document.getElementById('generateTextButton').style.display = 'flex';
         document.getElementById('downloadZipButton').style.display = 'flex';
     } catch (error) {
-        outputText.value = `Error fetching repository contents: ${error.message}\n\n` +
+        outputText.value = `Error: ${error.message}\n\n` +
             "Please ensure:\n" +
-            "1. The repository URL is correct and accessible.\n" +
-            "2. You have the necessary permissions to access the repository.\n" +
-            "3. If it's a private repository, you've provided a valid access token.\n" +
-            "4. The specified branch/tag and path (if any) exist in the repository.";
+            "1. You are on a GitHub repository page\n" +
+            "2. You have the necessary permissions to access the repository\n" +
+            "3. If it's a private repository, you've provided a valid access token\n" +
+            "4. The specified branch/tag and path (if any) exist in the repository";
     }
 });
 

@@ -14,7 +14,9 @@
   },
   "permissions": [
     "storage",
-    "clipboardWrite"
+    "clipboardWrite",
+    "activeTab",
+    "tabs"
   ],
   "host_permissions": [
     "https://api.github.com/*",
