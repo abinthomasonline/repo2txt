@@ -199,22 +199,73 @@ function displayDirectoryStructure(tree) {
     function createExtensionCheckboxesContainer() {
         const extentionCheckboxesContainer = document.getElementById('extentionCheckboxes');
         extentionCheckboxesContainer.innerHTML = '';
-        extentionCheckboxesContainer.className = 'mt-4';
-        const extentionCheckboxesContainerLabel = document.createElement('label');
-        extentionCheckboxesContainerLabel.innerHTML = 'Filter by file extensions:';
-        extentionCheckboxesContainerLabel.className = 'block text-sm font-medium text-gray-600';
-        extentionCheckboxesContainer.appendChild(extentionCheckboxesContainerLabel);
-        const extentionCheckboxesContainerUl = document.createElement('ul');
-        extentionCheckboxesContainer.appendChild(extentionCheckboxesContainerUl);
-        extentionCheckboxesContainerUl.className = 'mt-1';
-        const sortedExtensions = Object.entries(extensionCheckboxes).sort((a, b) => b[1].children.length - a[1].children.length);
+        extentionCheckboxesContainer.className = 'extension-checkboxes';
+
+        // Create header with label and toggle button
+        const header = document.createElement('div');
+        header.className = 'extension-header';
+        
+        const label = document.createElement('label');
+        label.innerHTML = 'Filter by file extensions';
+        label.className = 'form-label';
+        
+        // Create toggle button with icon
+        const toggleButton = document.createElement('button');
+        toggleButton.className = 'extension-toggle';
+        toggleButton.type = 'button';
+        toggleButton.innerHTML = `
+            <span>Select Extensions</span>
+            <span class="icon-container ml-2">
+                <i data-lucide="chevron-down" class="w-4 h-4"></i>
+            </span>
+        `;
+        
+        header.appendChild(label);
+        header.appendChild(toggleButton);
+        extentionCheckboxesContainer.appendChild(header);
+
+        // Create extension list container
+        const listContainer = document.createElement('div');
+        listContainer.className = 'extension-list';
+
+        // Add "Select All" checkbox
+        const selectAllItem = document.createElement('div');
+        selectAllItem.className = 'extension-item';
+        const selectAllCheckbox = document.createElement('input');
+        selectAllCheckbox.type = 'checkbox';
+        selectAllCheckbox.id = 'select-all-extensions';
+        const selectAllLabel = document.createElement('label');
+        selectAllLabel.htmlFor = 'select-all-extensions';
+        selectAllLabel.textContent = 'Select All';
+        selectAllItem.appendChild(selectAllCheckbox);
+        selectAllItem.appendChild(selectAllLabel);
+        listContainer.appendChild(selectAllItem);
+
+        // Add divider
+        const divider = document.createElement('div');
+        divider.className = 'extension-divider';
+        listContainer.appendChild(divider);
+
+        // Sort extensions by frequency
+        const sortedExtensions = Object.entries(extensionCheckboxes)
+            .sort((a, b) => b[1].children.length - a[1].children.length);
+
+        // Add extension checkboxes
         for (const [extension, checkbox] of sortedExtensions) {
+            const item = document.createElement('div');
+            item.className = 'extension-item';
+            
             const extCheckbox = checkbox.checkbox;
-            const extCheckboxLi = document.createElement('li');
-            extCheckboxLi.className = 'inline-block mr-4';
-            extCheckboxLi.appendChild(extCheckbox);
-            extCheckboxLi.appendChild(document.createTextNode('.' + extension));
-            extentionCheckboxesContainerUl.appendChild(extCheckboxLi);
+            extCheckbox.style.margin = '0 8px 0 0';
+            
+            const label = document.createElement('label');
+            label.textContent = `.${extension} (${checkbox.children.length})`;
+            
+            item.appendChild(extCheckbox);
+            item.appendChild(label);
+            listContainer.appendChild(item);
+
+            // Update select all state when individual checkbox changes
             extCheckbox.addEventListener('change', function() {
                 const children = checkbox.children;
                 children.forEach(child => {
@@ -222,8 +273,127 @@ function displayDirectoryStructure(tree) {
                     child.indeterminate = false;
                     updateParentCheckbox(child);
                 });
+                updateSelectAllState();
             });
         }
+
+        extentionCheckboxesContainer.appendChild(listContainer);
+
+        // Toggle dropdown
+        toggleButton.addEventListener('click', (e) => {
+            e.stopPropagation();
+            listContainer.classList.toggle('show');
+            
+            // Update icon
+            const icon = toggleButton.querySelector('[data-lucide]');
+            if (icon) {
+                const newIcon = document.createElement('i');
+                newIcon.setAttribute('data-lucide', 
+                    listContainer.classList.contains('show') ? 'chevron-up' : 'chevron-down');
+                newIcon.className = 'w-4 h-4';
+                icon.parentNode.replaceChild(newIcon, icon);
+                lucide.createIcons();
+            }
+        });
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!extentionCheckboxesContainer.contains(e.target)) {
+                listContainer.classList.remove('show');
+                
+                // Update icon
+                const icon = toggleButton.querySelector('[data-lucide]');
+                if (icon) {
+                    const newIcon = document.createElement('i');
+                    newIcon.setAttribute('data-lucide', 'chevron-down');
+                    newIcon.className = 'w-4 h-4';
+                    icon.parentNode.replaceChild(newIcon, icon);
+                    lucide.createIcons();
+                }
+            }
+        });
+
+        // Handle select all functionality
+        selectAllCheckbox.addEventListener('change', function() {
+            const isChecked = this.checked;
+            
+            // First, update all extension checkboxes in the dropdown
+            const extensionCheckboxes = Array.from(listContainer.querySelectorAll('input[type="checkbox"]'))
+                .filter(cb => cb !== selectAllCheckbox);
+            
+            extensionCheckboxes.forEach(checkbox => {
+                checkbox.checked = isChecked;
+            });
+
+            // Then, update all file checkboxes in the directory structure
+            Object.values(extensionCheckboxes).forEach(({ children }) => {
+                if (children) {
+                    children.forEach(child => {
+                        child.checked = isChecked;
+                        updateParentCheckbox(child);
+                    });
+                }
+            });
+
+            // Update each extension's file checkboxes
+            Object.values(extensionCheckboxes).forEach(checkbox => {
+                const changeEvent = new Event('change', { bubbles: true });
+                checkbox.dispatchEvent(changeEvent);
+            });
+
+            // Update all directory checkboxes
+            const allDirectoryCheckboxes = document.querySelectorAll('#directoryStructure .directory-checkbox');
+            allDirectoryCheckboxes.forEach(checkbox => {
+                checkbox.checked = isChecked;
+                checkbox.indeterminate = false;
+                
+                // Trigger change event on directory checkboxes
+                const changeEvent = new Event('change', { bubbles: true });
+                checkbox.dispatchEvent(changeEvent);
+            });
+
+            // Update all individual file checkboxes
+            const allFileCheckboxes = document.querySelectorAll('#directoryStructure input[type="checkbox"]:not(.directory-checkbox)');
+            allFileCheckboxes.forEach(checkbox => {
+                checkbox.checked = isChecked;
+                
+                // Trigger change event on file checkboxes
+                const changeEvent = new Event('change', { bubbles: true });
+                checkbox.dispatchEvent(changeEvent);
+                
+                // Update parent checkboxes
+                updateParentCheckbox(checkbox);
+            });
+
+            // Update extension checkboxes state
+            Object.entries(extensionCheckboxes).forEach(([extension, checkbox]) => {
+                if (checkbox.children) {
+                    checkbox.children.forEach(child => {
+                        child.checked = isChecked;
+                        updateParentCheckbox(child);
+                    });
+                }
+            });
+
+            // Force update the UI
+            updateSelectAllState();
+        });
+
+        // Function to update select all checkbox state
+        function updateSelectAllState() {
+            const checkboxes = Array.from(listContainer.querySelectorAll('input[type="checkbox"]'))
+                .filter(cb => cb !== selectAllCheckbox);
+            const checkedCount = checkboxes.filter(cb => cb.checked).length;
+            
+            selectAllCheckbox.checked = checkedCount === checkboxes.length;
+            selectAllCheckbox.indeterminate = checkedCount > 0 && checkedCount < checkboxes.length;
+        }
+
+        // Initial select all state
+        updateSelectAllState();
+
+        // Create initial icons
+        lucide.createIcons();
     }
 
     lucide.createIcons();
