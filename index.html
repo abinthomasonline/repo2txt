@@ -12,6 +12,10 @@
             --primary-green: #22c55e;
             --primary-purple: #9333ea;
             --primary-indigo: #6366f1;
+            --light-blue: #eff6ff;
+            --light-green: #f0fdf4;
+            --light-purple: #faf5ff;
+            --light-indigo: #eef2ff;
             --border-color: #e5e7eb;
             --text-primary: #374151;
             --text-secondary: #6b7280;
@@ -19,14 +23,14 @@
         }
 
         body {
-            width: 480px;
+            width: 520px;
             height: 600px;
             overflow-y: auto;
             margin: 0;
             padding: 16px;
             background-color: #f9fafb;
             color: var(--text-primary);
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            font-family: Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
         }
 
         /* Scrollbar styling */
@@ -46,14 +50,14 @@
 
         .container {
             background: white;
-            border-radius: 8px;
-            padding: 20px;
+            border-radius: 12px;
+            padding: 24px;
             box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
         }
 
         .header {
             text-align: center;
-            margin-bottom: 20px;
+            margin-bottom: 24px;
             padding: 12px;
             border-radius: 6px;
             transition: background-color 0.3s ease;
@@ -68,13 +72,15 @@
         }
 
         .header h1 {
-            font-size: 20px;
-            margin: 0 0 8px 0;
+            font-size: 22px;
+            margin: 0 0 10px 0;
             color: var(--text-primary);
+            font-weight: 600;
         }
 
         .header p {
             font-size: 13px;
+            font-weight: 500;
             margin: 0;
             color: var(--text-secondary);
         }
@@ -143,29 +149,57 @@
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            padding: 8px 16px;
+            padding: 10px 16px;
             font-size: 13px;
-            font-weight: 500;
+            font-weight: 600;
             border: none;
             border-radius: 6px;
             cursor: pointer;
             transition: all 0.2s;
-            color: white;
             gap: 6px;
             width: 100%;
+            border: 1px solid transparent;
         }
 
-        .button-blue { background-color: var(--primary-blue); }
-        .button-blue:hover { background-color: #2563eb; }
+        .button-blue { 
+            background-color: var(--light-blue); 
+            color: var(--primary-blue);
+            border-color: var(--primary-blue);
+        }
+        .button-blue:hover { 
+            background-color: var(--primary-blue); 
+            color: white;
+        }
         
-        .button-green { background-color: var(--primary-green); }
-        .button-green:hover { background-color: #16a34a; }
+        .button-green { 
+            background-color: var(--light-green);
+            color: var(--primary-green);
+            border-color: var(--primary-green);
+        }
+        .button-green:hover { 
+            background-color: var(--primary-green);
+            color: white;
+        }
         
-        .button-purple { background-color: var(--primary-purple); }
-        .button-purple:hover { background-color: #7e22ce; }
+        .button-purple { 
+            background-color: var(--light-purple);
+            color: var(--primary-purple);
+            border-color: var(--primary-purple);
+        }
+        .button-purple:hover { 
+            background-color: var(--primary-purple);
+            color: white;
+        }
         
-        .button-indigo { background-color: var(--primary-indigo); }
-        .button-indigo:hover { background-color: #4f46e5; }
+        .button-indigo { 
+            background-color: var(--light-indigo);
+            color: var(--primary-indigo);
+            border-color: var(--primary-indigo);
+        }
+        .button-indigo:hover { 
+            background-color: var(--primary-indigo);
+            color: white;
+        }
 
         .button-group {
             display: flex;
@@ -180,6 +214,8 @@
             border: 1px solid var(--border-color);
             border-radius: 6px;
             padding: 12px;
+            font-size: 13px;
+            line-height: 1.5;
         }
 
         .output-text {
@@ -187,12 +223,13 @@
             margin-top: 16px;
             padding: 12px;
             font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
-            font-size: 12px;
+            font-size: 13px;
             line-height: 1.4;
             border: 1px solid var(--border-color);
             border-radius: 6px;
             resize: none;
             box-sizing: border-box;
+            background-color: #fafafa;
         }
 
         .token-count {
@@ -254,7 +291,8 @@
             display: flex;
             align-items: center;
             padding: 8px;
-            font-size: 14px;
+            font-size: 13px;
+            font-weight: 500;
             cursor: pointer;
             border-radius: 4px;
         }
