@@ -4,13 +4,13 @@
   "description": "Convert GitHub repositories to plain text files easily. Transform code into a single formatted text file.",
   "version": "1.0",
   "action": {
-    "default_popup": "index.html",
-    "icons": {
-        "16": "icons/icon16.png",
-        "32": "icons/icon32.png",
-        "48": "icons/icon48.png",
-        "128": "icons/icon128.png"
-    }
+    "default_popup": "index.html"
+  },
+  "icons": {
+    "16": "icons/icon16.png",
+    "32": "icons/icon32.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
   },
   "permissions": [
     "storage",

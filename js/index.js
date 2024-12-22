@@ -149,8 +149,12 @@ document.getElementById('generateTextButton').addEventListener('click', async fu
         loadingText.textContent = 'Fetching file contents...';
         const fileContents = await fetchFileContents(selectedFiles, accessToken);
         loadingText.textContent = 'Formatting content...';
-        const formattedText = formatRepoContents(fileContents);
-        outputText.value = formattedText;
+        const formattedContent = formatRepoContents(fileContents);
+        
+        // Store the full text in a data attribute
+        outputText.setAttribute('data-full-text', formattedContent.fullText);
+        // Display the truncated text in the textarea
+        outputText.value = formattedContent.truncatedText;
 
         document.getElementById('copyButton').style.display = 'flex';
         document.getElementById('downloadButton').style.display = 'flex';
@@ -196,17 +200,39 @@ document.getElementById('downloadZipButton').addEventListener('click', async fun
 // Event listener for copying text to clipboard
 document.getElementById('copyButton').addEventListener('click', function () {
     const outputText = document.getElementById('outputText');
-    outputText.select();
-    navigator.clipboard.writeText(outputText.value)
-        .then(() => console.log('Text copied to clipboard'))
-        .catch(err => console.error('Failed to copy text: ', err));
+    const fullText = outputText.getAttribute('data-full-text');
+    
+    // Create a temporary textarea for copying the full text
+    const tempTextArea = document.createElement('textarea');
+    tempTextArea.value = fullText;
+    document.body.appendChild(tempTextArea);
+    tempTextArea.select();
+    
+    navigator.clipboard.writeText(fullText)
+        .then(() => {
+            console.log('Full text copied to clipboard');
+            // Optional: Show a brief "Copied!" message
+            const originalText = this.textContent;
+            this.innerHTML = '<i data-lucide="check" class="w-4 h-4"></i>Copied!';
+            lucide.createIcons();
+            setTimeout(() => {
+                this.innerHTML = '<i data-lucide="copy" class="w-4 h-4"></i>Copy';
+                lucide.createIcons();
+            }, 2000);
+        })
+        .catch(err => console.error('Failed to copy text: ', err))
+        .finally(() => {
+            document.body.removeChild(tempTextArea);
+        });
 });
 
 // Event listener for downloading text file
 document.getElementById('downloadButton').addEventListener('click', async function () {
-    const outputText = document.getElementById('outputText').value;
-    if (!outputText.trim()) {
-        document.getElementById('outputText').value = 'Error: No content to download. Please generate the text file first.';
+    const outputText = document.getElementById('outputText');
+    const fullText = outputText.getAttribute('data-full-text');
+    
+    if (!fullText) {
+        outputText.value = 'Error: No content to download. Please generate the text file first.';
         return;
     }
 
@@ -215,7 +241,7 @@ document.getElementById('downloadButton').addEventListener('click', async functi
         const repoName = getRepoNameFromUrl(tab.url);
         const fileName = `${repoName}_as_textprompt.txt`;
         
-        const blob = new Blob([outputText], { type: 'text/plain' });
+        const blob = new Blob([fullText], { type: 'text/plain' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
@@ -225,7 +251,7 @@ document.getElementById('downloadButton').addEventListener('click', async functi
     } catch (error) {
         console.error('Error downloading file:', error);
         // Fallback to default name if there's an error
-        const blob = new Blob([outputText], { type: 'text/plain' });
+        const blob = new Blob([fullText], { type: 'text/plain' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;

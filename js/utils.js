@@ -541,6 +541,8 @@ function getSelectedFiles() {
 function formatRepoContents(contents) {
     let text = '';
     let index = '';
+    const LINE_LIMIT = 500;
+    let totalLineCount = 0;
 
     // Ensure contents is an array before sorting
     contents = Array.isArray(contents) ? contents.sort(sortContents) : [contents];
@@ -578,17 +580,52 @@ function formatRepoContents(contents) {
     }
 
     index = buildIndex(tree);
+    totalLineCount += index.split('\n').length;
 
+    // Count total lines first
+    let fullText = '';
     contents.forEach((item) => {
-        text += `\n\n---\nFile: ${item.path}\n---\n\n${item.text}\n`;
+        fullText += `\n\n---\nFile: ${item.path}\n---\n\n${item.text}\n`;
     });
+    
+    const allLines = fullText.split('\n');
+    totalLineCount += allLines.length;
 
-    let formattedText = `Directory Structure:\n\n${index}\n${text}`;
+    // Now build the truncated text
+    let currentLineCount = index.split('\n').length;
+    let truncatedText = '';
+    
+    for (const item of contents) {
+        const itemText = `\n\n---\nFile: ${item.path}\n---\n\n${item.text}\n`;
+        const itemLines = itemText.split('\n');
+        
+        if (currentLineCount + itemLines.length <= LINE_LIMIT) {
+            truncatedText += itemText;
+            currentLineCount += itemLines.length;
+        } else {
+            const remainingLines = LINE_LIMIT - currentLineCount;
+            if (remainingLines > 0) {
+                const truncatedItemLines = itemLines.slice(0, remainingLines);
+                truncatedText += `\n\n---\nFile: ${item.path}\n---\n\n${truncatedItemLines.join('\n')}\n`;
+            }
+            break;
+        }
+    }
+
+    // Add truncation notice if needed
+    const remainingLines = totalLineCount - LINE_LIMIT;
+    if (remainingLines > 0) {
+        truncatedText += `\n\n---\nOutput truncated: ${remainingLines.toLocaleString()} more lines available---\n`;
+    }
+
+    let formattedText = `Directory Structure:\n\n${index}\n${truncatedText}`;
+    let fullFormattedText = `Directory Structure:\n\n${index}\n${fullText}`;
 
     try {
         const { encode } = GPTTokenizer_o200k_base;
         console.log("encoder is loaded");
-        const count = encode(formattedText).length;
+        // Count tokens for the full text
+        const count = encode(fullFormattedText).length;
         console.log(count);
         
         // Add hover events to Copy and Download buttons
@@ -632,7 +669,11 @@ function formatRepoContents(contents) {
         console.log(error);
     }
 
-    return formattedText;
+    // Return both the truncated and full text
+    return {
+        truncatedText: formattedText,
+        fullText: fullFormattedText
+    };
 }
 
 export { displayDirectoryStructure, sortContents, getSelectedFiles, formatRepoContents, setupTokenInput };
