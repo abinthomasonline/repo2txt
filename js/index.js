@@ -203,19 +203,36 @@ document.getElementById('copyButton').addEventListener('click', function () {
 });
 
 // Event listener for downloading text file
-document.getElementById('downloadButton').addEventListener('click', function () {
+document.getElementById('downloadButton').addEventListener('click', async function () {
     const outputText = document.getElementById('outputText').value;
     if (!outputText.trim()) {
         document.getElementById('outputText').value = 'Error: No content to download. Please generate the text file first.';
         return;
     }
-    const blob = new Blob([outputText], { type: 'text/plain' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'prompt.txt';
-    a.click();
-    URL.revokeObjectURL(url);
+
+    try {
+        const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+        const repoName = getRepoNameFromUrl(tab.url);
+        const fileName = `${repoName}_as_textprompt.txt`;
+        
+        const blob = new Blob([outputText], { type: 'text/plain' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = fileName;
+        a.click();
+        URL.revokeObjectURL(url);
+    } catch (error) {
+        console.error('Error downloading file:', error);
+        // Fallback to default name if there's an error
+        const blob = new Blob([outputText], { type: 'text/plain' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'repo_as_textprompt.txt';
+        a.click();
+        URL.revokeObjectURL(url);
+    }
 });
 
 // Parse GitHub repository URL
@@ -527,5 +544,16 @@ function updateThemeIcon() {
         newIcon.className = 'w-5 h-5';
         icon.parentNode.replaceChild(newIcon, icon);
         lucide.createIcons();
+    }
+}
+
+// Add this helper function near the top of the file
+function getRepoNameFromUrl(url) {
+    try {
+        const cleanedUrl = cleanGithubUrl(url);
+        const parts = new URL(cleanedUrl).pathname.split('/').filter(Boolean);
+        return parts.length >= 2 ? parts[1] : 'repo';
+    } catch (error) {
+        return 'repo';
     }
 }
