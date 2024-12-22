@@ -6,6 +6,7 @@
     <title>GitHub to Plain Text Converter</title>
     <script src="js/lucide.min.js"></script>
     <script src="js/jszip.min.js"></script>
+    <script src="js/o200k_base.js"></script>
     <style>
         :root {
             --primary-blue: #3b82f6;
@@ -190,6 +191,20 @@
             font-weight: 600;
         }
 
+        .header h1 a {
+            color: inherit;
+            text-decoration: none;
+            transition: all 0.2s;
+        }
+
+        .header h1 a:hover {
+            opacity: 0.8;
+        }
+
+        [data-theme="dark"] .header h1 a {
+            color: inherit;
+        }
+
         .header p {
             font-size: 13px;
             font-weight: 500;
@@ -274,6 +289,7 @@
             gap: 6px;
             width: 100%;
             border: 2px solid transparent;
+            position: relative;
         }
 
         .button-blue { 
@@ -348,9 +364,17 @@
         }
 
         .token-count {
-            font-size: 11px;
-            color: var(--text-secondary);
-            margin-top: 8px;
+            font-size: 13px;
+            color: var(--text-primary);
+            margin: 16px 0 8px 0;
+            padding: 8px 12px;
+            background-color: var(--bg-hover);
+            border-radius: 6px;
+            display: none;
+        }
+
+        [data-theme="dark"] .token-count {
+            background-color: var(--dark-button-bg);
         }
 
         .extension-checkboxes {
@@ -410,16 +434,25 @@
             font-weight: 500;
             cursor: pointer;
             border-radius: 4px;
+            user-select: none;
         }
 
         .extension-item:hover {
             background: var(--bg-hover);
         }
 
+        .extension-item label {
+            display: flex;
+            align-items: center;
+            width: 100%;
+            cursor: pointer;
+        }
+
         .extension-item input[type="checkbox"] {
             margin-right: 8px;
             width: 16px;
             height: 16px;
+            cursor: pointer;
         }
 
         .extension-divider {
@@ -434,6 +467,48 @@
             border: 2px solid var(--border-color);
             border-radius: 3px;
         }
+
+        .button-tooltip {
+            position: absolute;
+            top: -48px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: var(--bg-hover);
+            padding: 6px 12px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 600;
+            width: max-content;
+            text-align: center;
+            z-index: 1000;
+            border: 2px solid var(--border-color);
+            color: var(--text-primary);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .button-tooltip::after {
+            content: '';
+            position: absolute;
+            bottom: -6px;
+            left: 50%;
+            transform: translateX(-50%) rotate(45deg);
+            width: 8px;
+            height: 8px;
+            background-color: var(--bg-hover);
+            border-right: 2px solid var(--border-color);
+            border-bottom: 2px solid var(--border-color);
+        }
+
+        [data-theme="dark"] .button-tooltip {
+            background-color: var(--dark-button-bg);
+            color: var(--dark-text-primary);
+            border-color: var(--dark-border-color);
+        }
+
+        [data-theme="dark"] .button-tooltip::after {
+            background-color: var(--dark-button-bg);
+            border-color: var(--dark-border-color);
+        }
     </style>
 </head>
 <body>
@@ -444,7 +519,13 @@
                     <i data-lucide="sun" class="w-5 h-5"></i>
                 </button>
             </div>
-            <h1>GitHub to Plain Text</h1>
+            <h1>
+                <a href="https://repo2txt.simplebasedomain.com/" 
+                   target="_blank" 
+                   class="hover:underline">
+                   GitHub to Plain Text
+                </a>
+            </h1>
             <p>Convert Code in GitHub to a Single Formatted Text File</p>
             <div class="header-right">
                 <a href="https://github.com/abinthomasonline/repo2txt" target="_blank" class="github-link">
@@ -493,7 +574,6 @@
             </button>
         </div>
 
-        <div id="tokenCount" class="token-count"></div>
         <textarea id="outputText" rows="8" class="output-text" readonly></textarea>
 
         <div class="button-group">

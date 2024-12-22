@@ -21,5 +21,9 @@
   "host_permissions": [
     "https://api.github.com/*",
     "https://github.com/*"
-  ]
+  ],
+  "web_accessible_resources": [{
+    "resources": ["js/o200k_base.js"],
+    "matches": ["<all_urls>"]
+  }]
 } 

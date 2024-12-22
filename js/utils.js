@@ -340,13 +340,30 @@ function displayDirectoryStructure(tree) {
             
             const extCheckbox = checkbox.checkbox;
             extCheckbox.style.margin = '0 8px 0 0';
+            extCheckbox.id = `ext-${extension}`;  // Add ID for label association
             
             const label = document.createElement('label');
+            label.htmlFor = `ext-${extension}`;  // Associate label with checkbox
             label.textContent = `.${extension} (${checkbox.children.length})`;
+            label.style.flexGrow = '1';  // Make label take up remaining space
+            label.style.cursor = 'pointer';  // Show pointer cursor
             
             item.appendChild(extCheckbox);
             item.appendChild(label);
             listContainer.appendChild(item);
+
+            // Make the entire row clickable
+            item.addEventListener('click', (e) => {
+                // Prevent double-triggering when clicking the checkbox directly
+                if (e.target !== extCheckbox) {
+                    e.preventDefault();
+                    extCheckbox.checked = !extCheckbox.checked;
+                    
+                    // Trigger change event
+                    const changeEvent = new Event('change', { bubbles: true });
+                    extCheckbox.dispatchEvent(changeEvent);
+                }
+            });
 
             // Update select all state when individual checkbox changes
             extCheckbox.addEventListener('change', function() {
@@ -566,15 +583,55 @@ function formatRepoContents(contents) {
         text += `\n\n---\nFile: ${item.path}\n---\n\n${item.text}\n`;
     });
 
-    const formattedText = `Directory Structure:\n\n${index}\n${text}`;
+    let formattedText = `Directory Structure:\n\n${index}\n${text}`;
+
     try {
-        const { encode, decode } = GPTTokenizer_cl100k_base;
-        const tokensCount = encode(formattedText).length;
-        document.getElementById('tokenCount').innerHTML = `Approximate Token Count: ${tokensCount} <a href="https://github.com/niieani/gpt-tokenizer" target="_blank" class="text-blue-500 hover:text-blue-700 underline">(Using cl100k_base tokenizer)</a>`;
+        const { encode } = GPTTokenizer_o200k_base;
+        console.log("encoder is loaded");
+        const count = encode(formattedText).length;
+        console.log(count);
+        
+        // Add hover events to Copy and Download buttons
+        const copyButton = document.getElementById('copyButton');
+        const downloadButton = document.getElementById('downloadButton');
+        const tooltipText = `Token Count: ${count.toLocaleString()}\nTokenizer: o200k_base (gpt-4o & o1)`;
+
+        // Copy button tooltip
+        copyButton.addEventListener('mouseenter', () => {
+            const tooltip = document.createElement('div');
+            tooltip.className = 'button-tooltip';
+            tooltip.textContent = tooltipText;
+            tooltip.style.whiteSpace = 'pre-line';
+            tooltip.style.lineHeight = '1.5';
+            copyButton.appendChild(tooltip);
+        });
+        
+        copyButton.addEventListener('mouseleave', () => {
+            const tooltip = copyButton.querySelector('.button-tooltip');
+            if (tooltip) {
+                copyButton.removeChild(tooltip);
+            }
+        });
+
+        // Download button tooltip
+        downloadButton.addEventListener('mouseenter', () => {
+            const tooltip = document.createElement('div');
+            tooltip.className = 'button-tooltip';
+            tooltip.textContent = tooltipText;
+            tooltip.style.whiteSpace = 'pre-line';
+            downloadButton.appendChild(tooltip);
+        });
+        
+        downloadButton.addEventListener('mouseleave', () => {
+            const tooltip = downloadButton.querySelector('.button-tooltip');
+            if (tooltip) {
+                downloadButton.removeChild(tooltip);
+            }
+        });
     } catch (error) {
-        document.getElementById('tokenCount').innerHTML = '';
         console.log(error);
     }
+
     return formattedText;
 }
 
