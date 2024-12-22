@@ -502,8 +502,16 @@ function cleanGithubUrl(url) {
 // Update isValidGithubRepo to use the cleaned URL
 function isValidGithubRepo(url) {
     try {
-        const cleanedUrl = cleanGithubUrl(url);
-        const parts = new URL(cleanedUrl).pathname.split('/').filter(Boolean);
+        // const cleanedUrl = cleanGithubUrl(url);
+        const urlObj = new URL(url);
+        
+        // First check if it's actually GitHub
+        if (!urlObj.hostname.startsWith('github.com')) {
+            return false;
+        }
+        
+        // Then check if we have owner/repo structure
+        const parts = urlObj.pathname.split('/').filter(Boolean);
         return parts.length >= 2; // Need at least owner and repo
     } catch (error) {
         return false;
