@@ -2,18 +2,40 @@ import { displayDirectoryStructure, getSelectedFiles, formatRepoContents } from 
 
 // Load saved token on page load
 document.addEventListener('DOMContentLoaded', async function() {
-    lucide.createIcons();
-    setupTokenInput();
-    loadSavedToken();
-    setupThemeToggle();
+    const loadingOverlay = document.getElementById('loadingOverlay');
+    const loadingText = loadingOverlay.querySelector('.loading-text');
+    
+    // Show loading overlay
+    loadingOverlay.style.display = 'flex';
+    loadingText.textContent = 'Initializing...';
 
-    // Check current URL and update header
     try {
-        const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-        const isValid = isValidGithubRepo(tab.url);
-        updateHeaderStatus(isValid);
+        lucide.createIcons();
+        loadingText.textContent = 'Setting up components...';
+        setupTokenInput();
+        loadSavedToken();
+        setupThemeToggle();
+
+        loadingText.textContent = 'Checking repository...';
+        // Check current URL and update header
+        try {
+            const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+            const isValid = isValidGithubRepo(tab.url);
+            updateHeaderStatus(isValid);
+        } catch (error) {
+            updateHeaderStatus(false);
+        }
     } catch (error) {
-        updateHeaderStatus(false);
+        console.error('Initialization error:', error);
+    } finally {
+        // Hide loading overlay
+        loadingOverlay.style.opacity = '0';
+        loadingOverlay.style.transition = 'opacity 0.3s ease';
+        setTimeout(() => {
+            loadingOverlay.style.display = 'none';
+            loadingOverlay.style.opacity = '1';
+            loadingOverlay.style.transition = '';
+        }, 300);
     }
 });
 
@@ -37,6 +59,13 @@ function saveToken(token) {
 // Event listener for form submission
 document.getElementById('repoForm').addEventListener('submit', async function (e) {
     e.preventDefault();
+    const loadingOverlay = document.getElementById('loadingOverlay');
+    const loadingText = loadingOverlay.querySelector('.loading-text');
+    
+    // Show loading overlay
+    loadingOverlay.style.display = 'flex';
+    loadingText.textContent = 'Fetching repository structure...';
+
     const accessToken = document.getElementById('accessToken').value;
 
     // Save token automatically
@@ -75,6 +104,7 @@ document.getElementById('repoForm').addEventListener('submit', async function (e
         const sha = await fetchRepoSha(owner, repo, refFromUrl, pathFromUrl, accessToken);
         const tree = await fetchRepoTree(owner, repo, sha, accessToken);
 
+        loadingText.textContent = 'Processing repository structure...';
         displayDirectoryStructure(tree);
         document.getElementById('generateTextButton').style.display = 'flex';
         document.getElementById('downloadZipButton').style.display = 'flex';
@@ -85,11 +115,25 @@ document.getElementById('repoForm').addEventListener('submit', async function (e
             "2. You have the necessary permissions to access the repository\n" +
             "3. If it's a private repository, you've provided a valid access token\n" +
             "4. The specified branch/tag and path (if any) exist in the repository";
+    } finally {
+        // Hide loading overlay
+        loadingOverlay.style.opacity = '0';
+        setTimeout(() => {
+            loadingOverlay.style.display = 'none';
+            loadingOverlay.style.opacity = '1';
+        }, 300);
     }
 });
 
 // Event listener for generating text file
 document.getElementById('generateTextButton').addEventListener('click', async function () {
+    const loadingOverlay = document.getElementById('loadingOverlay');
+    const loadingText = loadingOverlay.querySelector('.loading-text');
+    
+    // Show loading overlay
+    loadingOverlay.style.display = 'flex';
+    loadingText.textContent = 'Generating text file...';
+
     const accessToken = document.getElementById('accessToken').value;
     const outputText = document.getElementById('outputText');
     outputText.value = '';
@@ -102,7 +146,9 @@ document.getElementById('generateTextButton').addEventListener('click', async fu
         if (selectedFiles.length === 0) {
             throw new Error('No files selected');
         }
+        loadingText.textContent = 'Fetching file contents...';
         const fileContents = await fetchFileContents(selectedFiles, accessToken);
+        loadingText.textContent = 'Formatting content...';
         const formattedText = formatRepoContents(fileContents);
         outputText.value = formattedText;
 
@@ -115,6 +161,13 @@ document.getElementById('generateTextButton').addEventListener('click', async fu
             "2. Your access token (if provided) is valid and has the necessary permissions.\n" +
             "3. You have a stable internet connection.\n" +
             "4. The GitHub API is accessible and functioning normally.";
+    } finally {
+        // Hide loading overlay
+        loadingOverlay.style.opacity = '0';
+        setTimeout(() => {
+            loadingOverlay.style.display = 'none';
+            loadingOverlay.style.opacity = '1';
+        }, 300);
     }
 });
 
