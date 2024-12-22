@@ -16,10 +16,95 @@
             --light-green: #f0fdf4;
             --light-purple: #faf5ff;
             --light-indigo: #eef2ff;
-            --border-color: #e5e7eb;
+            --border-color: #d1d5db;
             --text-primary: #374151;
             --text-secondary: #6b7280;
             --bg-hover: #f3f4f6;
+            --bg-main: #faf7f5;
+            --dark-bg-main: #1a1a1a;
+            --dark-bg-container: #2d2d2d;
+            --dark-text-primary: #e5e7eb;
+            --dark-text-secondary: #9ca3af;
+            --dark-border-color: #404040;
+            --dark-button-bg: #333333;
+            --dark-button-hover: #404040;
+            --valid-repo-bg: #dcfce7;
+            --valid-repo-text: #166534;
+            --invalid-repo-bg: #fee2e2;
+            --invalid-repo-text: #991b1b;
+            --dark-valid-repo-bg: #064e3b;
+            --dark-valid-repo-text: #dcfce7;
+            --dark-invalid-repo-bg: #7f1d1d;
+            --dark-invalid-repo-text: #fee2e2;
+        }
+
+        [data-theme="dark"] {
+            --bg-main: var(--dark-bg-main);
+            --text-primary: var(--dark-text-primary);
+            --text-secondary: var(--dark-text-secondary);
+            --border-color: var(--dark-border-color);
+            --bg-hover: #333333;
+        }
+
+        [data-theme="dark"] .container {
+            background: var(--dark-bg-container);
+        }
+
+        [data-theme="dark"] .header.valid-repo {
+            background-color: var(--dark-valid-repo-bg);
+            border-color: var(--dark-valid-repo-text);
+        }
+
+        [data-theme="dark"] .header.valid-repo h1,
+        [data-theme="dark"] .header.valid-repo p {
+            color: var(--dark-valid-repo-text);
+        }
+
+        [data-theme="dark"] .header.invalid-repo {
+            background-color: var(--dark-invalid-repo-bg);
+            border-color: var(--dark-invalid-repo-text);
+        }
+
+        [data-theme="dark"] .header.invalid-repo h1,
+        [data-theme="dark"] .header.invalid-repo p {
+            color: var(--dark-invalid-repo-text);
+        }
+
+        [data-theme="dark"] .button {
+            background-color: var(--dark-button-bg);
+            border-color: var(--dark-border-color);
+            color: var(--dark-text-primary);
+        }
+
+        [data-theme="dark"] .button:hover {
+            background-color: var(--dark-button-hover);
+            border-color: var(--text-primary);
+        }
+
+        [data-theme="dark"] .info-panel,
+        [data-theme="dark"] .extension-list,
+        [data-theme="dark"] .directory-structure,
+        [data-theme="dark"] .output-text {
+            background-color: var(--dark-button-bg);
+            color: var(--dark-text-primary);
+        }
+
+        [data-theme="dark"] .extension-toggle {
+            background-color: var(--dark-button-bg);
+            color: var(--dark-text-primary);
+        }
+
+        [data-theme="dark"] .extension-item:hover {
+            background-color: var(--dark-button-hover);
+        }
+
+        [data-theme="dark"] a {
+            color: var(--primary-blue);
+        }
+
+        [data-theme="dark"] input[type="checkbox"] {
+            background-color: var(--dark-button-bg);
+            border-color: var(--dark-border-color);
         }
 
         body {
@@ -28,7 +113,7 @@
             overflow-y: auto;
             margin: 0;
             padding: 16px;
-            background-color: #f9fafb;
+            background-color: var(--bg-main);
             color: var(--text-primary);
             font-family: Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
         }
@@ -52,23 +137,50 @@
             background: white;
             border-radius: 12px;
             padding: 24px;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1), 0 0 0 2px var(--border-color);
         }
 
         .header {
             text-align: center;
-            margin-bottom: 24px;
+            margin-bottom: 16px;
             padding: 12px;
             border-radius: 6px;
             transition: background-color 0.3s ease;
+            position: relative;
+        }
+
+        .header-left {
+            position: absolute;
+            top: 50%;
+            left: 12px;
+            transform: translateY(-50%);
+        }
+
+        .header-right {
+            position: absolute;
+            top: 50%;
+            right: 12px;
+            transform: translateY(-50%);
         }
 
         .header.valid-repo {
-            background-color: #dcfce7;  /* Light green */
+            background-color: var(--valid-repo-bg);
+            border: 2px solid var(--valid-repo-text);
+        }
+
+        .header.valid-repo h1,
+        .header.valid-repo p {
+            color: var(--valid-repo-text);
         }
 
         .header.invalid-repo {
-            background-color: #fee2e2;  /* Light red */
+            background-color: var(--invalid-repo-bg);
+            border: 2px solid var(--invalid-repo-text);
+        }
+
+        .header.invalid-repo h1,
+        .header.invalid-repo p {
+            color: var(--invalid-repo-text);
         }
 
         .header h1 {
@@ -85,20 +197,23 @@
             color: var(--text-secondary);
         }
 
-        .github-link {
-            position: absolute;
-            top: 12px;
-            right: 12px;
+        .theme-toggle {
+            background: none;
+            border: none;
+            padding: 4px;
+            cursor: pointer;
             color: var(--text-secondary);
             transition: color 0.2s;
+            display: flex;
+            align-items: center;
         }
 
-        .github-link:hover {
+        .theme-toggle:hover {
             color: var(--text-primary);
         }
 
         .form-group {
-            margin-bottom: 16px;
+            margin-bottom: 12px;
         }
 
         .form-label {
@@ -124,8 +239,8 @@
         .info-panel {
             font-size: 12px;
             padding: 12px;
-            background-color: #f8fafc;
-            border: 1px solid #e2e8f0;
+            background-color: #faf7f5;
+            border: 2px solid #e2e8f0;
             border-radius: 6px;
             margin-top: 8px;
         }
@@ -134,7 +249,7 @@
             width: 100%;
             padding: 8px 12px;
             font-size: 13px;
-            border: 1px solid var(--border-color);
+            border: 2px solid var(--border-color);
             border-radius: 6px;
             outline: none;
             box-sizing: border-box;
@@ -142,7 +257,7 @@
 
         .input-field:focus {
             border-color: var(--primary-blue);
-            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
+            box-shadow: 0 0 0 1px rgba(59, 130, 246, 0.2);
         }
 
         .button {
@@ -158,7 +273,7 @@
             transition: all 0.2s;
             gap: 6px;
             width: 100%;
-            border: 1px solid transparent;
+            border: 2px solid transparent;
         }
 
         .button-blue { 
@@ -211,7 +326,7 @@
             margin-top: 16px;
             max-height: 200px;
             overflow-y: auto;
-            border: 1px solid var(--border-color);
+            border: 2px solid var(--border-color);
             border-radius: 6px;
             padding: 12px;
             font-size: 13px;
@@ -225,7 +340,7 @@
             font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
             font-size: 13px;
             line-height: 1.4;
-            border: 1px solid var(--border-color);
+            border: 2px solid var(--border-color);
             border-radius: 6px;
             resize: none;
             box-sizing: border-box;
@@ -258,7 +373,7 @@
             font-size: 13px;
             color: var(--text-primary);
             background: var(--bg-hover);
-            border: 1px solid var(--border-color);
+            border: 2px solid var(--border-color);
             border-radius: 6px;
             cursor: pointer;
         }
@@ -273,9 +388,9 @@
             left: 0;
             right: 0;
             background: white;
-            border: 1px solid var(--border-color);
+            border: 2px solid var(--border-color);
             border-radius: 6px;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 0 0 1px var(--border-color);
             z-index: 1000;
             max-height: 300px;
             overflow-y: auto;
@@ -309,20 +424,33 @@
 
         .extension-divider {
             height: 1px;
-            background: var(--border-color);
+            background: #e5e7eb;
             margin: 8px 0;
+        }
+
+        /* Update checkbox styles */
+        input[type="checkbox"] {
+            accent-color: var(--primary-blue);
+            border: 2px solid var(--border-color);
+            border-radius: 3px;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <a href="https://github.com/abinthomasonline/repo2txt" target="_blank" class="github-link">
-            <i data-lucide="github" class="w-5 h-5"></i>
-        </a>
-        
         <div class="header">
+            <div class="header-left">
+                <button type="button" class="theme-toggle" id="themeToggle">
+                    <i data-lucide="sun" class="w-5 h-5"></i>
+                </button>
+            </div>
             <h1>GitHub to Plain Text</h1>
             <p>Convert Code in GitHub to a Single Formatted Text File</p>
+            <div class="header-right">
+                <a href="https://github.com/abinthomasonline/repo2txt" target="_blank" class="github-link">
+                    <i data-lucide="github" class="w-5 h-5"></i>
+                </a>
+            </div>
         </div>
 
         <form id="repoForm">

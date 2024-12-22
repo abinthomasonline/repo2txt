@@ -5,6 +5,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     lucide.createIcons();
     setupTokenInput();
     loadSavedToken();
+    setupThemeToggle();
 
     // Check current URL and update header
     try {
@@ -45,11 +46,11 @@ document.getElementById('repoForm').addEventListener('submit', async function (e
     outputText.value = '';
 
     try {
-        // Get current tab URL
+        // Get current tab URL and clean it
         const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-        const repoUrl = tab.url;
+        const repoUrl = cleanGithubUrl(tab.url);
 
-        if (!repoUrl.startsWith('https://github.com/')) {
+        if (!isValidGithubRepo(repoUrl)) {
             throw new Error('Please open this extension on a GitHub repository page');
         }
 
@@ -366,10 +367,48 @@ function setupTokenInput() {
     });
 }
 
-// Add this function to check if URL is a valid GitHub repo
+// Add this function to clean GitHub URLs
+function cleanGithubUrl(url) {
+    try {
+        // Remove any trailing slashes
+        url = url.replace(/\/+$/, '');
+        
+        // Create URL object for easier parsing
+        const urlObj = new URL(url);
+        
+        // Get the pathname without query parameters or hash
+        let path = urlObj.pathname;
+        
+        // Remove common GitHub suffixes
+        path = path
+            .replace(/\/(tree|blob)\/[^\/]+\/.*$/, '') // Remove tree/blob paths
+            .replace(/\?.*$/, '')                      // Remove query parameters
+            .replace(/#.*$/, '')                       // Remove hash
+            .replace(/\/pulls.*$/, '')                 // Remove pulls section
+            .replace(/\/issues.*$/, '')                // Remove issues section
+            .replace(/\/commits.*$/, '')               // Remove commits section
+            .replace(/\/releases.*$/, '')              // Remove releases section
+            .replace(/\/tags.*$/, '')                  // Remove tags section
+            .replace(/\/actions.*$/, '')               // Remove actions section
+            .replace(/\/projects.*$/, '')              // Remove projects section
+            .replace(/\/wiki.*$/, '')                  // Remove wiki section
+            .replace(/\/security.*$/, '')              // Remove security section
+            .replace(/\/pulse.*$/, '')                 // Remove pulse section
+            .replace(/\/(tab|readme).*$/, '');         // Remove tab parameters
+
+        // Reconstruct the base repository URL
+        return `https://github.com${path}`;
+    } catch (error) {
+        return url; // Return original URL if parsing fails
+    }
+}
+
+// Update isValidGithubRepo to use the cleaned URL
 function isValidGithubRepo(url) {
     try {
-        return url.startsWith('https://github.com/') && url.split('/').length >= 5;
+        const cleanedUrl = cleanGithubUrl(url);
+        const parts = new URL(cleanedUrl).pathname.split('/').filter(Boolean);
+        return parts.length >= 2; // Need at least owner and repo
     } catch (error) {
         return false;
     }
@@ -378,11 +417,62 @@ function isValidGithubRepo(url) {
 // Add this function to update header background
 function updateHeaderStatus(isValid) {
     const header = document.querySelector('.header');
+    const headerIcons = header.querySelectorAll('.header-actions i');
+    
     if (isValid) {
         header.classList.add('valid-repo');
         header.classList.remove('invalid-repo');
+        // Update icon colors to match header text color
+        headerIcons.forEach(icon => {
+            icon.style.color = document.documentElement.getAttribute('data-theme') === 'dark' 
+                ? 'var(--dark-valid-repo-text)' 
+                : 'var(--valid-repo-text)';
+        });
     } else {
         header.classList.add('invalid-repo');
         header.classList.remove('valid-repo');
+        // Update icon colors to match header text color
+        headerIcons.forEach(icon => {
+            icon.style.color = document.documentElement.getAttribute('data-theme') === 'dark' 
+                ? 'var(--dark-invalid-repo-text)' 
+                : 'var(--invalid-repo-text)';
+        });
+    }
+}
+
+// Add theme toggle functionality
+function setupThemeToggle() {
+    const themeToggle = document.getElementById('themeToggle');
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    
+    // Set initial theme
+    document.documentElement.setAttribute('data-theme', 
+        localStorage.getItem('theme') || (prefersDark ? 'dark' : 'light'));
+    
+    // Update icon based on current theme
+    updateThemeIcon();
+
+    themeToggle.addEventListener('click', () => {
+        const currentTheme = document.documentElement.getAttribute('data-theme');
+        const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+        
+        document.documentElement.setAttribute('data-theme', newTheme);
+        localStorage.setItem('theme', newTheme);
+        
+        updateThemeIcon();
+    });
+}
+
+function updateThemeIcon() {
+    const themeToggle = document.getElementById('themeToggle');
+    const icon = themeToggle.querySelector('i');
+    const currentTheme = document.documentElement.getAttribute('data-theme');
+    
+    if (icon) {
+        const newIcon = document.createElement('i');
+        newIcon.setAttribute('data-lucide', currentTheme === 'dark' ? 'sun' : 'moon');
+        newIcon.className = 'w-5 h-5';
+        icon.parentNode.replaceChild(newIcon, icon);
+        lucide.createIcons();
     }
 }
