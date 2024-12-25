@@ -1,10 +1,42 @@
 import { displayDirectoryStructure, getSelectedFiles, formatRepoContents } from './utils.js';
 
 // Load saved token on page load
-document.addEventListener('DOMContentLoaded', function() {
-    lucide.createIcons();
-    setupShowMoreInfoButton();
-    loadSavedToken();
+document.addEventListener('DOMContentLoaded', async function() {
+    const loadingOverlay = document.getElementById('loadingOverlay');
+    const loadingText = loadingOverlay.querySelector('.loading-text');
+    
+    // Show loading overlay
+    loadingOverlay.style.display = 'flex';
+    loadingText.textContent = 'Initializing...';
+
+    try {
+        lucide.createIcons();
+        loadingText.textContent = 'Setting up components...';
+        setupTokenInput();
+        loadSavedToken();
+        setupThemeToggle();
+
+        loadingText.textContent = 'Checking repository...';
+        // Check current URL and update header
+        try {
+            const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+            const isValid = isValidGithubRepo(tab.url);
+            updateHeaderStatus(isValid);
+        } catch (error) {
+            updateHeaderStatus(false);
+        }
+    } catch (error) {
+        console.error('Initialization error:', error);
+    } finally {
+        // Hide loading overlay
+        loadingOverlay.style.opacity = '0';
+        loadingOverlay.style.transition = 'opacity 0.3s ease';
+        setTimeout(() => {
+            loadingOverlay.style.display = 'none';
+            loadingOverlay.style.opacity = '1';
+            loadingOverlay.style.transition = '';
+        }, 300);
+    }
 });
 
 // Load saved token from local storage
@@ -27,7 +59,13 @@ function saveToken(token) {
 // Event listener for form submission
 document.getElementById('repoForm').addEventListener('submit', async function (e) {
     e.preventDefault();
-    const repoUrl = document.getElementById('repoUrl').value;
+    const loadingOverlay = document.getElementById('loadingOverlay');
+    const loadingText = loadingOverlay.querySelector('.loading-text');
+    
+    // Show loading overlay
+    loadingOverlay.style.display = 'flex';
+    loadingText.textContent = 'Fetching repository structure...';
+
     const accessToken = document.getElementById('accessToken').value;
 
     // Save token automatically
@@ -37,6 +75,14 @@ document.getElementById('repoForm').addEventListener('submit', async function (e
     outputText.value = '';
 
     try {
+        // Get current tab URL and clean it
+        const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+        const repoUrl = cleanGithubUrl(tab.url);
+
+        if (!isValidGithubRepo(repoUrl)) {
+            throw new Error('Please open this extension on a GitHub repository page');
+        }
+
         // Parse repository URL and fetch repository contents
         const { owner, repo, lastString } = parseRepoUrl(repoUrl);
         let refFromUrl = '';
@@ -58,21 +104,36 @@ document.getElementById('repoForm').addEventListener('submit', async function (e
         const sha = await fetchRepoSha(owner, repo, refFromUrl, pathFromUrl, accessToken);
         const tree = await fetchRepoTree(owner, repo, sha, accessToken);
 
+        loadingText.textContent = 'Processing repository structure...';
         displayDirectoryStructure(tree);
         document.getElementById('generateTextButton').style.display = 'flex';
         document.getElementById('downloadZipButton').style.display = 'flex';
     } catch (error) {
-        outputText.value = `Error fetching repository contents: ${error.message}\n\n` +
+        outputText.value = `Error: ${error.message}\n\n` +
             "Please ensure:\n" +
-            "1. The repository URL is correct and accessible.\n" +
-            "2. You have the necessary permissions to access the repository.\n" +
-            "3. If it's a private repository, you've provided a valid access token.\n" +
-            "4. The specified branch/tag and path (if any) exist in the repository.";
+            "1. You are on a GitHub repository page\n" +
+            "2. You have the necessary permissions to access the repository\n" +
+            "3. If it's a private repository, you've provided a valid access token\n" +
+            "4. The specified branch/tag and path (if any) exist in the repository";
+    } finally {
+        // Hide loading overlay
+        loadingOverlay.style.opacity = '0';
+        setTimeout(() => {
+            loadingOverlay.style.display = 'none';
+            loadingOverlay.style.opacity = '1';
+        }, 300);
     }
 });
 
 // Event listener for generating text file
 document.getElementById('generateTextButton').addEventListener('click', async function () {
+    const loadingOverlay = document.getElementById('loadingOverlay');
+    const loadingText = loadingOverlay.querySelector('.loading-text');
+    
+    // Show loading overlay
+    loadingOverlay.style.display = 'flex';
+    loadingText.textContent = 'Generating text file...';
+
     const accessToken = document.getElementById('accessToken').value;
     const outputText = document.getElementById('outputText');
     outputText.value = '';
@@ -85,9 +146,15 @@ document.getElementById('generateTextButton').addEventListener('click', async fu
         if (selectedFiles.length === 0) {
             throw new Error('No files selected');
         }
+        loadingText.textContent = 'Fetching file contents...';
         const fileContents = await fetchFileContents(selectedFiles, accessToken);
-        const formattedText = formatRepoContents(fileContents);
-        outputText.value = formattedText;
+        loadingText.textContent = 'Formatting content...';
+        const formattedContent = formatRepoContents(fileContents);
+        
+        // Store the full text in a data attribute
+        outputText.setAttribute('data-full-text', formattedContent.fullText);
+        // Display the truncated text in the textarea
+        outputText.value = formattedContent.truncatedText;
 
         document.getElementById('copyButton').style.display = 'flex';
         document.getElementById('downloadButton').style.display = 'flex';
@@ -98,6 +165,13 @@ document.getElementById('generateTextButton').addEventListener('click', async fu
             "2. Your access token (if provided) is valid and has the necessary permissions.\n" +
             "3. You have a stable internet connection.\n" +
             "4. The GitHub API is accessible and functioning normally.";
+    } finally {
+        // Hide loading overlay
+        loadingOverlay.style.opacity = '0';
+        setTimeout(() => {
+            loadingOverlay.style.display = 'none';
+            loadingOverlay.style.opacity = '1';
+        }, 300);
     }
 });
 
@@ -126,26 +200,65 @@ document.getElementById('downloadZipButton').addEventListener('click', async fun
 // Event listener for copying text to clipboard
 document.getElementById('copyButton').addEventListener('click', function () {
     const outputText = document.getElementById('outputText');
-    outputText.select();
-    navigator.clipboard.writeText(outputText.value)
-        .then(() => console.log('Text copied to clipboard'))
-        .catch(err => console.error('Failed to copy text: ', err));
+    const fullText = outputText.getAttribute('data-full-text');
+    
+    // Create a temporary textarea for copying the full text
+    const tempTextArea = document.createElement('textarea');
+    tempTextArea.value = fullText;
+    document.body.appendChild(tempTextArea);
+    tempTextArea.select();
+    
+    navigator.clipboard.writeText(fullText)
+        .then(() => {
+            console.log('Full text copied to clipboard');
+            // Optional: Show a brief "Copied!" message
+            const originalText = this.textContent;
+            this.innerHTML = '<i data-lucide="check" class="w-4 h-4"></i>Copied!';
+            lucide.createIcons();
+            setTimeout(() => {
+                this.innerHTML = '<i data-lucide="copy" class="w-4 h-4"></i>Copy';
+                lucide.createIcons();
+            }, 2000);
+        })
+        .catch(err => console.error('Failed to copy text: ', err))
+        .finally(() => {
+            document.body.removeChild(tempTextArea);
+        });
 });
 
 // Event listener for downloading text file
-document.getElementById('downloadButton').addEventListener('click', function () {
-    const outputText = document.getElementById('outputText').value;
-    if (!outputText.trim()) {
-        document.getElementById('outputText').value = 'Error: No content to download. Please generate the text file first.';
+document.getElementById('downloadButton').addEventListener('click', async function () {
+    const outputText = document.getElementById('outputText');
+    const fullText = outputText.getAttribute('data-full-text');
+    
+    if (!fullText) {
+        outputText.value = 'Error: No content to download. Please generate the text file first.';
         return;
     }
-    const blob = new Blob([outputText], { type: 'text/plain' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'prompt.txt';
-    a.click();
-    URL.revokeObjectURL(url);
+
+    try {
+        const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+        const repoName = getRepoNameFromUrl(tab.url);
+        const fileName = `${repoName}_as_textprompt.txt`;
+        
+        const blob = new Blob([fullText], { type: 'text/plain' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = fileName;
+        a.click();
+        URL.revokeObjectURL(url);
+    } catch (error) {
+        console.error('Error downloading file:', error);
+        // Fallback to default name if there's an error
+        const blob = new Blob([fullText], { type: 'text/plain' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'repo_as_textprompt.txt';
+        a.click();
+        URL.revokeObjectURL(url);
+    }
 });
 
 // Parse GitHub repository URL
@@ -292,4 +405,189 @@ async function createAndDownloadZip(fileContents) {
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
+}
+
+function setupTokenInput() {
+    const tokenLabel = document.querySelector('.form-label');
+    const infoButton = document.getElementById('showMoreInfo');
+    const tokenInput = document.getElementById('accessToken');
+    const tokenInfo = document.getElementById('tokenInfo');
+    const tokenContainer = document.querySelector('.form-group');
+
+    // Initially hide the input and info
+    tokenInput.style.display = 'none';
+    tokenInfo.style.display = 'none';
+
+    // Function to toggle token input visibility
+    function toggleTokenInput(event) {
+        event.preventDefault();
+        event.stopPropagation();
+        const isVisible = tokenInput.style.display === 'block';
+        
+        // Toggle visibility
+        tokenInput.style.display = isVisible ? 'none' : 'block';
+        tokenInfo.style.display = isVisible ? 'none' : 'block';
+        
+        // Update icon
+        const icon = infoButton.querySelector('[data-lucide]');
+        if (icon) {
+            const newIcon = document.createElement('i');
+            newIcon.setAttribute('data-lucide', isVisible ? 'chevron-down' : 'chevron-up');
+            newIcon.className = 'w-4 h-4';
+            icon.parentNode.replaceChild(newIcon, icon);
+            lucide.createIcons();
+        }
+    }
+
+    // Add click handlers
+    tokenLabel.style.cursor = 'pointer';
+    tokenLabel.addEventListener('click', toggleTokenInput);
+    infoButton.addEventListener('click', toggleTokenInput);
+
+    // Close when clicking outside
+    document.addEventListener('click', (e) => {
+        if (!tokenContainer.contains(e.target)) {
+            tokenInput.style.display = 'none';
+            tokenInfo.style.display = 'none';
+            
+            // Update icon
+            const icon = infoButton.querySelector('[data-lucide]');
+            if (icon) {
+                const newIcon = document.createElement('i');
+                newIcon.setAttribute('data-lucide', 'chevron-down');
+                newIcon.className = 'w-4 h-4';
+                icon.parentNode.replaceChild(newIcon, icon);
+                lucide.createIcons();
+            }
+        }
+    });
+}
+
+// Add this function to clean GitHub URLs
+function cleanGithubUrl(url) {
+    try {
+        // Remove any trailing slashes
+        url = url.replace(/\/+$/, '');
+        
+        // Create URL object for easier parsing
+        const urlObj = new URL(url);
+        
+        // Get the pathname without query parameters or hash
+        let path = urlObj.pathname;
+        
+        // Remove common GitHub suffixes
+        path = path
+            .replace(/\/(tree|blob)\/[^\/]+\/.*$/, '') // Remove tree/blob paths
+            .replace(/\?.*$/, '')                      // Remove query parameters
+            .replace(/#.*$/, '')                       // Remove hash
+            .replace(/\/pulls.*$/, '')                 // Remove pulls section
+            .replace(/\/issues.*$/, '')                // Remove issues section
+            .replace(/\/commits.*$/, '')               // Remove commits section
+            .replace(/\/releases.*$/, '')              // Remove releases section
+            .replace(/\/tags.*$/, '')                  // Remove tags section
+            .replace(/\/actions.*$/, '')               // Remove actions section
+            .replace(/\/projects.*$/, '')              // Remove projects section
+            .replace(/\/wiki.*$/, '')                  // Remove wiki section
+            .replace(/\/security.*$/, '')              // Remove security section
+            .replace(/\/pulse.*$/, '')                 // Remove pulse section
+            .replace(/\/(tab|readme).*$/, '');         // Remove tab parameters
+
+        // Reconstruct the base repository URL
+        return `https://github.com${path}`;
+    } catch (error) {
+        return url; // Return original URL if parsing fails
+    }
+}
+
+// Update isValidGithubRepo to use the cleaned URL
+function isValidGithubRepo(url) {
+    try {
+        // const cleanedUrl = cleanGithubUrl(url);
+        const urlObj = new URL(url);
+        
+        // First check if it's actually GitHub
+        if (!urlObj.hostname.startsWith('github.com')) {
+            return false;
+        }
+        
+        // Then check if we have owner/repo structure
+        const parts = urlObj.pathname.split('/').filter(Boolean);
+        return parts.length >= 2; // Need at least owner and repo
+    } catch (error) {
+        return false;
+    }
+}
+
+// Add this function to update header background
+function updateHeaderStatus(isValid) {
+    const header = document.querySelector('.header');
+    const headerIcons = header.querySelectorAll('.header-actions i');
+    
+    if (isValid) {
+        header.classList.add('valid-repo');
+        header.classList.remove('invalid-repo');
+        // Update icon colors to match header text color
+        headerIcons.forEach(icon => {
+            icon.style.color = document.documentElement.getAttribute('data-theme') === 'dark' 
+                ? 'var(--dark-valid-repo-text)' 
+                : 'var(--valid-repo-text)';
+        });
+    } else {
+        header.classList.add('invalid-repo');
+        header.classList.remove('valid-repo');
+        // Update icon colors to match header text color
+        headerIcons.forEach(icon => {
+            icon.style.color = document.documentElement.getAttribute('data-theme') === 'dark' 
+                ? 'var(--dark-invalid-repo-text)' 
+                : 'var(--invalid-repo-text)';
+        });
+    }
+}
+
+// Add theme toggle functionality
+function setupThemeToggle() {
+    const themeToggle = document.getElementById('themeToggle');
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    
+    // Set initial theme
+    document.documentElement.setAttribute('data-theme', 
+        localStorage.getItem('theme') || (prefersDark ? 'dark' : 'light'));
+    
+    // Update icon based on current theme
+    updateThemeIcon();
+
+    themeToggle.addEventListener('click', () => {
+        const currentTheme = document.documentElement.getAttribute('data-theme');
+        const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+        
+        document.documentElement.setAttribute('data-theme', newTheme);
+        localStorage.setItem('theme', newTheme);
+        
+        updateThemeIcon();
+    });
+}
+
+function updateThemeIcon() {
+    const themeToggle = document.getElementById('themeToggle');
+    const icon = themeToggle.querySelector('i');
+    const currentTheme = document.documentElement.getAttribute('data-theme');
+    
+    if (icon) {
+        const newIcon = document.createElement('i');
+        newIcon.setAttribute('data-lucide', currentTheme === 'dark' ? 'sun' : 'moon');
+        newIcon.className = 'w-5 h-5';
+        icon.parentNode.replaceChild(newIcon, icon);
+        lucide.createIcons();
+    }
+}
+
+// Add this helper function near the top of the file
+function getRepoNameFromUrl(url) {
+    try {
+        const cleanedUrl = cleanGithubUrl(url);
+        const parts = new URL(cleanedUrl).pathname.split('/').filter(Boolean);
+        return parts.length >= 2 ? parts[1] : 'repo';
+    } catch (error) {
+        return 'repo';
+    }
 }

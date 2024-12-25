@@ -1,3 +1,65 @@
+// Add this function at the beginning of the file
+function setupTokenInput() {
+    const tokenLabel = document.querySelector('.form-label');
+    const infoButton = document.getElementById('showMoreInfo');
+    const tokenInput = document.getElementById('accessToken');
+    const tokenInfo = document.getElementById('tokenInfo');
+    const tokenContainer = document.querySelector('.form-group');
+
+    // Initially hide the input and info
+    tokenInput.style.display = 'none';
+    tokenInfo.style.display = 'none';
+
+    // Function to toggle token input visibility
+    function toggleTokenInput(event) {
+        event.stopPropagation();
+        const isVisible = tokenInput.style.display === 'block';
+        
+        // Toggle visibility
+        tokenInput.style.display = isVisible ? 'none' : 'block';
+        tokenInfo.style.display = isVisible ? 'none' : 'block';
+        
+        // Update icon
+        const icon = infoButton.querySelector('[data-lucide]');
+        if (icon) {
+            const newIcon = document.createElement('i');
+            newIcon.setAttribute('data-lucide', isVisible ? 'chevron-down' : 'chevron-up');
+            newIcon.className = 'w-4 h-4';
+            icon.parentNode.replaceChild(newIcon, icon);
+            lucide.createIcons();
+        }
+    }
+
+    // Add click handlers
+    tokenLabel.style.cursor = 'pointer';
+    tokenLabel.addEventListener('click', toggleTokenInput);
+    infoButton.addEventListener('click', toggleTokenInput);
+
+    // Close when clicking outside
+    document.addEventListener('click', (e) => {
+        if (!tokenContainer.contains(e.target)) {
+            tokenInput.style.display = 'none';
+            tokenInfo.style.display = 'none';
+            
+            // Update icon
+            const icon = infoButton.querySelector('[data-lucide]');
+            if (icon) {
+                const newIcon = document.createElement('i');
+                newIcon.setAttribute('data-lucide', 'chevron-down');
+                newIcon.className = 'w-4 h-4';
+                icon.parentNode.replaceChild(newIcon, icon);
+                lucide.createIcons();
+            }
+        }
+    });
+
+    // Hide initially after a short delay to ensure DOM is ready
+    setTimeout(() => {
+        tokenInput.style.display = 'none';
+        tokenInfo.style.display = 'none';
+    }, 0);
+}
+
 // Display directory structure
 function displayDirectoryStructure(tree) {
     tree = tree.filter(item => item.type === 'blob').sort(sortContents);
@@ -199,22 +261,111 @@ function displayDirectoryStructure(tree) {
     function createExtensionCheckboxesContainer() {
         const extentionCheckboxesContainer = document.getElementById('extentionCheckboxes');
         extentionCheckboxesContainer.innerHTML = '';
-        extentionCheckboxesContainer.className = 'mt-4';
-        const extentionCheckboxesContainerLabel = document.createElement('label');
-        extentionCheckboxesContainerLabel.innerHTML = 'Filter by file extensions:';
-        extentionCheckboxesContainerLabel.className = 'block text-sm font-medium text-gray-600';
-        extentionCheckboxesContainer.appendChild(extentionCheckboxesContainerLabel);
-        const extentionCheckboxesContainerUl = document.createElement('ul');
-        extentionCheckboxesContainer.appendChild(extentionCheckboxesContainerUl);
-        extentionCheckboxesContainerUl.className = 'mt-1';
-        const sortedExtensions = Object.entries(extensionCheckboxes).sort((a, b) => b[1].children.length - a[1].children.length);
+        extentionCheckboxesContainer.className = 'extension-checkboxes';
+
+        // Create header with label and toggle button
+        const header = document.createElement('div');
+        header.className = 'extension-header';
+        
+        const label = document.createElement('label');
+        label.innerHTML = 'Filter by file extensions';
+        label.className = 'form-label';
+        
+        // Create toggle button with icon
+        const toggleButton = document.createElement('button');
+        toggleButton.className = 'extension-toggle';
+        toggleButton.type = 'button';
+        toggleButton.innerHTML = `
+            <span>Select Extensions</span>
+            <span class="icon-container ml-2">
+                <i data-lucide="chevron-down" class="w-4 h-4"></i>
+            </span>
+        `;
+        
+        header.appendChild(label);
+        header.appendChild(toggleButton);
+        extentionCheckboxesContainer.appendChild(header);
+
+        // Create extension list container
+        const listContainer = document.createElement('div');
+        listContainer.className = 'extension-list';
+
+        // Define media extensions
+        const mediaExtensions = new Set([
+            'jpg', 'jpeg', 'png', 'gif', 'bmp', 'ico', 'svg', 'webp',  // Images
+            'mp4', 'webm', 'mov', 'avi', 'wmv', 'flv', 'm4v',          // Videos
+            'mp3', 'wav', 'ogg', 'm4a', 'aac',                         // Audio
+            'ttf', 'otf', 'woff', 'woff2', 'eot',                      // Fonts
+        ]);
+
+        // Add "Select All" and "Select Non-Media" checkboxes
+        const selectAllItem = document.createElement('div');
+        selectAllItem.className = 'extension-item';
+        const selectAllCheckbox = document.createElement('input');
+        selectAllCheckbox.type = 'checkbox';
+        selectAllCheckbox.id = 'select-all-extensions';
+        const selectAllLabel = document.createElement('label');
+        selectAllLabel.htmlFor = 'select-all-extensions';
+        selectAllLabel.textContent = 'Select All';
+        selectAllItem.appendChild(selectAllCheckbox);
+        selectAllItem.appendChild(selectAllLabel);
+        listContainer.appendChild(selectAllItem);
+
+        // Add "Select Non-Media" option
+        const selectNonMediaItem = document.createElement('div');
+        selectNonMediaItem.className = 'extension-item';
+        const selectNonMediaCheckbox = document.createElement('input');
+        selectNonMediaCheckbox.type = 'checkbox';
+        selectNonMediaCheckbox.id = 'select-non-media-extensions';
+        const selectNonMediaLabel = document.createElement('label');
+        selectNonMediaLabel.htmlFor = 'select-non-media-extensions';
+        selectNonMediaLabel.textContent = 'Select Everything Non-Media';
+        selectNonMediaItem.appendChild(selectNonMediaCheckbox);
+        selectNonMediaItem.appendChild(selectNonMediaLabel);
+        listContainer.appendChild(selectNonMediaItem);
+
+        // Add divider
+        const divider = document.createElement('div');
+        divider.className = 'extension-divider';
+        listContainer.appendChild(divider);
+
+        // Sort extensions by frequency
+        const sortedExtensions = Object.entries(extensionCheckboxes)
+            .sort((a, b) => b[1].children.length - a[1].children.length);
+
+        // Add extension checkboxes
         for (const [extension, checkbox] of sortedExtensions) {
+            const item = document.createElement('div');
+            item.className = 'extension-item';
+            
             const extCheckbox = checkbox.checkbox;
-            const extCheckboxLi = document.createElement('li');
-            extCheckboxLi.className = 'inline-block mr-4';
-            extCheckboxLi.appendChild(extCheckbox);
-            extCheckboxLi.appendChild(document.createTextNode('.' + extension));
-            extentionCheckboxesContainerUl.appendChild(extCheckboxLi);
+            extCheckbox.style.margin = '0 8px 0 0';
+            extCheckbox.id = `ext-${extension}`;  // Add ID for label association
+            
+            const label = document.createElement('label');
+            label.htmlFor = `ext-${extension}`;  // Associate label with checkbox
+            label.textContent = `.${extension} (${checkbox.children.length})`;
+            label.style.flexGrow = '1';  // Make label take up remaining space
+            label.style.cursor = 'pointer';  // Show pointer cursor
+            
+            item.appendChild(extCheckbox);
+            item.appendChild(label);
+            listContainer.appendChild(item);
+
+            // Make the entire row clickable
+            item.addEventListener('click', (e) => {
+                // Prevent double-triggering when clicking the checkbox directly
+                if (e.target !== extCheckbox) {
+                    e.preventDefault();
+                    extCheckbox.checked = !extCheckbox.checked;
+                    
+                    // Trigger change event
+                    const changeEvent = new Event('change', { bubbles: true });
+                    extCheckbox.dispatchEvent(changeEvent);
+                }
+            });
+
+            // Update select all state when individual checkbox changes
             extCheckbox.addEventListener('change', function() {
                 const children = checkbox.children;
                 children.forEach(child => {
@@ -222,8 +373,140 @@ function displayDirectoryStructure(tree) {
                     child.indeterminate = false;
                     updateParentCheckbox(child);
                 });
+                updateSelectAllState();
             });
         }
+
+        extentionCheckboxesContainer.appendChild(listContainer);
+
+        // Toggle dropdown
+        toggleButton.addEventListener('click', (e) => {
+            e.stopPropagation();
+            listContainer.classList.toggle('show');
+            
+            // Update icon
+            const icon = toggleButton.querySelector('[data-lucide]');
+            if (icon) {
+                const newIcon = document.createElement('i');
+                newIcon.setAttribute('data-lucide', 
+                    listContainer.classList.contains('show') ? 'chevron-up' : 'chevron-down');
+                newIcon.className = 'w-4 h-4';
+                icon.parentNode.replaceChild(newIcon, icon);
+                lucide.createIcons();
+            }
+        });
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!extentionCheckboxesContainer.contains(e.target)) {
+                listContainer.classList.remove('show');
+                
+                // Update icon
+                const icon = toggleButton.querySelector('[data-lucide]');
+                if (icon) {
+                    const newIcon = document.createElement('i');
+                    newIcon.setAttribute('data-lucide', 'chevron-down');
+                    newIcon.className = 'w-4 h-4';
+                    icon.parentNode.replaceChild(newIcon, icon);
+                    lucide.createIcons();
+                }
+            }
+        });
+
+        // Handle select all functionality
+        selectAllCheckbox.addEventListener('change', function() {
+            const isChecked = this.checked;
+            
+            // Update all extension checkboxes in the dropdown
+            const extensionCheckboxes = Array.from(listContainer.querySelectorAll('input[type="checkbox"]'))
+                .filter(cb => cb !== selectAllCheckbox && cb !== selectNonMediaCheckbox);
+            
+            // Update extension checkboxes
+            extensionCheckboxes.forEach(checkbox => {
+                checkbox.checked = isChecked;
+                
+                // Trigger change event
+                const changeEvent = new Event('change', { bubbles: true });
+                checkbox.dispatchEvent(changeEvent);
+            });
+
+            // Update all file checkboxes in the directory structure
+            const allFileCheckboxes = document.querySelectorAll('#directoryStructure input[type="checkbox"]:not(.directory-checkbox)');
+            allFileCheckboxes.forEach(checkbox => {
+                checkbox.checked = isChecked;
+                updateParentCheckbox(checkbox);
+            });
+
+            // Update all directory checkboxes
+            const allDirectoryCheckboxes = document.querySelectorAll('#directoryStructure .directory-checkbox');
+            allDirectoryCheckboxes.forEach(checkbox => {
+                checkbox.checked = isChecked;
+                checkbox.indeterminate = false;
+            });
+
+            // Force update the UI
+            updateSelectAllState();
+        });
+
+        // Handle select non-media functionality
+        selectNonMediaCheckbox.addEventListener('change', function() {
+            const isChecked = this.checked;
+            
+            // Update extension checkboxes
+            const extensionCheckboxes = Array.from(listContainer.querySelectorAll('input[type="checkbox"]'))
+                .filter(cb => cb !== selectAllCheckbox && cb !== selectNonMediaCheckbox);
+            
+            extensionCheckboxes.forEach(checkbox => {
+                const extension = checkbox.value;
+                const shouldCheck = isChecked && !mediaExtensions.has(extension);
+                checkbox.checked = shouldCheck;
+                
+                // Trigger change event
+                const changeEvent = new Event('change', { bubbles: true });
+                checkbox.dispatchEvent(changeEvent);
+            });
+
+            // Update all file checkboxes in the directory structure
+            const allFileCheckboxes = document.querySelectorAll('#directoryStructure input[type="checkbox"]:not(.directory-checkbox)');
+            allFileCheckboxes.forEach(checkbox => {
+                const fileExtension = checkbox.value && JSON.parse(checkbox.value).path.split('.').pop().toLowerCase();
+                const shouldCheck = isChecked && !mediaExtensions.has(fileExtension);
+                checkbox.checked = shouldCheck;
+                updateParentCheckbox(checkbox);
+            });
+
+            // Update all directory checkboxes
+            const allDirectoryCheckboxes = document.querySelectorAll('#directoryStructure .directory-checkbox');
+            allDirectoryCheckboxes.forEach(checkbox => {
+                checkbox.indeterminate = true;
+                updateParentCheckbox(checkbox);
+            });
+
+            // Update select all checkbox state
+            updateSelectAllState();
+        });
+
+        // Update the updateSelectAllState function to handle both checkboxes
+        function updateSelectAllState() {
+            const checkboxes = Array.from(listContainer.querySelectorAll('input[type="checkbox"]'))
+                .filter(cb => cb !== selectAllCheckbox && cb !== selectNonMediaCheckbox);
+            const checkedCount = checkboxes.filter(cb => cb.checked).length;
+            
+            selectAllCheckbox.checked = checkedCount === checkboxes.length;
+            selectAllCheckbox.indeterminate = checkedCount > 0 && checkedCount < checkboxes.length;
+            
+            // Update non-media checkbox state
+            const nonMediaBoxes = checkboxes.filter(cb => !mediaExtensions.has(cb.value));
+            const checkedNonMedia = nonMediaBoxes.filter(cb => cb.checked).length;
+            selectNonMediaCheckbox.checked = checkedNonMedia === nonMediaBoxes.length;
+            selectNonMediaCheckbox.indeterminate = checkedNonMedia > 0 && checkedNonMedia < nonMediaBoxes.length;
+        }
+
+        // Initial select all state
+        updateSelectAllState();
+
+        // Create initial icons
+        lucide.createIcons();
     }
 
     lucide.createIcons();
@@ -258,6 +541,8 @@ function getSelectedFiles() {
 function formatRepoContents(contents) {
     let text = '';
     let index = '';
+    const LINE_LIMIT = 500;
+    let totalLineCount = 0;
 
     // Ensure contents is an array before sorting
     contents = Array.isArray(contents) ? contents.sort(sortContents) : [contents];
@@ -295,21 +580,100 @@ function formatRepoContents(contents) {
     }
 
     index = buildIndex(tree);
+    totalLineCount += index.split('\n').length;
 
+    // Count total lines first
+    let fullText = '';
     contents.forEach((item) => {
-        text += `\n\n---\nFile: ${item.path}\n---\n\n${item.text}\n`;
+        fullText += `\n\n---\nFile: ${item.path}\n---\n\n${item.text}\n`;
     });
+    
+    const allLines = fullText.split('\n');
+    totalLineCount += allLines.length;
 
-    const formattedText = `Directory Structure:\n\n${index}\n${text}`;
+    // Now build the truncated text
+    let currentLineCount = index.split('\n').length;
+    let truncatedText = '';
+    
+    for (const item of contents) {
+        const itemText = `\n\n---\nFile: ${item.path}\n---\n\n${item.text}\n`;
+        const itemLines = itemText.split('\n');
+        
+        if (currentLineCount + itemLines.length <= LINE_LIMIT) {
+            truncatedText += itemText;
+            currentLineCount += itemLines.length;
+        } else {
+            const remainingLines = LINE_LIMIT - currentLineCount;
+            if (remainingLines > 0) {
+                const truncatedItemLines = itemLines.slice(0, remainingLines);
+                truncatedText += `\n\n---\nFile: ${item.path}\n---\n\n${truncatedItemLines.join('\n')}\n`;
+            }
+            break;
+        }
+    }
+
+    // Add truncation notice if needed
+    const remainingLines = totalLineCount - LINE_LIMIT;
+    if (remainingLines > 0) {
+        truncatedText += `\n\n---\nOutput truncated: ${remainingLines.toLocaleString()} more lines available---\n`;
+    }
+
+    let formattedText = `Directory Structure:\n\n${index}\n${truncatedText}`;
+    let fullFormattedText = `Directory Structure:\n\n${index}\n${fullText}`;
+
     try {
-        const { encode, decode } = GPTTokenizer_cl100k_base;
-        const tokensCount = encode(formattedText).length;
-        document.getElementById('tokenCount').innerHTML = `Approximate Token Count: ${tokensCount} <a href="https://github.com/niieani/gpt-tokenizer" target="_blank" class="text-blue-500 hover:text-blue-700 underline">(Using cl100k_base tokenizer)</a>`;
+        const { encode } = GPTTokenizer_o200k_base;
+        console.log("encoder is loaded");
+        // Count tokens for the full text
+        const count = encode(fullFormattedText).length;
+        console.log(count);
+        
+        // Add hover events to Copy and Download buttons
+        const copyButton = document.getElementById('copyButton');
+        const downloadButton = document.getElementById('downloadButton');
+        const tooltipText = `Token Count: ${count.toLocaleString()}\nTokenizer: o200k_base (gpt-4o & o1)`;
+
+        // Copy button tooltip
+        copyButton.addEventListener('mouseenter', () => {
+            const tooltip = document.createElement('div');
+            tooltip.className = 'button-tooltip';
+            tooltip.textContent = tooltipText;
+            tooltip.style.whiteSpace = 'pre-line';
+            tooltip.style.lineHeight = '1.5';
+            copyButton.appendChild(tooltip);
+        });
+        
+        copyButton.addEventListener('mouseleave', () => {
+            const tooltip = copyButton.querySelector('.button-tooltip');
+            if (tooltip) {
+                copyButton.removeChild(tooltip);
+            }
+        });
+
+        // Download button tooltip
+        downloadButton.addEventListener('mouseenter', () => {
+            const tooltip = document.createElement('div');
+            tooltip.className = 'button-tooltip';
+            tooltip.textContent = tooltipText;
+            tooltip.style.whiteSpace = 'pre-line';
+            downloadButton.appendChild(tooltip);
+        });
+        
+        downloadButton.addEventListener('mouseleave', () => {
+            const tooltip = downloadButton.querySelector('.button-tooltip');
+            if (tooltip) {
+                downloadButton.removeChild(tooltip);
+            }
+        });
     } catch (error) {
-        document.getElementById('tokenCount').innerHTML = '';
         console.log(error);
     }
-    return formattedText;
+
+    // Return both the truncated and full text
+    return {
+        truncatedText: formattedText,
+        fullText: fullFormattedText
+    };
 }
 
-export { displayDirectoryStructure, sortContents, getSelectedFiles, formatRepoContents };
+export { displayDirectoryStructure, sortContents, getSelectedFiles, formatRepoContents, setupTokenInput };

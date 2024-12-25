@@ -3,93 +3,632 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GitHub to Plain Text Converter | Convert Code Repositories to Text</title>
-    <meta name="description" content="Convert GitHub repositories to plain text files easily. Our tool helps you transform code into a single formatted text file for better readability and analysis.">
-    <meta name="keywords" content="GitHub, code converter, plain text, repository, code analysis">
-    <meta name="author" content="abinthomasonline">
-    <link rel="canonical" href="https://repo2txt.simplebasedomain.com/">
-    <meta property="og:title" content="GitHub to Plain Text Converter">
-    <meta property="og:description" content="Convert GitHub repositories to plain text files easily. Transform code into a single formatted text file.">
-    <meta property="og:url" content="https://repo2txt.simplebasedomain.com/">
-    <meta property="og:type" content="website">
-    <link rel="icon" href="/favicon.ico" type="image/x-icon">
-    <script src="https://cdn.tailwindcss.com"></script>
+    <title>GitHub to Plain Text Converter</title>
     <script src="js/lucide.min.js"></script>
-    <!-- Google tag (gtag.js) -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-CYF86LN5WM"></script>
-    <script>
-        window.dataLayer = window.dataLayer || [];
-        function gtag(){dataLayer.push(arguments);}
-        gtag('js', new Date());
-
-        gtag('config', 'G-CYF86LN5WM');
-    </script>
     <script src="js/jszip.min.js"></script>
-    <script async src="https://unpkg.com/gpt-tokenizer"></script>
+    <script src="js/o200k_base.js"></script>
+    <style>
+        :root {
+            --primary-blue: #3b82f6;
+            --primary-green: #22c55e;
+            --primary-purple: #9333ea;
+            --primary-indigo: #6366f1;
+            --light-blue: #eff6ff;
+            --light-green: #f0fdf4;
+            --light-purple: #faf5ff;
+            --light-indigo: #eef2ff;
+            --border-color: #d1d5db;
+            --text-primary: #374151;
+            --text-secondary: #6b7280;
+            --bg-hover: #f3f4f6;
+            --bg-main: #faf7f5;
+            --dark-bg-main: #1a1a1a;
+            --dark-bg-container: #2d2d2d;
+            --dark-text-primary: #e5e7eb;
+            --dark-text-secondary: #9ca3af;
+            --dark-border-color: #404040;
+            --dark-button-bg: #333333;
+            --dark-button-hover: #404040;
+            --valid-repo-bg: #dcfce7;
+            --valid-repo-text: #166534;
+            --invalid-repo-bg: #fee2e2;
+            --invalid-repo-text: #991b1b;
+            --dark-valid-repo-bg: #064e3b;
+            --dark-valid-repo-text: #dcfce7;
+            --dark-invalid-repo-bg: #7f1d1d;
+            --dark-invalid-repo-text: #fee2e2;
+        }
+
+        [data-theme="dark"] {
+            --bg-main: var(--dark-bg-main);
+            --text-primary: var(--dark-text-primary);
+            --text-secondary: var(--dark-text-secondary);
+            --border-color: var(--dark-border-color);
+            --bg-hover: #333333;
+        }
+
+        [data-theme="dark"] .container {
+            background: var(--dark-bg-container);
+        }
+
+        [data-theme="dark"] .header.valid-repo {
+            background-color: var(--dark-valid-repo-bg);
+            border-color: var(--dark-valid-repo-text);
+        }
+
+        [data-theme="dark"] .header.valid-repo h1,
+        [data-theme="dark"] .header.valid-repo p {
+            color: var(--dark-valid-repo-text);
+        }
+
+        [data-theme="dark"] .header.invalid-repo {
+            background-color: var(--dark-invalid-repo-bg);
+            border-color: var(--dark-invalid-repo-text);
+        }
+
+        [data-theme="dark"] .header.invalid-repo h1,
+        [data-theme="dark"] .header.invalid-repo p {
+            color: var(--dark-invalid-repo-text);
+        }
+
+        [data-theme="dark"] .button {
+            background-color: var(--dark-button-bg);
+            border-color: var(--dark-border-color);
+            color: var(--dark-text-primary);
+        }
+
+        [data-theme="dark"] .button:hover {
+            background-color: var(--dark-button-hover);
+            border-color: var(--text-primary);
+        }
+
+        [data-theme="dark"] .info-panel,
+        [data-theme="dark"] .extension-list,
+        [data-theme="dark"] .directory-structure,
+        [data-theme="dark"] .output-text {
+            background-color: var(--dark-button-bg);
+            color: var(--dark-text-primary);
+        }
+
+        [data-theme="dark"] .extension-toggle {
+            background-color: var(--dark-button-bg);
+            color: var(--dark-text-primary);
+        }
+
+        [data-theme="dark"] .extension-item:hover {
+            background-color: var(--dark-button-hover);
+        }
+
+        [data-theme="dark"] a {
+            color: var(--primary-blue);
+        }
+
+        [data-theme="dark"] input[type="checkbox"] {
+            background-color: var(--dark-button-bg);
+            border-color: var(--dark-border-color);
+        }
+
+        body {
+            width: 520px;
+            height: 600px;
+            overflow-y: auto;
+            margin: 0;
+            padding: 16px;
+            background-color: var(--bg-main);
+            color: var(--text-primary);
+            font-family: Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+
+        /* Scrollbar styling */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #d1d5db;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #9ca3af;
+        }
+
+        .container {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1), 0 0 0 2px var(--border-color);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 16px;
+            padding: 12px;
+            border-radius: 6px;
+            transition: background-color 0.3s ease;
+            position: relative;
+        }
+
+        .header-left {
+            position: absolute;
+            top: 50%;
+            left: 12px;
+            transform: translateY(-50%);
+        }
+
+        .header-right {
+            position: absolute;
+            top: 50%;
+            right: 12px;
+            transform: translateY(-50%);
+        }
+
+        .header.valid-repo {
+            background-color: var(--valid-repo-bg);
+            border: 2px solid var(--valid-repo-text);
+        }
+
+        .header.valid-repo h1,
+        .header.valid-repo p {
+            color: var(--valid-repo-text);
+        }
+
+        .header.invalid-repo {
+            background-color: var(--invalid-repo-bg);
+            border: 2px solid var(--invalid-repo-text);
+        }
+
+        .header.invalid-repo h1,
+        .header.invalid-repo p {
+            color: var(--invalid-repo-text);
+        }
+
+        .header h1 {
+            font-size: 22px;
+            margin: 0 0 10px 0;
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+
+        .header h1 a {
+            color: inherit;
+            text-decoration: none;
+            transition: all 0.2s;
+        }
+
+        .header h1 a:hover {
+            opacity: 0.8;
+        }
+
+        [data-theme="dark"] .header h1 a {
+            color: inherit;
+        }
+
+        .header p {
+            font-size: 13px;
+            font-weight: 500;
+            margin: 0;
+            color: var(--text-secondary);
+        }
+
+        .theme-toggle {
+            background: none;
+            border: none;
+            padding: 4px;
+            cursor: pointer;
+            color: var(--text-secondary);
+            transition: color 0.2s;
+            display: flex;
+            align-items: center;
+        }
+
+        .theme-toggle:hover {
+            color: var(--text-primary);
+        }
+
+        .form-group {
+            margin-bottom: 12px;
+        }
+
+        .form-label {
+            display: flex;
+            align-items: center;
+            font-size: 13px;
+            font-weight: 500;
+            margin-bottom: 6px;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .info-button {
+            background: none;
+            border: none;
+            padding: 4px;
+            margin-left: 4px;
+            cursor: pointer;
+            color: var(--primary-blue);
+            margin-left: auto;
+        }
+
+        .info-panel {
+            font-size: 12px;
+            padding: 12px;
+            background-color: #faf7f5;
+            border: 2px solid #e2e8f0;
+            border-radius: 6px;
+            margin-top: 8px;
+        }
+
+        .input-field {
+            width: 100%;
+            padding: 8px 12px;
+            font-size: 13px;
+            border: 2px solid var(--border-color);
+            border-radius: 6px;
+            outline: none;
+            box-sizing: border-box;
+        }
+
+        .input-field:focus {
+            border-color: var(--primary-blue);
+            box-shadow: 0 0 0 1px rgba(59, 130, 246, 0.2);
+        }
+
+        .button {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 10px 16px;
+            font-size: 13px;
+            font-weight: 600;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+            gap: 6px;
+            width: 100%;
+            border: 2px solid transparent;
+            position: relative;
+        }
+
+        .button-blue { 
+            background-color: var(--light-blue); 
+            color: var(--primary-blue);
+            border-color: var(--primary-blue);
+        }
+        .button-blue:hover { 
+            background-color: var(--primary-blue); 
+            color: white;
+        }
+        
+        .button-green { 
+            background-color: var(--light-green);
+            color: var(--primary-green);
+            border-color: var(--primary-green);
+        }
+        .button-green:hover { 
+            background-color: var(--primary-green);
+            color: white;
+        }
+        
+        .button-purple { 
+            background-color: var(--light-purple);
+            color: var(--primary-purple);
+            border-color: var(--primary-purple);
+        }
+        .button-purple:hover { 
+            background-color: var(--primary-purple);
+            color: white;
+        }
+        
+        .button-indigo { 
+            background-color: var(--light-indigo);
+            color: var(--primary-indigo);
+            border-color: var(--primary-indigo);
+        }
+        .button-indigo:hover { 
+            background-color: var(--primary-indigo);
+            color: white;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 8px;
+            margin-top: 16px;
+        }
+
+        .directory-structure {
+            margin-top: 16px;
+            max-height: 200px;
+            overflow-y: auto;
+            border: 2px solid var(--border-color);
+            border-radius: 6px;
+            padding: 12px;
+            font-size: 13px;
+            line-height: 1.5;
+        }
+
+        .output-text {
+            width: 100%;
+            margin-top: 16px;
+            padding: 12px;
+            font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+            font-size: 13px;
+            line-height: 1.4;
+            border: 2px solid var(--border-color);
+            border-radius: 6px;
+            resize: none;
+            box-sizing: border-box;
+            background-color: #fafafa;
+        }
+
+        .token-count {
+            font-size: 13px;
+            color: var(--text-primary);
+            margin: 16px 0 8px 0;
+            padding: 8px 12px;
+            background-color: var(--bg-hover);
+            border-radius: 6px;
+            display: none;
+        }
+
+        [data-theme="dark"] .token-count {
+            background-color: var(--dark-button-bg);
+        }
+
+        .extension-checkboxes {
+            margin-top: 16px;
+            font-size: 12px;
+            position: relative;
+        }
+
+        .extension-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 8px;
+        }
+
+        .extension-toggle {
+            display: flex;
+            align-items: center;
+            padding: 6px 12px;
+            font-size: 13px;
+            color: var(--text-primary);
+            background: var(--bg-hover);
+            border: 2px solid var(--border-color);
+            border-radius: 6px;
+            cursor: pointer;
+        }
+
+        .extension-toggle i {
+            margin-left: 6px;
+        }
+
+        .extension-list {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: white;
+            border: 2px solid var(--border-color);
+            border-radius: 6px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 0 0 1px var(--border-color);
+            z-index: 1000;
+            max-height: 300px;
+            overflow-y: auto;
+            padding: 8px;
+            display: none;
+        }
+
+        .extension-list.show {
+            display: block;
+        }
+
+        .extension-item {
+            display: flex;
+            align-items: center;
+            padding: 8px;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            border-radius: 4px;
+            user-select: none;
+        }
+
+        .extension-item:hover {
+            background: var(--bg-hover);
+        }
+
+        .extension-item label {
+            display: flex;
+            align-items: center;
+            width: 100%;
+            cursor: pointer;
+        }
+
+        .extension-item input[type="checkbox"] {
+            margin-right: 8px;
+            width: 16px;
+            height: 16px;
+            cursor: pointer;
+        }
+
+        .extension-divider {
+            height: 1px;
+            background: #e5e7eb;
+            margin: 8px 0;
+        }
+
+        /* Update checkbox styles */
+        input[type="checkbox"] {
+            accent-color: var(--primary-blue);
+            border: 2px solid var(--border-color);
+            border-radius: 3px;
+        }
+
+        .button-tooltip {
+            position: absolute;
+            top: -48px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: var(--bg-hover);
+            padding: 6px 12px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 600;
+            width: max-content;
+            text-align: center;
+            z-index: 1000;
+            border: 2px solid var(--border-color);
+            color: var(--text-primary);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .button-tooltip::after {
+            content: '';
+            position: absolute;
+            bottom: -6px;
+            left: 50%;
+            transform: translateX(-50%) rotate(45deg);
+            width: 8px;
+            height: 8px;
+            background-color: var(--bg-hover);
+            border-right: 2px solid var(--border-color);
+            border-bottom: 2px solid var(--border-color);
+        }
+
+        [data-theme="dark"] .button-tooltip {
+            background-color: var(--dark-button-bg);
+            color: var(--dark-text-primary);
+            border-color: var(--dark-border-color);
+        }
+
+        [data-theme="dark"] .button-tooltip::after {
+            background-color: var(--dark-button-bg);
+            border-color: var(--dark-border-color);
+        }
+
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.9);
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            gap: 12px;
+        }
+
+        [data-theme="dark"] .loading-overlay {
+            background: rgba(45, 45, 45, 0.9);
+        }
+
+        .loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid var(--border-color);
+            border-top-color: var(--primary-blue);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        .loading-text {
+            color: var(--text-primary);
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
 </head>
-<body class="bg-gray-100 min-h-screen p-4 md:p-8 text-gray-600">
-    <div class="max-w-4xl mx-auto bg-white rounded-lg shadow-md p-6 relative">
-        <a href="https://github.com/abinthomasonline/repo2txt" target="_blank" class="absolute top-2 right-2">
-            <i data-lucide="github" class="w-8 h-8 text-gray-600 hover:text-gray-800"></i>
-        </a>
-        <h1 class="text-3xl font-bold mb-2 text-center text-gray-600">GitHub to Plain Text</h1>
-        <p class="text-lg text-center text-gray-500 mb-6">Convert Code in GitHub to a Single Formatted Text File</p>
-        <form id="repoForm" class="space-y-4">
-            <div>
-                <label for="repoUrl" class="block text-sm font-medium text-gray-600">GitHub URL:</label>
-                <input type="text" id="repoUrl" name="repoUrl" required class="mt-1 block w-full rounded-md border border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 h-10 px-2">
+<body>
+    <div id="loadingOverlay" class="loading-overlay">
+        <div class="loading-spinner"></div>
+        <div class="loading-text">Loading...</div>
+    </div>
+    <div class="container">
+        <div class="header">
+            <div class="header-left">
+                <button type="button" class="theme-toggle" id="themeToggle">
+                    <i data-lucide="sun" class="w-5 h-5"></i>
+                </button>
             </div>
-            <div>
-                <label for="accessToken" class="block text-sm font-medium text-gray-600 flex items-center">
-                    Personal Access Token (optional - for private repositories and higher rate limits):
-                    <button type="button" id="showMoreInfo" class="ml-2 text-blue-500 hover:text-blue-700">
-                        <i data-lucide="info" class="w-4 h-4"></i>
-                    </button>
-                </label>
-                <div id="tokenInfo" class="hidden mt-2">
-                    <p class="text-sm text-gray-500">[This code runs in your browser. Your token will be saved locally for convenience.]</p>
-                    <p class="mt-1"><a href="https://github.com/settings/tokens/new?description=repo2file&scopes=repo" target="_blank" class="text-sm text-gray-500 hover:text-gray-700"><i data-lucide="external-link" class="w-5 h-5 inline-block"></i> Get your token</a></p>
-                </div>
-                <input type="text" id="accessToken" name="accessToken" class="mt-1 block w-full rounded-md border border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 h-10 px-2">
-            </div>
-            <div>
-                <a href="/local.html" class="text-blue-500 hover:text-blue-700 underline">
-                    Convert From Local Directory Instead
+            <h1>
+                <a href="https://repo2txt.simplebasedomain.com/" 
+                   target="_blank" 
+                   class="hover:underline">
+                   GitHub to Plain Text
+                </a>
+            </h1>
+            <p>Convert Code in GitHub to a Single Formatted Text File</p>
+            <div class="header-right">
+                <a href="https://github.com/abinthomasonline/repo2txt" target="_blank" class="github-link">
+                    <i data-lucide="github" class="w-5 h-5"></i>
                 </a>
             </div>
-            <button type="submit" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline flex items-center justify-center">
-                <i data-lucide="folder-search" class="w-5 h-5 mr-2"></i>
-                Fetch Directory Structure
+        </div>
+
+        <form id="repoForm">
+            <div class="form-group">
+                <label class="form-label">
+                    Personal Access Token
+                    <button type="button" id="showMoreInfo" class="info-button ml-auto">
+                        <i data-lucide="chevron-down" class="w-4 h-4"></i>
+                    </button>
+                </label>
+                <div id="tokenInfo" class="info-panel">
+                    <p>Token is optional, but will increase your rate limit from 60 to 5000 requests per hour</p>
+                    <p>Your token will be saved locally for convenience.</p>
+                    <a href="https://github.com/settings/tokens/new?description=repo2file&scopes=repo" 
+                       target="_blank" class="text-blue-600">
+                        <i data-lucide="external-link" class="w-3 h-3"></i>
+                        Get your token
+                    </a>
+                </div>
+                <input type="text" id="accessToken" class="input-field mt-2" placeholder="ghp_xxxxxxxxxxxx">
+            </div>
+
+            <button type="submit" class="button button-blue">
+                <i data-lucide="folder-search" class="w-4 h-4"></i>
+                Fetch Repository Structure
             </button>
         </form>
-        <div id="extentionCheckboxes"></div>
-        <div id="directoryStructure" class="mt-6"></div>
-        <div class="mt-4 flex space-x-4">
-            <button id="generateTextButton" class="flex-1 bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline hidden flex items-center justify-center">
-                <i data-lucide="file-text" class="w-5 h-5 mr-2"></i>
-                Generate Text File
+
+        <div id="extentionCheckboxes" class="extension-checkboxes"></div>
+        <div id="directoryStructure" class="directory-structure"></div>
+
+        <div class="button-group">
+            <button id="generateTextButton" class="button button-green hidden">
+                <i data-lucide="file-text" class="w-4 h-4"></i>
+                Generate Text
             </button>
-            <button id="downloadZipButton" class="flex-1 bg-purple-500 hover:bg-purple-600 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline hidden flex items-center justify-center">
-                <i data-lucide="download" class="w-5 h-5 mr-2"></i>
+            <button id="downloadZipButton" class="button button-purple hidden">
+                <i data-lucide="download" class="w-4 h-4"></i>
                 Download Zip
             </button>
         </div>
-        <div id="tokenCount" class="mt-4 text-sm text-gray-500"></div>
-        <textarea id="outputText" rows="20" class="mt-4 w-full p-2 border rounded-md font-mono" readonly></textarea>
-        <div class="mt-4 flex space-x-4">
-            <button id="copyButton" class="flex-1 bg-indigo-500 hover:bg-indigo-600 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline hidden flex items-center justify-center">
-                <i data-lucide="copy" class="w-5 h-5 mr-2"></i>
-                Copy to Clipboard
+
+        <textarea id="outputText" rows="8" class="output-text" readonly></textarea>
+
+        <div class="button-group">
+            <button id="copyButton" class="button button-indigo hidden">
+                <i data-lucide="copy" class="w-4 h-4"></i>
+                Copy
             </button>
-            <button id="downloadButton" class="flex-1 bg-purple-500 hover:bg-purple-600 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline hidden flex items-center justify-center">
-                <i data-lucide="download" class="w-5 h-5 mr-2"></i>
-                Download Text File
+            <button id="downloadButton" class="button button-purple hidden">
+                <i data-lucide="download" class="w-4 h-4"></i>
+                Download Text
             </button>
         </div>
     </div>
-    <footer class="mt-8 text-center text-sm text-gray-500">
-        <p>If you encounter any errors, please email <a href="mailto:abinthomasonline@gmail.com" class="text-blue-500 hover:text-blue-700">abinthomasonline@gmail.com</a> or <a href="https://github.com/abinthomasonline/repo2txt/issues" target="_blank" class="text-blue-500 hover:text-blue-700">raise a GitHub issue</a>.</p>
-    </footer>
     <script type="module" src="js/index.js"></script>
 </body>
 </html>
