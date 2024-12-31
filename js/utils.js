@@ -1,5 +1,5 @@
 // Display directory structure
-function displayDirectoryStructure(tree) {
+const displayDirectoryStructure = function(tree) {
     tree = tree.filter(item => item.type === 'blob').sort(sortContents);
     const container = document.getElementById('directoryStructure');
     container.innerHTML = '';
@@ -230,7 +230,7 @@ function displayDirectoryStructure(tree) {
 }
 
 // Sort contents alphabetically and by directory/file
-function sortContents(a, b) {
+const sortContents = function(a, b) {
     if (!a || !b || !a.path || !b.path) return 0;
     
     const aPath = a.path.split('/');
@@ -249,27 +249,34 @@ function sortContents(a, b) {
 }
 
 // Get selected files from the directory structure
-function getSelectedFiles() {
+const getSelectedFiles = function() {
     const checkboxes = document.querySelectorAll('#directoryStructure input[type="checkbox"]:checked:not(.directory-checkbox)');
     return Array.from(checkboxes).map(checkbox => JSON.parse(checkbox.value));
-}
+};
 
 // Format repository contents into a single text
-function formatRepoContents(contents) {
+const formatRepoContents = function(selectedContents) {
     let text = '';
     let index = '';
 
-    // Ensure contents is an array before sorting
-    contents = Array.isArray(contents) ? contents.sort(sortContents) : [contents];
+    // Get all file paths from the directory structure
+    const allCheckboxes = document.querySelectorAll('#directoryStructure input[type="checkbox"]:not(.directory-checkbox)');
+    const allFiles = Array.from(allCheckboxes).map(checkbox => JSON.parse(checkbox.value));
+    
+    // Create a Set of selected paths for quick search
+    const selectedPaths = new Set(selectedContents.map(item => item.path));
+    
+    // Sort all files for the directory structure
+    allFiles.sort(sortContents);
 
-    // Create a directory tree structure
+    // Create a directory tree structure with all files
     const tree = {};
-    contents.forEach(item => {
+    allFiles.forEach(item => {
         const parts = item.path.split('/');
         let currentLevel = tree;
         parts.forEach((part, i) => {
             if (!currentLevel[part]) {
-                currentLevel[part] = i === parts.length - 1 ? null : {};
+                currentLevel[part] = i === parts.length - 1 ? item.path : {};
             }
             currentLevel = currentLevel[part];
         });
@@ -286,8 +293,16 @@ function formatRepoContents(contents) {
 
             name = name === '' ? './' : name;
 
-            result += `${prefix}${linePrefix}${name}\n`;
-            if (subNode) {
+            // If it's a file (subNode is a string containing the path)
+            if (typeof subNode === 'string') {
+                const isSelected = selectedPaths.has(subNode);
+                result += `${prefix}${linePrefix}${name} [${isSelected ? 'x' : ' '}]\n`;
+            } else {
+                // If it's a directory
+                result += `${prefix}${linePrefix}${name}\n`;
+            }
+
+            if (subNode && typeof subNode === 'object') {
                 result += buildIndex(subNode, `${prefix}${childPrefix}`);
             }
         });
@@ -296,7 +311,8 @@ function formatRepoContents(contents) {
 
     index = buildIndex(tree);
 
-    contents.forEach((item) => {
+    // Add content for selected files
+    selectedContents.sort(sortContents).forEach((item) => {
         text += `\n\n---\nFile: ${item.path}\n---\n\n${item.text}\n`;
     });
 
@@ -310,6 +326,6 @@ function formatRepoContents(contents) {
         console.log(error);
     }
     return formattedText;
-}
+};
 
 export { displayDirectoryStructure, sortContents, getSelectedFiles, formatRepoContents };
