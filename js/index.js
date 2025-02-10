@@ -1,10 +1,11 @@
-import { displayDirectoryStructure, getSelectedFiles, formatRepoContents } from './utils.js';
+import { displayDirectoryStructure, getSelectedFiles, formatRepoContents, formatIssues } from './utils.js';
 
 // Load saved token on page load
 document.addEventListener('DOMContentLoaded', function() {
     lucide.createIcons();
     setupShowMoreInfoButton();
     loadSavedToken();
+    setupFetchIssuesButton();
 });
 
 // Load saved token from local storage
@@ -61,6 +62,7 @@ document.getElementById('repoForm').addEventListener('submit', async function (e
         displayDirectoryStructure(tree);
         document.getElementById('generateTextButton').style.display = 'flex';
         document.getElementById('downloadZipButton').style.display = 'flex';
+        document.getElementById('fetchIssuesButton').style.display = 'flex';
     } catch (error) {
         outputText.value = `Error fetching repository contents: ${error.message}\n\n` +
             "Please ensure:\n" +
@@ -70,6 +72,69 @@ document.getElementById('repoForm').addEventListener('submit', async function (e
             "4. The specified branch/tag and path (if any) exist in the repository.";
     }
 });
+
+// Fetch GitHub Issues
+async function fetchIssues(owner, repo, token) {
+    const headers = {
+        'Accept': 'application/vnd.github+json'
+    };
+    if (token) {
+        headers['Authorization'] = `token ${token}`;
+    }
+
+    let allIssues = [];
+    let page = 1;
+    let hasNextPage = true;
+
+    while (hasNextPage) {
+        const url = `https://api.github.com/repos/${owner}/${repo}/issues?state=all&page=${page}&per_page=100`;
+        const response = await fetch(url, { headers });
+
+        if (!response.ok) {
+            handleFetchError(response);
+        }
+
+        const issues = await response.json();
+        allIssues = allIssues.concat(issues);
+
+        const linkHeader = response.headers.get('Link');
+        hasNextPage = linkHeader && linkHeader.includes('rel="next"');
+        page++;
+    }
+
+    return allIssues;
+}
+
+// Setup event listener for the Fetch Issues button
+function setupFetchIssuesButton() {
+    const fetchIssuesButton = document.getElementById('fetchIssuesButton');
+    fetchIssuesButton.addEventListener('click', async function() {
+        const repoUrl = document.getElementById('repoUrl').value;
+        const accessToken = document.getElementById('accessToken').value;
+        const outputText = document.getElementById('outputText');
+
+        try {
+            const { owner, repo } = parseRepoUrl(repoUrl);
+            const issues = await fetchIssues(owner, repo, accessToken);
+
+            if(issues && issues.length >0){
+                const formattedIssues = formatIssues(issues);
+                outputText.value += `\n\n--- START OF ISSUES ---\n\n${formattedIssues}\n\n--- END OF ISSUES ---\n`;
+            }else{
+                outputText.value += `\n\n--- START OF ISSUES ---\n\nNo issues found for this repository.\n\n--- END OF ISSUES ---\n`;
+            }
+
+            lucide.createIcons(); // Update the icons after modifying the DOM
+        } catch (error) {
+             outputText.value = `Error fetching issues: ${error.message}\n\n` +
+            "Please ensure:\n" +
+            "1. The repository URL is correct and accessible.\n" +
+            "2. You have the necessary permissions to access the repository.\n" +
+            "3. If it's a private repository, you've provided a valid access token.\n" +
+            "4. There are issues on this repository"
+        }
+    });
+}
 
 // Event listener for generating text file
 document.getElementById('generateTextButton').addEventListener('click', async function () {
