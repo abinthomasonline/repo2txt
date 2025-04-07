@@ -29,7 +29,9 @@ This tool runs entirely in the browser, ensuring data security without server-si
 ## Contributing
 
 Contributions are welcome! Please feel free to submit a Pull Request.
+
 Akshay Kumar BM – Learning Git PRs 🚀
+Kumar BM – Learning Git PRs 🚀
 
 ## License
 
