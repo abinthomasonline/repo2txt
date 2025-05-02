@@ -1,5 +1,8 @@
 import { displayDirectoryStructure, getSelectedFiles, formatRepoContents } from './utils.js';
 
+let downloadFileName = 'prompt.txt';
+let owner, repo;
+
 // Load saved token on page load
 document.addEventListener('DOMContentLoaded', function() {
     lucide.createIcons();
@@ -38,9 +41,14 @@ document.getElementById('repoForm').addEventListener('submit', async function (e
 
     try {
         // Parse repository URL and fetch repository contents
-        const { owner, repo, lastString } = parseRepoUrl(repoUrl);
+        const parsedUrl = parseRepoUrl(repoUrl);
+        owner = parsedUrl.owner;
+        repo = parsedUrl.repo;
+        const lastString = parsedUrl.lastString;
+
         let refFromUrl = '';
         let pathFromUrl = '';
+        downloadFileName = `${repo}.txt`;
 
         if (lastString) {
             const references = await getReferences(owner, repo, accessToken);
@@ -88,6 +96,14 @@ document.getElementById('generateTextButton').addEventListener('click', async fu
         const fileContents = await fetchFileContents(selectedFiles, accessToken);
         const formattedText = formatRepoContents(fileContents);
         outputText.value = formattedText;
+
+        if(!repo){
+            const firstPath = selectedFiles[0].path;
+            const folderName = firstPath.split('/')[0];
+            downloadFileName = `${folderName}.txt`;
+        } else {
+            downloadFileName = `${repo}.txt`;
+        }
 
         document.getElementById('copyButton').style.display = 'flex';
         document.getElementById('downloadButton').style.display = 'flex';
@@ -143,7 +159,7 @@ document.getElementById('downloadButton').addEventListener('click', function () 
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = 'prompt.txt';
+    a.download = downloadFileName;
     a.click();
     URL.revokeObjectURL(url);
 });
