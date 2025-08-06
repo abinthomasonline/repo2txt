@@ -139,13 +139,25 @@ document.getElementById('downloadButton').addEventListener('click', function () 
         document.getElementById('outputText').value = 'Error: No content to download. Please generate the text file first.';
         return;
     }
-    const blob = new Blob([outputText], { type: 'text/plain' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'prompt.txt';
-    a.click();
-    URL.revokeObjectURL(url);
+    
+    try {
+        const blob = new Blob([outputText], { type: 'text/plain' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'prompt.txt';
+        document.body.appendChild(a);
+        a.click();
+        
+        // Clean up after a delay to ensure the download starts
+        setTimeout(() => {
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }, 100);
+    } catch (error) {
+        console.error('Error during file download:', error);
+        document.getElementById('outputText').value = `Error: Failed to download file. ${error.message}`;
+    }
 });
 
 // Parse GitHub repository URL
