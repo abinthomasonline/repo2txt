@@ -312,4 +312,55 @@ function formatRepoContents(contents) {
     return formattedText;
 }
 
-export { displayDirectoryStructure, sortContents, getSelectedFiles, formatRepoContents };
+function formatIssues(issues) {
+    if (!issues || issues.length === 0) {
+        return "No issues found.";
+    }
+
+    let formattedText = '';
+    issues.forEach(issue => {
+        formattedText += `Issue #${issue.number}:\n`;
+        formattedText += `  Title: ${issue.title}\n`;
+        formattedText += `  State: ${issue.state}\n`;
+        formattedText += `  Author: ${issue.user.login}\n`;
+        formattedText += `  Created At: ${new Date(issue.created_at).toLocaleString()}\n`;
+        formattedText += `  Updated At: ${new Date(issue.updated_at).toLocaleString()}\n`;
+
+        // Handle labels
+        if (issue.labels && issue.labels.length > 0) {
+            formattedText += `  Labels: ${issue.labels.map(label => label.name).join(', ')}\n`;
+        } else {
+            formattedText += `  Labels: None\n`;
+        }
+
+        // Handle assignees
+        if (issue.assignees && issue.assignees.length > 0) {
+            formattedText += `  Assignees: ${issue.assignees.map(assignee => assignee.login).join(', ')}\n`;
+        } else {
+            formattedText += `  Assignees: None\n`;
+        }
+         //Handle milestone
+        if (issue.milestone && issue.milestone.title){
+            formattedText += `  Milestone: ${issue.milestone.title}\n`;
+        }else{
+            formattedText += `  Milestone: none\n`;
+        }
+
+        // Truncate body
+        const maxBodyLength = 500;
+        let body = issue.body || "No description provided.";
+        if (body.length > maxBodyLength) {
+            body = body.substring(0, maxBodyLength) + "...\n[Truncated for brevity. See full text on GitHub.]";
+        }
+        formattedText += `  Body: ${body}\n\n`;
+         // Add comments
+         if (issue.comments && issue.comments > 0){
+            formattedText += `  Comments: ${issue.comments}\n\n`;
+        } else{
+            formattedText += `  Comments: 0\n\n`;
+        }
+    });
+    return formattedText;
+}
+
+export { displayDirectoryStructure, sortContents, getSelectedFiles, formatRepoContents, formatIssues };
