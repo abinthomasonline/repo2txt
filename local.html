@@ -14,6 +14,85 @@
     <meta property="og:type" content="website">
     <link rel="icon" href="/favicon.ico" type="image/x-icon">
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+        }
+    </script>
+    <style>
+        :root {
+            --bg-primary: rgb(243, 244, 246);
+            --bg-secondary: rgb(255, 255, 255);
+            --text-primary: rgb(75, 85, 99);
+            --text-secondary: rgb(107, 114, 128);
+            --border-color: rgb(209, 213, 219);
+            --shadow-color: rgba(0, 0, 0, 0.1);
+        }
+        
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --bg-primary: rgb(17, 24, 39);
+                --bg-secondary: rgb(31, 41, 55);
+                --text-primary: rgb(229, 231, 235);
+                --text-secondary: rgb(156, 163, 175);
+                --border-color: rgb(75, 85, 99);
+                --shadow-color: rgba(0, 0, 0, 0.3);
+            }
+        }
+        
+        body {
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+        }
+        
+        .bg-gray-100 {
+            background-color: var(--bg-primary) !important;
+        }
+        
+        .bg-white {
+            background-color: var(--bg-secondary) !important;
+        }
+        
+        .text-gray-600 {
+            color: var(--text-primary) !important;
+        }
+        
+        .text-gray-500 {
+            color: var(--text-secondary) !important;
+        }
+        
+        .border-gray-300 {
+            border-color: var(--border-color) !important;
+        }
+        
+        .shadow-md {
+            box-shadow: 0 4px 6px -1px var(--shadow-color), 0 2px 4px -1px var(--shadow-color) !important;
+        }
+        
+        input, textarea {
+            background-color: var(--bg-secondary) !important;
+            color: var(--text-primary) !important;
+            border-color: var(--border-color) !important;
+        }
+        
+        input:focus, textarea:focus {
+            background-color: var(--bg-secondary) !important;
+            color: var(--text-primary) !important;
+        }
+        
+        .text-gray-800:hover {
+            color: var(--text-primary) !important;
+        }
+        
+        /* Ensure links maintain proper contrast */
+        .text-blue-500 {
+            color: rgb(59, 130, 246) !important;
+        }
+        
+        .text-blue-700:hover {
+            color: rgb(37, 99, 235) !important;
+        }
+    </style>
     <script src="js/lucide.min.js"></script>
     <!-- Google tag (gtag.js) -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-CYF86LN5WM"></script>
@@ -93,6 +172,24 @@
     <footer class="mt-8 text-center text-sm text-gray-500">
         <p>If you encounter any errors, please email <a href="mailto:abinthomasonline@gmail.com" class="text-blue-500 hover:text-blue-700">abinthomasonline@gmail.com</a> or <a href="https://github.com/abinthomasonline/repo2txt/issues" target="_blank" class="text-blue-500 hover:text-blue-700">raise a GitHub issue</a>.</p>
     </footer>
+    <script>
+        // Dark mode functionality - detect system preference and listen for changes
+        function updateTheme() {
+            if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                document.documentElement.classList.add('dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+            }
+        }
+        
+        // Initial theme setup
+        updateTheme();
+        
+        // Listen for system theme changes
+        if (window.matchMedia) {
+            window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', updateTheme);
+        }
+    </script>
     <script type="module" src="js/local.js"></script>
 </body>
 </html>
