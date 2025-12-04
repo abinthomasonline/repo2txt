@@ -4,15 +4,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Local Directory to Plain Text Converter | Convert Local Directories to Text</title>
-    <meta name="description"
-        content="Convert local directories to plain text files easily. Our tool helps you transform local files into a single formatted text file for better readability and analysis.">
+    <title>Local Directory to Plain Text Converter | Repo2Txt</title>
+    <meta name="description" content="Convert local directories to plain text files easily.">
     <meta name="keywords" content="local directory, code converter, plain text, file analysis">
     <meta name="author" content="abinthomasonline">
     <link rel="canonical" href="https://repo2txt.simplebasedomain.com/local.html">
     <meta property="og:title" content="Local Directory to Plain Text Converter">
-    <meta property="og:description"
-        content="Convert local directories to plain text files easily. Transform files into a single formatted text file.">
+    <meta property="og:description" content="Convert local directories to plain text files easily.">
     <meta property="og:url" content="https://repo2txt.simplebasedomain.com/local.html">
     <meta property="og:type" content="website">
     <link rel="icon" href="/favicon.ico" type="image/x-icon">
@@ -20,7 +18,7 @@
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -29,72 +27,116 @@
             theme: {
                 extend: {
                     fontFamily: {
-                        sans: ['Outfit', 'sans-serif'],
+                        sans: ['Inter', 'sans-serif'],
                     },
                     colors: {
-                        dark: {
-                            900: '#0f172a',
-                            800: '#1e293b',
-                            700: '#334155',
-                        },
+                        border: "hsl(var(--border))",
+                        input: "hsl(var(--input))",
+                        ring: "hsl(var(--ring))",
+                        background: "hsl(var(--background))",
+                        foreground: "hsl(var(--foreground))",
                         primary: {
-                            500: '#6366f1', // Indigo
-                            600: '#4f46e5',
-                        }
-                    },
-                    animation: {
-                        'fade-in': 'fadeIn 0.5s ease-out',
-                        'slide-up': 'slideUp 0.5s ease-out',
-                    },
-                    keyframes: {
-                        fadeIn: {
-                            '0%': { opacity: '0' },
-                            '100%': { opacity: '1' },
+                            DEFAULT: "hsl(var(--primary))",
+                            foreground: "hsl(var(--primary-foreground))",
                         },
-                        slideUp: {
-                            '0%': { transform: 'translateY(20px)', opacity: '0' },
-                            '100%': { transform: 'translateY(0)', opacity: '1' },
-                        }
-                    }
+                        secondary: {
+                            DEFAULT: "hsl(var(--secondary))",
+                            foreground: "hsl(var(--secondary-foreground))",
+                        },
+                        destructive: {
+                            DEFAULT: "hsl(var(--destructive))",
+                            foreground: "hsl(var(--destructive-foreground))",
+                        },
+                        muted: {
+                            DEFAULT: "hsl(var(--muted))",
+                            foreground: "hsl(var(--muted-foreground))",
+                        },
+                        accent: {
+                            DEFAULT: "hsl(var(--accent))",
+                            foreground: "hsl(var(--accent-foreground))",
+                        },
+                        popover: {
+                            DEFAULT: "hsl(var(--popover))",
+                            foreground: "hsl(var(--popover-foreground))",
+                        },
+                        card: {
+                            DEFAULT: "hsl(var(--card))",
+                            foreground: "hsl(var(--card-foreground))",
+                        },
+                    },
+                    borderRadius: {
+                        lg: "var(--radius)",
+                        md: "calc(var(--radius) - 2px)",
+                        sm: "calc(var(--radius) - 4px)",
+                    },
                 }
             }
         }
     </script>
     <style>
+        :root {
+            --background: 0 0% 100%;
+            --foreground: 240 10% 3.9%;
+            --card: 0 0% 100%;
+            --card-foreground: 240 10% 3.9%;
+            --popover: 0 0% 100%;
+            --popover-foreground: 240 10% 3.9%;
+            --primary: 240 5.9% 10%;
+            --primary-foreground: 0 0% 98%;
+            --secondary: 240 4.8% 95.9%;
+            --secondary-foreground: 240 5.9% 10%;
+            --muted: 240 4.8% 95.9%;
+            --muted-foreground: 240 3.8% 46.1%;
+            --accent: 240 4.8% 95.9%;
+            --accent-foreground: 240 5.9% 10%;
+            --destructive: 0 84.2% 60.2%;
+            --destructive-foreground: 0 0% 98%;
+            --border: 240 5.9% 90%;
+            --input: 240 5.9% 90%;
+            --ring: 240 10% 3.9%;
+            --radius: 0.5rem;
+        }
+
+        .dark {
+            --background: 0 0% 0%;
+            /* Pure Black */
+            --foreground: 0 0% 98%;
+            --card: 0 0% 0%;
+            /* Pure Black Card */
+            --card-foreground: 0 0% 98%;
+            --popover: 0 0% 3.9%;
+            --popover-foreground: 0 0% 98%;
+            --primary: 0 0% 98%;
+            --primary-foreground: 0 0% 9%;
+            --secondary: 0 0% 14.9%;
+            --secondary-foreground: 0 0% 98%;
+            --muted: 0 0% 14.9%;
+            --muted-foreground: 0 0% 63.9%;
+            --accent: 0 0% 14.9%;
+            --accent-foreground: 0 0% 98%;
+            --destructive: 0 62.8% 30.6%;
+            --destructive-foreground: 0 0% 98%;
+            --border: 0 0% 14.9%;
+            --input: 0 0% 14.9%;
+            --ring: 0 0% 83.1%;
+        }
+
         body {
-            background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
-            background-attachment: fixed;
+            background-color: hsl(var(--background));
+            color: hsl(var(--foreground));
         }
 
-        .glass-panel {
-            background: rgba(30, 41, 59, 0.7);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
-        }
-
-        .input-glass {
-            background: rgba(15, 23, 42, 0.6);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            color: #e2e8f0;
-            transition: all 0.3s ease;
-        }
-
-        .input-glass:focus {
-            background: rgba(15, 23, 42, 0.8);
-            border-color: #6366f1;
-            box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
-            outline: none;
+        .border-border {
+            border-color: hsl(var(--border));
         }
 
         /* Custom File Input Styling */
         input[type=file]::file-selector-button {
-            background-color: #4f46e5;
-            color: white;
+            background-color: hsl(var(--secondary));
+            color: hsl(var(--secondary-foreground));
             border: none;
             padding: 0.5rem 1rem;
-            border-radius: 0.5rem;
+            border-radius: calc(var(--radius) - 2px);
             font-weight: 500;
             font-size: 0.875rem;
             cursor: pointer;
@@ -103,7 +145,7 @@
         }
 
         input[type=file]::file-selector-button:hover {
-            background-color: #4338ca;
+            background-color: hsl(var(--secondary) / 0.8);
         }
 
         /* Custom Scrollbar */
@@ -113,16 +155,16 @@
         }
 
         ::-webkit-scrollbar-track {
-            background: rgba(15, 23, 42, 0.5);
+            background: hsl(var(--background));
         }
 
         ::-webkit-scrollbar-thumb {
-            background: #475569;
+            background: hsl(var(--muted));
             border-radius: 4px;
         }
 
         ::-webkit-scrollbar-thumb:hover {
-            background: #64748b;
+            background: hsl(var(--muted-foreground));
         }
     </style>
     <script src="js/lucide.min.js"></script>
@@ -139,73 +181,69 @@
     <script async src="https://unpkg.com/gpt-tokenizer"></script>
 </head>
 
-<body
-    class="min-h-screen p-4 md:p-8 text-slate-300 font-sans antialiased selection:bg-primary-500 selection:text-white">
-    <div class="max-w-4xl mx-auto glass-panel rounded-2xl p-8 relative animate-fade-in">
+<body class="min-h-screen p-4 md:p-8 font-sans antialiased">
+    <div class="max-w-6xl mx-auto border border-border rounded-xl p-8 relative bg-card shadow-sm">
         <a href="https://github.com/abinthomasonline/repo2txt" target="_blank"
-            class="absolute top-4 right-4 p-2 rounded-full hover:bg-white/10 transition-colors duration-200 group">
-            <i data-lucide="github" class="w-6 h-6 text-slate-400 group-hover:text-white transition-colors"></i>
+            class="absolute top-4 right-4 p-2 rounded-md hover:bg-accent transition-colors duration-200">
+            <i data-lucide="github" class="w-5 h-5 text-muted-foreground hover:text-foreground transition-colors"></i>
         </a>
 
-        <div class="text-center mb-10 animate-slide-up">
-            <div class="inline-flex items-center justify-center p-3 bg-primary-500/10 rounded-xl mb-4">
-                <i data-lucide="folder-code" class="w-8 h-8 text-primary-500"></i>
-            </div>
-            <h1
-                class="text-4xl md:text-5xl font-bold mb-3 text-transparent bg-clip-text bg-gradient-to-r from-white to-slate-400">
-                Local2Txt</h1>
-            <p class="text-lg text-slate-400 max-w-lg mx-auto">Convert local directories or ZIP files into a single,
-                LLM-ready text file.</p>
+        <div class="mb-8">
+            <h1 class="text-3xl font-bold tracking-tight mb-2">Local2Txt</h1>
+            <p class="text-muted-foreground">Convert local directories or ZIP files into a single, LLM-ready text file.
+            </p>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6 animate-slide-up" style="animation-delay: 0.1s;">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
             <div class="space-y-2">
-                <label for="directoryPicker" class="block text-sm font-medium text-slate-300 ml-1">Select
+                <label for="directoryPicker"
+                    class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">Select
                     Directory</label>
-                <div class="input-glass rounded-xl p-2">
-                    <input type="file" id="directoryPicker" webkitdirectory directory multiple
-                        class="block w-full text-sm text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-primary-600 file:text-white hover:file:bg-primary-500">
+                <div
+                    class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 items-center">
+                    <input type="file" id="directoryPicker" webkitdirectory directory multiple class="w-full">
                 </div>
             </div>
             <div class="space-y-2">
-                <label for="zipPicker" class="block text-sm font-medium text-slate-300 ml-1">Or Upload Zip File</label>
-                <div class="input-glass rounded-xl p-2">
-                    <input type="file" id="zipPicker" accept=".zip,.rar,.7z"
-                        class="block w-full text-sm text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-primary-600 file:text-white hover:file:bg-primary-500">
+                <label for="zipPicker"
+                    class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">Or
+                    Upload Zip File</label>
+                <div
+                    class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 items-center">
+                    <input type="file" id="zipPicker" accept=".zip,.rar,.7z" class="w-full">
                 </div>
-                <p class="text-xs text-slate-500 ml-1">Supported formats: .zip, .rar, .7z</p>
+                <p class="text-[0.8rem] text-muted-foreground">Supported formats: .zip, .rar, .7z</p>
             </div>
         </div>
 
-        <div class="flex items-center justify-between pt-2 animate-slide-up" style="animation-delay: 0.15s;">
-            <a href="/" class="text-sm text-slate-400 hover:text-white flex items-center transition-colors group">
-                <i data-lucide="globe" class="w-4 h-4 mr-2 group-hover:text-primary-500 transition-colors"></i>
+        <div class="flex items-center justify-between pt-2">
+            <a href="/"
+                class="text-sm text-muted-foreground hover:text-foreground flex items-center transition-colors hover:underline">
                 Convert from GitHub instead
             </a>
         </div>
 
-        <div id="extentionCheckboxes" class="mt-8 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 animate-slide-up"
-            style="animation-delay: 0.2s;"></div>
+        <div id="extentionCheckboxes" class="mt-8 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3"></div>
 
-        <div id="directoryStructure" class="mt-8 animate-slide-up" style="animation-delay: 0.3s;"></div>
+        <div id="directoryStructure" class="mt-8"></div>
 
-        <div class="mt-8 animate-slide-up" style="animation-delay: 0.4s;">
+        <div class="mt-8">
             <button id="generateTextButton"
-                class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-semibold py-3.5 px-6 rounded-xl shadow-lg shadow-emerald-500/20 hover:shadow-emerald-500/40 transition-all duration-200 hidden flex items-center justify-center transform hover:-translate-y-0.5">
-                <i data-lucide="file-text" class="w-5 h-5 mr-2"></i>
+                class="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2 w-full hidden">
+                <i data-lucide="file-text" class="w-4 h-4 mr-2"></i>
                 Generate Text File
             </button>
         </div>
 
-        <div id="tokenCount" class="mt-6 text-sm text-slate-400 font-mono text-center"></div>
+        <div id="tokenCount" class="mt-6 text-sm text-muted-foreground font-mono text-center"></div>
 
         <div class="relative mt-4 group">
             <textarea id="outputText" rows="20"
-                class="w-full bg-slate-900/50 border border-slate-700/50 rounded-xl p-4 font-mono text-sm text-slate-300 focus:border-primary-500 focus:ring-1 focus:ring-primary-500 transition-all outline-none resize-y"
+                class="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 font-mono"
                 readonly placeholder="Generated text will appear here..."></textarea>
-            <div class="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity">
+            <div class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
                 <button id="copyButton"
-                    class="bg-slate-800 hover:bg-slate-700 text-white p-2 rounded-lg shadow-lg border border-slate-600 transition-colors"
+                    class="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-8 w-8"
                     title="Copy to clipboard">
                     <i data-lucide="copy" class="w-4 h-4"></i>
                 </button>
@@ -214,22 +252,21 @@
 
         <div class="mt-4 flex flex-col sm:flex-row gap-4">
             <button id="downloadButton"
-                class="flex-1 bg-slate-700 hover:bg-slate-600 text-white font-semibold py-3 px-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 hidden flex items-center justify-center">
-                <i data-lucide="download" class="w-5 h-5 mr-2"></i>
+                class="flex-1 inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-secondary text-secondary-foreground hover:bg-secondary/80 h-10 px-4 py-2 hidden">
+                <i data-lucide="download" class="w-4 h-4 mr-2"></i>
                 Save as .txt
             </button>
         </div>
     </div>
 
-    <footer class="mt-12 text-center text-sm text-slate-500 pb-8">
-        <p>Built with <i data-lucide="heart" class="w-3 h-3 inline text-red-500 fill-red-500"></i> by <a
-                href="https://github.com/abinthomasonline" target="_blank"
-                class="text-slate-400 hover:text-white transition-colors">Abin Thomas</a></p>
+    <footer class="mt-12 text-center text-sm text-muted-foreground pb-8">
+        <p>Built by <a href="https://github.com/abinthomasonline" target="_blank"
+                class="hover:text-foreground transition-colors underline underline-offset-4">Abin Thomas</a></p>
         <div class="mt-2 space-x-4">
-            <a href="mailto:abinthomasonline@gmail.com" class="hover:text-primary-400 transition-colors">Contact</a>
+            <a href="mailto:abinthomasonline@gmail.com" class="hover:text-foreground transition-colors">Contact</a>
             <span>•</span>
             <a href="https://github.com/abinthomasonline/repo2txt/issues" target="_blank"
-                class="hover:text-primary-400 transition-colors">Report Issue</a>
+                class="hover:text-foreground transition-colors">Report Issue</a>
         </div>
     </footer>
 
