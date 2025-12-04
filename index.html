@@ -161,14 +161,73 @@
     </script>
     <script src="js/jszip.min.js"></script>
     <script async src="https://unpkg.com/gpt-tokenizer"></script>
+    <script>
+        // Theme toggle logic
+        function toggleTheme() {
+            const html = document.documentElement;
+            if (html.classList.contains('dark')) {
+                html.classList.remove('dark');
+                localStorage.setItem('theme', 'light');
+            } else {
+                html.classList.add('dark');
+                localStorage.setItem('theme', 'dark');
+            }
+            updateThemeIcon();
+        }
+
+        function updateThemeIcon() {
+            const isDark = document.documentElement.classList.contains('dark');
+            const icon = document.getElementById('themeIcon');
+            if (icon) {
+                icon.setAttribute('data-lucide', isDark ? 'sun' : 'moon');
+                lucide.createIcons();
+            }
+        }
+
+        // Initialize theme
+        document.addEventListener('DOMContentLoaded', () => {
+            const savedTheme = localStorage.getItem('theme');
+            const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)');
+
+            function applyTheme(isDark) {
+                if (isDark) {
+                    document.documentElement.classList.add('dark');
+                } else {
+                    document.documentElement.classList.remove('dark');
+                }
+                updateThemeIcon();
+            }
+
+            if (savedTheme) {
+                applyTheme(savedTheme === 'dark');
+            } else {
+                applyTheme(systemPrefersDark.matches);
+            }
+
+            // Listen for system theme changes if no preference is saved
+            systemPrefersDark.addEventListener('change', (e) => {
+                if (!localStorage.getItem('theme')) {
+                    applyTheme(e.matches);
+                }
+            });
+        });
+    </script>
 </head>
 
-<body class="min-h-screen p-4 md:p-8 font-sans antialiased">
+<body class="min-h-screen p-4 md:p-8 font-sans antialiased transition-colors duration-300">
     <div class="max-w-6xl mx-auto border border-border rounded-xl p-8 relative bg-card shadow-sm">
-        <a href="https://github.com/abinthomasonline/repo2txt" target="_blank"
-            class="absolute top-4 right-4 p-2 rounded-md hover:bg-accent transition-colors duration-200">
-            <i data-lucide="github" class="w-5 h-5 text-muted-foreground hover:text-foreground transition-colors"></i>
-        </a>
+        <div class="absolute top-4 right-4 flex items-center space-x-2">
+            <button onclick="toggleTheme()" class="p-2 rounded-md hover:bg-accent transition-colors duration-200"
+                title="Toggle Theme">
+                <i id="themeIcon" data-lucide="sun"
+                    class="w-5 h-5 text-muted-foreground hover:text-foreground transition-colors"></i>
+            </button>
+            <a href="https://github.com/cestercian/repo2txt" target="_blank"
+                class="p-2 rounded-md hover:bg-accent transition-colors duration-200">
+                <i data-lucide="github"
+                    class="w-5 h-5 text-muted-foreground hover:text-foreground transition-colors"></i>
+            </a>
+        </div>
 
         <div class="mb-8">
             <h1 class="text-3xl font-bold tracking-tight mb-2">Repo2Txt</h1>
@@ -268,8 +327,8 @@
     </div>
 
     <footer class="mt-12 text-center text-sm text-muted-foreground pb-8">
-        <p>Built by <a href="https://github.com/abinthomasonline" target="_blank"
-                class="hover:text-foreground transition-colors underline underline-offset-4">Abin Thomas</a></p>
+        <p>Built by <a href="https://github.com/cestercian" target="_blank"
+                class="hover:text-foreground transition-colors underline underline-offset-4">cestercian</a></p>
         <div class="mt-2 space-x-4">
             <a href="mailto:abinthomasonline@gmail.com" class="hover:text-foreground transition-colors">Contact</a>
             <span>•</span>
