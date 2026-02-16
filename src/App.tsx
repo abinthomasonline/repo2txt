@@ -7,9 +7,6 @@ import { FileTree } from '@/components/file-tree';
 import { OutputPanel } from '@/components/OutputPanel';
 import { ProviderError } from '@/lib/providers/types';
 import { GitHubProvider } from '@/features/github';
-import { GitLabProvider } from '@/features/gitlab';
-import { AzureDevOpsProvider } from '@/features/azure';
-import { LocalProvider } from '@/features/local';
 import { Formatter } from '@/lib/formatter';
 import { buildTree, extractDirectories } from '@/lib/tree-builder';
 import {
@@ -19,7 +16,8 @@ import {
   extractLocalName,
 } from '@/lib/utils/repoName';
 import { useStore } from '@/store';
-import type { TreeNode, FileNode, FileContent, ExtensionFilter as ExtensionFilterType, FormattedOutput } from '@/types';
+import type { FileNode, FileContent, ExtensionFilter as ExtensionFilterType, FormattedOutput } from '@/types';
+import type { IProvider } from '@/lib/providers/types';
 
 function App() {
   const { setProviderType, setRepoUrl } = useStore();
@@ -50,7 +48,7 @@ function App() {
   const [isLoading, setIsLoading] = useState(false);
   const [showExcluded, setShowExcluded] = useState(false);
   const [output, setOutput] = useState<FormattedOutput | null>(null);
-  const [currentProvider, setCurrentProvider] = useState<GitHubProvider | GitLabProvider | AzureDevOpsProvider | LocalProvider | null>(null);
+  const [currentProvider, setCurrentProvider] = useState<IProvider | null>(null);
   const [repoName, setRepoName] = useState<string>('repo-export');
   const [error, setError] = useState<{ message: string; recovery?: () => void; recoveryLabel?: string } | null>(null);
   const shouldAutoExpandRoot = useRef(false);
@@ -120,7 +118,7 @@ function App() {
   }, [tree, toggleExpanded]);
 
   // Load files from provider
-  const loadFiles = useCallback(async (provider: GitHubProvider | GitLabProvider | AzureDevOpsProvider | LocalProvider, url: string) => {
+  const loadFiles = useCallback(async (provider: IProvider, url: string) => {
     try {
       setIsLoading(true);
       setCurrentProvider(provider);
@@ -171,6 +169,8 @@ function App() {
     setRepoUrl(url);
     setRepoName(extractGitLabRepoName(url));
 
+    // Dynamically import GitLab provider (code splitting)
+    const { GitLabProvider } = await import('@/features/gitlab');
     const provider = new GitLabProvider();
     // Get GitLab token from sessionStorage if available
     const token = sessionStorage.getItem('gitlab_token');
@@ -187,6 +187,8 @@ function App() {
     setRepoUrl(url);
     setRepoName(extractAzureRepoName(url));
 
+    // Dynamically import Azure provider (code splitting)
+    const { AzureDevOpsProvider } = await import('@/features/azure');
     const provider = new AzureDevOpsProvider();
     // Get Azure token from sessionStorage if available
     const token = sessionStorage.getItem('azure_token');
@@ -202,6 +204,8 @@ function App() {
     setProviderType('local');
     setRepoName(extractLocalName(files));
 
+    // Dynamically import Local provider (code splitting)
+    const { LocalProvider } = await import('@/features/local');
     const provider = new LocalProvider();
     await provider.initialize({ source: 'directory', files });
 
@@ -216,6 +220,8 @@ function App() {
     setProviderType('local');
     setRepoName(extractLocalName(file));
 
+    // Dynamically import Local provider (code splitting)
+    const { LocalProvider } = await import('@/features/local');
     const provider = new LocalProvider();
     await provider.initialize({ source: 'zip', zipFile: file });
 
