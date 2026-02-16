@@ -13,6 +13,13 @@ dist-ssr
 *.local
 .vite
 
+# Claude Code cache
+.claude
+
+# Test coverage
+coverage/
+.nyc_output/
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

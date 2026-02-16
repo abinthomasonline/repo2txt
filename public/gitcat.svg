@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <defs>
+    <linearGradient id="catGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#4F46E5;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#7C3AED;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+
+  <!-- Cat head -->
+  <ellipse cx="50" cy="55" rx="28" ry="26" fill="url(#catGradient)"/>
+
+  <!-- Left ear -->
+  <path d="M 30 35 L 25 20 L 38 32 Z" fill="url(#catGradient)"/>
+
+  <!-- Right ear -->
+  <path d="M 70 35 L 75 20 L 62 32 Z" fill="url(#catGradient)"/>
+
+  <!-- Inner left ear -->
+  <path d="M 30 35 L 28 26 L 35 34 Z" fill="#E0E7FF"/>
+
+  <!-- Inner right ear -->
+  <path d="M 70 35 L 72 26 L 65 34 Z" fill="#E0E7FF"/>
+
+  <!-- Left eye -->
+  <ellipse cx="40" cy="52" rx="4" ry="6" fill="#1F2937"/>
+  <ellipse cx="41" cy="51" rx="1.5" ry="2" fill="white"/>
+
+  <!-- Right eye -->
+  <ellipse cx="60" cy="52" rx="4" ry="6" fill="#1F2937"/>
+  <ellipse cx="61" cy="51" rx="1.5" ry="2" fill="white"/>
+
+  <!-- Nose -->
+  <path d="M 50 58 L 48 62 L 52 62 Z" fill="#EC4899"/>
+
+  <!-- Mouth -->
+  <path d="M 50 62 Q 45 66 42 64" stroke="#1F2937" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+  <path d="M 50 62 Q 55 66 58 64" stroke="#1F2937" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+
+  <!-- Whiskers left -->
+  <line x1="24" y1="54" x2="35" y2="54" stroke="#1F2937" stroke-width="1" stroke-linecap="round"/>
+  <line x1="24" y1="58" x2="35" y2="57" stroke="#1F2937" stroke-width="1" stroke-linecap="round"/>
+  <line x1="24" y1="62" x2="35" y2="60" stroke="#1F2937" stroke-width="1" stroke-linecap="round"/>
+
+  <!-- Whiskers right -->
+  <line x1="76" y1="54" x2="65" y2="54" stroke="#1F2937" stroke-width="1" stroke-linecap="round"/>
+  <line x1="76" y1="58" x2="65" y2="57" stroke="#1F2937" stroke-width="1" stroke-linecap="round"/>
+  <line x1="76" y1="62" x2="65" y2="60" stroke="#1F2937" stroke-width="1" stroke-linecap="round"/>
+
+  <!-- Document/code accent (optional - represents "repo2txt") -->
+  <rect x="36" y="72" width="28" height="16" rx="2" fill="#E0E7FF" opacity="0.8"/>
+  <line x1="40" y1="77" x2="60" y2="77" stroke="#4F46E5" stroke-width="1.5" stroke-linecap="round"/>
+  <line x1="40" y1="81" x2="56" y2="81" stroke="#4F46E5" stroke-width="1.5" stroke-linecap="round"/>
+  <line x1="40" y1="85" x2="58" y2="85" stroke="#4F46E5" stroke-width="1.5" stroke-linecap="round"/>
+</svg>
