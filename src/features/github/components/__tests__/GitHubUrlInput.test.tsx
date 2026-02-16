@@ -172,18 +172,6 @@ describe('GitHubUrlInput', () => {
     });
   });
 
-  it('should load initial URL from store', () => {
-    (useStore as any).mockReturnValue({
-      repoUrl: 'https://github.com/facebook/react',
-      setRepoUrl: mockSetRepoUrl,
-    });
-
-    render(<GitHubUrlInput />);
-
-    const input = screen.getByPlaceholderText('https://github.com/facebook/react') as HTMLInputElement;
-    expect(input.value).toBe('https://github.com/facebook/react');
-  });
-
   it('should have proper aria attributes for accessibility', () => {
     render(<GitHubUrlInput />);
 

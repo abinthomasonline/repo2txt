@@ -89,7 +89,7 @@ describe('GitHubAuth', () => {
 
     await userEvent.type(input, token);
 
-    expect(sessionStorage.getItem('provider_token')).toBe(token);
+    expect(sessionStorage.getItem('github_token')).toBe(token);
   });
 
   it('should update store when token is entered', async () => {
@@ -107,7 +107,7 @@ describe('GitHubAuth', () => {
 
   it('should load saved token from sessionStorage on mount', () => {
     const savedToken = 'ghp_savedtoken456';
-    sessionStorage.setItem('provider_token', savedToken);
+    sessionStorage.setItem('github_token', savedToken);
 
     render(<GitHubAuth />);
 
@@ -148,7 +148,7 @@ describe('GitHubAuth', () => {
     await userEvent.click(clearButton);
 
     expect(input.value).toBe('');
-    expect(sessionStorage.getItem('provider_token')).toBeNull();
+    expect(sessionStorage.getItem('github_token')).toBeNull();
     expect(mockSetCredentials).toHaveBeenCalledWith({ token: undefined });
   });
 
@@ -174,11 +174,11 @@ describe('GitHubAuth', () => {
     const input = screen.getByPlaceholderText('ghp_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx');
     await userEvent.type(input, 'ghp_testtoken123');
 
-    expect(sessionStorage.getItem('provider_token')).toBe('ghp_testtoken123');
+    expect(sessionStorage.getItem('github_token')).toBe('ghp_testtoken123');
 
     await userEvent.clear(input);
 
-    expect(sessionStorage.getItem('provider_token')).toBeNull();
+    expect(sessionStorage.getItem('github_token')).toBeNull();
   });
 
   it('should update credentials in store when token is cleared', async () => {
@@ -228,7 +228,7 @@ describe('GitHubAuth', () => {
     await userEvent.type(input, 'ghp_token2');
 
     await waitFor(() => {
-      expect(sessionStorage.getItem('provider_token')).toBe('ghp_token2');
+      expect(sessionStorage.getItem('github_token')).toBe('ghp_token2');
     });
   });
 });
