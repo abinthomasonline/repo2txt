@@ -14,7 +14,7 @@ export function GitHubAuth() {
 
   // Load saved token on mount
   useEffect(() => {
-    const savedToken = sessionStorage.getItem('provider_token');
+    const savedToken = sessionStorage.getItem('github_token');
     if (savedToken) {
       setToken(savedToken);
       setCredentials({ token: savedToken });
@@ -27,17 +27,17 @@ export function GitHubAuth() {
 
     // Save to sessionStorage and store
     if (newToken) {
-      sessionStorage.setItem('provider_token', newToken);
+      sessionStorage.setItem('github_token', newToken);
       setCredentials({ token: newToken });
     } else {
-      sessionStorage.removeItem('provider_token');
+      sessionStorage.removeItem('github_token');
       setCredentials({ token: undefined });
     }
   };
 
   const handleClearToken = () => {
     setToken('');
-    sessionStorage.removeItem('provider_token');
+    sessionStorage.removeItem('github_token');
     setCredentials({ token: undefined });
   };
 

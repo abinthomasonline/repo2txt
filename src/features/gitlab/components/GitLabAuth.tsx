@@ -14,7 +14,7 @@ export function GitLabAuth() {
 
   // Load saved token on mount
   useEffect(() => {
-    const savedToken = sessionStorage.getItem('provider_token');
+    const savedToken = sessionStorage.getItem('gitlab_token');
     if (savedToken) {
       setToken(savedToken);
       setCredentials({ token: savedToken });
@@ -27,17 +27,17 @@ export function GitLabAuth() {
 
     // Save to sessionStorage and store
     if (newToken) {
-      sessionStorage.setItem('provider_token', newToken);
+      sessionStorage.setItem('gitlab_token', newToken);
       setCredentials({ token: newToken });
     } else {
-      sessionStorage.removeItem('provider_token');
+      sessionStorage.removeItem('gitlab_token');
       setCredentials({ token: undefined });
     }
   };
 
   const handleClearToken = () => {
     setToken('');
-    sessionStorage.removeItem('provider_token');
+    sessionStorage.removeItem('gitlab_token');
     setCredentials({ token: undefined });
   };
 

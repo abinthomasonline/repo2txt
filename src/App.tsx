@@ -147,8 +147,8 @@ function App() {
     setRepoUrl(url);
 
     const provider = new GitHubProvider();
-    // Get token from sessionStorage if available
-    const token = sessionStorage.getItem('provider_token');
+    // Get GitHub token from sessionStorage if available
+    const token = sessionStorage.getItem('github_token');
     if (token) {
       provider.setCredentials({ token });
     }
@@ -162,8 +162,8 @@ function App() {
     setRepoUrl(url);
 
     const provider = new GitLabProvider();
-    // Get token from sessionStorage if available
-    const token = sessionStorage.getItem('provider_token');
+    // Get GitLab token from sessionStorage if available
+    const token = sessionStorage.getItem('gitlab_token');
     if (token) {
       provider.setCredentials({ token });
     }
