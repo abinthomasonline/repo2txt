@@ -5,11 +5,13 @@
 
 import { useState } from 'react';
 import { GitHubForm } from '@/features/github';
+import { GitLabForm } from '@/features/gitlab';
 import { LocalForm } from '@/features/local';
 import type { ProviderType } from '@/types';
 
 interface ProviderSelectorProps {
   onGitHubSubmit?: (url: string) => void;
+  onGitLabSubmit?: (url: string) => void;
   onLocalDirectorySubmit?: (files: FileList) => void;
   onLocalZipSubmit?: (file: File) => void;
   onProviderChange?: (provider: ProviderType) => void;
@@ -18,6 +20,7 @@ interface ProviderSelectorProps {
 
 export function ProviderSelector({
   onGitHubSubmit,
+  onGitLabSubmit,
   onLocalDirectorySubmit,
   onLocalZipSubmit,
   onProviderChange,
@@ -56,6 +59,25 @@ export function ProviderSelector({
         </button>
 
         <button
+          onClick={() => handleProviderChange('gitlab')}
+          disabled={disabled}
+          className={`
+            flex-1 flex items-center justify-center gap-2 rounded-md px-4 py-2.5 text-sm font-medium transition-colors
+            ${
+              activeProvider === 'gitlab'
+                ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 shadow'
+                : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100'
+            }
+            ${disabled ? 'opacity-50 cursor-not-allowed' : ''}
+          `}
+        >
+          <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M23.6 9.593l-.033-.086L20.3.98a.851.851 0 00-.336-.405.875.875 0 00-1.056.095c-.139.127-.24.296-.289.485l-2.224 6.827H7.617L5.393 1.165a.857.857 0 00-.29-.485.875.875 0 00-1.055-.095.857.857 0 00-.336.405L.443 9.502l-.032.086a6.066 6.066 0 002.012 7.01l.01.008.03.022 4.977 3.727 2.462 1.862 1.5 1.132a1.008 1.008 0 001.22 0l1.499-1.132 2.461-1.862 5.006-3.75.01-.008a6.068 6.068 0 002.012-7.004z" />
+          </svg>
+          GitLab
+        </button>
+
+        <button
           onClick={() => handleProviderChange('local')}
           disabled={disabled}
           className={`
@@ -84,6 +106,8 @@ export function ProviderSelector({
       <div className="rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 p-6">
         {activeProvider === 'github' ? (
           <GitHubForm onSubmit={onGitHubSubmit} disabled={disabled} />
+        ) : activeProvider === 'gitlab' ? (
+          <GitLabForm onSubmit={onGitLabSubmit} disabled={disabled} />
         ) : (
           <LocalForm
             onDirectorySelected={onLocalDirectorySubmit}

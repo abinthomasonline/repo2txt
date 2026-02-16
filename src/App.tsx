@@ -7,6 +7,7 @@ import { FileTree } from '@/components/file-tree';
 import { OutputPanel } from '@/components/OutputPanel';
 import { ProviderError } from '@/lib/providers/types';
 import { GitHubProvider } from '@/features/github';
+import { GitLabProvider } from '@/features/gitlab';
 import { LocalProvider } from '@/features/local';
 import { Formatter } from '@/lib/formatter';
 import { buildTree, extractDirectories } from '@/lib/tree-builder';
@@ -42,7 +43,7 @@ function App() {
   const [isLoading, setIsLoading] = useState(false);
   const [showExcluded, setShowExcluded] = useState(false);
   const [output, setOutput] = useState<FormattedOutput | null>(null);
-  const [currentProvider, setCurrentProvider] = useState<GitHubProvider | LocalProvider | null>(null);
+  const [currentProvider, setCurrentProvider] = useState<GitHubProvider | GitLabProvider | LocalProvider | null>(null);
   const [error, setError] = useState<{ message: string; recovery?: () => void; recoveryLabel?: string } | null>(null);
   const shouldAutoExpandRoot = useRef(false);
   const outputRef = useRef<HTMLDivElement>(null);
@@ -111,7 +112,7 @@ function App() {
   }, [tree, toggleExpanded]);
 
   // Load files from provider
-  const loadFiles = useCallback(async (provider: GitHubProvider | LocalProvider, url: string) => {
+  const loadFiles = useCallback(async (provider: GitHubProvider | GitLabProvider | LocalProvider, url: string) => {
     try {
       setIsLoading(true);
       setCurrentProvider(provider);
@@ -146,6 +147,21 @@ function App() {
     setRepoUrl(url);
 
     const provider = new GitHubProvider();
+    // Get token from sessionStorage if available
+    const token = sessionStorage.getItem('provider_token');
+    if (token) {
+      provider.setCredentials({ token });
+    }
+
+    await loadFiles(provider, url);
+  }, [loadFiles, setProviderType, setRepoUrl]);
+
+  // Handle GitLab submission
+  const handleGitLabSubmit = useCallback(async (url: string) => {
+    setProviderType('gitlab');
+    setRepoUrl(url);
+
+    const provider = new GitLabProvider();
     // Get token from sessionStorage if available
     const token = sessionStorage.getItem('provider_token');
     if (token) {
@@ -345,6 +361,7 @@ function App() {
           <section>
             <ProviderSelector
               onGitHubSubmit={handleGitHubSubmit}
+              onGitLabSubmit={handleGitLabSubmit}
               onLocalDirectorySubmit={handleLocalDirectorySubmit}
               onLocalZipSubmit={handleLocalZipSubmit}
               onProviderChange={resetAll}
