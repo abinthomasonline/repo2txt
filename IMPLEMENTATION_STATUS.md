@@ -1,6 +1,6 @@
 # repo2txt v2.0 - Implementation Status
 
-**Last Updated:** 2026-02-16
+**Last Updated:** 2026-02-17
 **Version:** 2.0.0-beta.1
 
 ---
@@ -144,23 +144,24 @@
 
 ---
 
-### Phase 5: Gitignore Parser (60%)
-- ✅ Basic GitIgnoreParser implementation
+### Phase 5: Gitignore Parser (100%)
+- ✅ Complete GitIgnoreParser implementation
   - ✅ Basic wildcard patterns (`*.log`)
   - ✅ Directory patterns (`node_modules/`)
   - ✅ Comments (full-line `# comment`)
+  - ✅ Inline comments (`*.log # ignore logs`)
   - ✅ Empty line handling
   - ✅ Escape special regex characters
-- ❌ Missing advanced features:
-  - ❌ Negation patterns (`!important.txt`)
-  - ❌ Double-asterisk globbing (`dir/**/file`)
-  - ❌ Character classes (`[abc]`)
-  - ❌ Inline comments
+  - ✅ Negation patterns (`!important.txt`)
+  - ✅ Double-asterisk globbing (`dir/**/file`, `**/node_modules/`)
+  - ✅ Character classes (`[abc]`, `[0-9]`)
+  - ✅ Single wildcards (`*` matches anything except `/`)
+  - ✅ Question mark (`?` matches single char except `/`)
 
 **Files:**
-- `src/store/slices/fileTreeSlice.ts` (patternToRegex helper)
+- `src/store/slices/fileTreeSlice.ts` (enhanced patternToRegex helper with full gitignore spec)
 
-**Status:** Basic implementation works but needs enhancement for full gitignore spec.
+**Status:** ✅ **COMPLETE** - Full gitignore specification support with negation patterns.
 
 ---
 
@@ -412,7 +413,7 @@
 | 2. GitHub Provider | ✅ Complete | 100% | - |
 | 3. Local Provider | ✅ Complete | 100% | - |
 | 4. UI Components | ✅ Complete | 100% | - |
-| 5. Gitignore Parser | 🚧 Partial | 60% | Medium |
+| 5. Gitignore Parser | ✅ Complete | 100% | - |
 | 6. Formatter & Tokenizer | ✅ Complete | 90% | - |
 | 7. Output Panel | 🚧 Partial | 80% | Low |
 | 8. Dark Mode | ✅ Complete | 100% | - |
@@ -425,7 +426,7 @@
 | 15. Beta Deployment | ❌ Not Started | 0% | High |
 | 16. Production | ❌ Not Started | 0% | High |
 
-**Overall Completion:** ~74% (12.6 of 16 phases complete/mostly complete)
+**Overall Completion:** ~76% (13 of 16 phases complete/mostly complete)
 
 ---
 
@@ -498,7 +499,7 @@ Based on priority and dependencies:
 1. **GitHub Issues in Prompt (PR #19)** - NOT IMPLEMENTED
 2. **Per-file Token Count (Issue #18)** - NOT IMPLEMENTED
 3. **Download with Repo Name (PR #23)** - Partially implemented, needs enhancement
-4. **Advanced Gitignore Patterns** - Missing negation, **, character classes
+4. ~~**Advanced Gitignore Patterns**~~ - ✅ RESOLVED (Phase 5 complete)
 5. **Synchronous Tokenization** - Blocks UI on large files
 6. **No E2E Tests** - Coverage gap
 
@@ -513,7 +514,7 @@ Comparing to original v1:
 | GitHub repo fetching | ✅ | ✅ | ✅ Parity + Better error handling |
 | Local directory upload | ✅ | ✅ | ✅ Parity |
 | Zip file support | ✅ | ✅ | ✅ Parity |
-| Gitignore parsing | ✅ | 🚧 | 🚧 Basic patterns work, advanced missing |
+| Gitignore parsing | ✅ | ✅ | ✅ Parity + Full gitignore spec support |
 | Extension filtering | ✅ | ✅ | ✅ Parity + Better UX |
 | Directory tree visualization | ✅ | ✅ | ✅ Parity + Virtual scrolling |
 | Token counting | ✅ | ✅ | ✅ Parity (but synchronous) |
@@ -563,19 +564,18 @@ No security vulnerabilities detected.
 
 **Ready for Users:**
 - GitHub public/private repos
+- GitLab public/private repos
+- Azure DevOps repos
 - Local directory upload
 - Zip file upload
 - Extension filtering
-- Basic gitignore patterns
+- Full gitignore spec support (including negation, **, character classes)
 - Copy/download output
 - Dark mode
 
 **Not Ready Yet:**
-- GitLab support
-- Azure DevOps support
-- Mobile optimization
+- Mobile optimization (basic responsive design implemented, advanced patterns pending)
 - Per-file token counts
-- Advanced gitignore patterns
 - Production deployment
 
 ---
