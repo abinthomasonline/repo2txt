@@ -26,25 +26,33 @@ describe('FileStats', () => {
     },
   ];
 
-  it('should render file statistics header', () => {
+  it('should render file statistics with summary always visible', () => {
     render(<FileStats files={mockFiles} />);
 
     expect(screen.getByText('File Statistics')).toBeInTheDocument();
 
-    // Stats should be hidden by default (collapsed)
-    expect(screen.queryByText('3')).not.toBeInTheDocument();
+    // Summary stats should be visible even when collapsed
+    expect(screen.getByText('3')).toBeInTheDocument(); // File count
+    expect(screen.getByText('175')).toBeInTheDocument(); // Total lines
+    expect(screen.getByText('525')).toBeInTheDocument(); // Total tokens
+
+    // But per-file details should be hidden
+    expect(screen.queryByText('src/App.tsx')).not.toBeInTheDocument();
   });
 
-  it('should expand when clicked', async () => {
+  it('should show per-file details when expanded', async () => {
     render(<FileStats files={mockFiles} />);
+
+    // Per-file details should be hidden initially
+    expect(screen.queryByText('src/App.tsx')).not.toBeInTheDocument();
 
     const header = screen.getByText('File Statistics');
     await userEvent.click(header);
 
-    // Should now show the stats
-    expect(screen.getByText('3')).toBeInTheDocument(); // File count
-    expect(screen.getByText('175')).toBeInTheDocument(); // Total lines
-    expect(screen.getByText('525')).toBeInTheDocument(); // Total tokens
+    // Should now show per-file details
+    expect(screen.getByText('src/App.tsx')).toBeInTheDocument();
+    expect(screen.getByText('src/index.ts')).toBeInTheDocument();
+    expect(screen.getByText('src/utils.ts')).toBeInTheDocument();
   });
 
   it('should render files sorted by token count when expanded', async () => {
