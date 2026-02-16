@@ -53,7 +53,8 @@ describe('GitHubUrlInput', () => {
   });
 
   it('should validate valid GitHub URLs', async () => {
-    render(<GitHubUrlInput />);
+    const onUrlChange = vi.fn();
+    render(<GitHubUrlInput onUrlChange={onUrlChange} />);
 
     const input = screen.getByPlaceholderText('https://github.com/facebook/react');
 
@@ -63,7 +64,8 @@ describe('GitHubUrlInput', () => {
       expect(screen.getByText('Valid GitHub URL')).toBeInTheDocument();
     });
 
-    expect(mockSetRepoUrl).toHaveBeenCalledWith('https://github.com/facebook/react');
+    // Component should call onUrlChange with the URL and validity status
+    expect(onUrlChange).toHaveBeenLastCalledWith('https://github.com/facebook/react', true);
   });
 
   it('should show error for invalid URLs', async () => {
@@ -119,7 +121,8 @@ describe('GitHubUrlInput', () => {
   });
 
   it('should clear URL when clear button is clicked', async () => {
-    render(<GitHubUrlInput />);
+    const onUrlChange = vi.fn();
+    render(<GitHubUrlInput onUrlChange={onUrlChange} />);
 
     const input = screen.getByPlaceholderText('https://github.com/facebook/react') as HTMLInputElement;
 
@@ -133,7 +136,8 @@ describe('GitHubUrlInput', () => {
     await userEvent.click(clearButton);
 
     expect(input.value).toBe('');
-    expect(mockSetRepoUrl).toHaveBeenCalledWith('');
+    // Component should call onUrlChange with empty URL and invalid status
+    expect(onUrlChange).toHaveBeenLastCalledWith('', false);
   });
 
   it('should call onValidUrl callback when valid URL is entered', async () => {
@@ -154,15 +158,17 @@ describe('GitHubUrlInput', () => {
     expect(screen.queryByText('Valid GitHub URL')).not.toBeInTheDocument();
   });
 
-  it('should update store URL when valid URL is entered', async () => {
-    render(<GitHubUrlInput />);
+  it('should call onUrlChange callback when URL changes', async () => {
+    const onUrlChange = vi.fn();
+    render(<GitHubUrlInput onUrlChange={onUrlChange} />);
 
     const input = screen.getByPlaceholderText('https://github.com/facebook/react');
 
     await userEvent.type(input, 'https://github.com/facebook/react');
 
     await waitFor(() => {
-      expect(mockSetRepoUrl).toHaveBeenCalledWith('https://github.com/facebook/react');
+      // Should be called with the complete URL and validity status
+      expect(onUrlChange).toHaveBeenLastCalledWith('https://github.com/facebook/react', true);
     });
   });
 

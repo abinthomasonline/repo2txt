@@ -71,7 +71,7 @@ describe('FileTreeNode', () => {
   it('should render indeterminate checkbox for partially selected directory', () => {
     const partialNode: TreeNode = {
       ...mockDirNode,
-      selected: undefined,
+      selected: 'indeterminate',
     };
     render(<FileTreeNode node={partialNode} depth={0} />);
 

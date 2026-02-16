@@ -42,12 +42,16 @@ describe('GitIgnoreEditor', () => {
     expect(onReset).toHaveBeenCalled();
   });
 
-  it('should toggle show excluded files', () => {
+  it('should toggle show excluded files', async () => {
     const onToggleExcluded = vi.fn();
     render(<GitIgnoreEditor patterns={mockPatterns} onToggleExcluded={onToggleExcluded} />);
 
-    const checkbox = screen.getByLabelText('Show excluded files');
-    fireEvent.click(checkbox);
+    const checkbox = screen.getByLabelText('Show excluded files in directory tree');
+    await userEvent.click(checkbox);
+
+    // The callback is only called when Apply button is clicked
+    const applyButton = screen.getByText('Apply Patterns');
+    await userEvent.click(applyButton);
 
     expect(onToggleExcluded).toHaveBeenCalledWith(true);
   });

@@ -133,17 +133,17 @@ describe('FileTree', () => {
   describe('filterByExtension', () => {
     it('should filter by single extension', () => {
       const tree = new FileTree(sampleNodes);
-      tree.filterByExtension(['.tsx']);
+      const filtered = tree.filterByExtension(['.tsx']);
 
-      const visible = tree.getVisibleNodes();
+      const visible = filtered.getVisibleNodes();
       expect(visible.every((n) => n.getExtension() === '.tsx' || n.isDirectory())).toBe(true);
     });
 
     it('should filter by multiple extensions', () => {
       const tree = new FileTree(sampleNodes);
-      tree.filterByExtension(['.tsx', '.ts']);
+      const filtered = tree.filterByExtension(['.tsx', '.ts']);
 
-      const visible = tree.getVisibleNodes();
+      const visible = filtered.getVisibleNodes();
       const extensions = ['.tsx', '.ts', ''];
       expect(visible.every((n) => extensions.includes(n.getExtension()) || n.isDirectory())).toBe(true);
     });
@@ -152,35 +152,35 @@ describe('FileTree', () => {
   describe('gitignore patterns', () => {
     it('should exclude files matching pattern', () => {
       const tree = new FileTree(sampleNodes);
-      tree.applyGitignore(['*.md']);
+      const filtered = tree.applyGitignore(['*.md']);
 
-      expect(tree.getNode('README.md')?.excluded).toBe(true);
-      expect(tree.getNode('package.json')?.excluded).toBe(false);
+      expect(filtered.getNode('README.md')?.excluded).toBe(true);
+      expect(filtered.getNode('package.json')?.excluded).toBe(false);
     });
 
     it('should handle directory patterns', () => {
       const tree = new FileTree(sampleNodes);
-      tree.applyGitignore(['tests/']);
+      const filtered = tree.applyGitignore(['tests/']);
 
-      expect(tree.getNode('tests')?.excluded).toBe(true);
-      expect(tree.getNode('tests/App.test.ts')?.excluded).toBe(true);
+      expect(filtered.getNode('tests')?.excluded).toBe(true);
+      expect(filtered.getNode('tests/App.test.ts')?.excluded).toBe(true);
     });
 
     it('should handle wildcards', () => {
       const tree = new FileTree(sampleNodes);
-      tree.applyGitignore(['*.test.*']);
+      const filtered = tree.applyGitignore(['*.test.*']);
 
-      expect(tree.getNode('tests/App.test.ts')?.excluded).toBe(true);
-      expect(tree.getNode('src/App.tsx')?.excluded).toBe(false);
+      expect(filtered.getNode('tests/App.test.ts')?.excluded).toBe(true);
+      expect(filtered.getNode('src/App.tsx')?.excluded).toBe(false);
     });
 
     it('should skip empty lines and comments', () => {
       const tree = new FileTree(sampleNodes);
-      tree.applyGitignore(['', '# comment', '  ', '*.md']);
+      const filtered = tree.applyGitignore(['', '# comment', '  ', '*.md']);
 
       // Only .md files should be excluded
-      expect(tree.getNode('README.md')?.excluded).toBe(true);
-      expect(tree.getAllNodes().filter((n) => n.excluded)).toHaveLength(1);
+      expect(filtered.getNode('README.md')?.excluded).toBe(true);
+      expect(filtered.getAllNodes().filter((n) => n.excluded)).toHaveLength(1);
     });
   });
 

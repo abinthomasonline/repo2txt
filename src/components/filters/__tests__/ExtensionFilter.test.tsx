@@ -63,46 +63,7 @@ describe('ExtensionFilter', () => {
     expect(onDeselectAll).toHaveBeenCalled();
   });
 
-  it('should show custom extension input when button is clicked', async () => {
-    render(<ExtensionFilter extensions={mockExtensions} />);
-
-    const addButton = screen.getByText('Add Custom Extension');
-    await userEvent.click(addButton);
-
-    expect(screen.getByPlaceholderText('.ext or ext')).toBeInTheDocument();
-  });
-
-  it('should call onAddCustom with valid extension', async () => {
-    const onAddCustom = vi.fn();
-    render(<ExtensionFilter extensions={mockExtensions} onAddCustom={onAddCustom} />);
-
-    const addButton = screen.getByText('Add Custom Extension');
-    await userEvent.click(addButton);
-
-    const input = screen.getByPlaceholderText('.ext or ext');
-    await userEvent.type(input, '.json');
-
-    const confirmButton = screen.getByText('Add');
-    await userEvent.click(confirmButton);
-
-    expect(onAddCustom).toHaveBeenCalledWith('.json');
-  });
-
-  it('should prepend dot to extension if not provided', async () => {
-    const onAddCustom = vi.fn();
-    render(<ExtensionFilter extensions={mockExtensions} onAddCustom={onAddCustom} />);
-
-    const addButton = screen.getByText('Add Custom Extension');
-    await userEvent.click(addButton);
-
-    const input = screen.getByPlaceholderText('.ext or ext');
-    await userEvent.type(input, 'json');
-
-    const confirmButton = screen.getByText('Add');
-    await userEvent.click(confirmButton);
-
-    expect(onAddCustom).toHaveBeenCalledWith('.json');
-  });
+  // Note: "Add Custom Extension" feature was removed in favor of auto-detection only
 
   it('should show empty state when no extensions', () => {
     render(<ExtensionFilter extensions={[]} />);
