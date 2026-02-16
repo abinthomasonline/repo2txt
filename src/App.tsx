@@ -1,6 +1,167 @@
+import { useState, useCallback } from 'react';
 import { ThemeToggle } from '@/components/ui/ThemeToggle';
+import { ProviderSelector } from '@/components/ProviderSelector';
+import { FileTree } from '@/components/file-tree';
+import { ExtensionFilter } from '@/components/filters/ExtensionFilter';
+import { GitIgnoreEditor } from '@/components/filters/GitIgnoreEditor';
+import { OutputPanel } from '@/components/OutputPanel';
+import { GitHubProvider } from '@/features/github';
+import { LocalProvider } from '@/features/local';
+import { FileTree as FileTreeManager } from '@/lib/file-tree/FileTree';
+import { Formatter } from '@/lib/formatter';
+import { useStore } from '@/store';
+import type { TreeNode, FileNode, FileContent, ExtensionFilter as ExtensionFilterType, FormattedOutput } from '@/types';
 
 function App() {
+  const { setProviderType, setRepoUrl } = useStore();
+
+  // State
+  const [isLoading, setIsLoading] = useState(false);
+  const [treeNodes, setTreeNodes] = useState<TreeNode[]>([]);
+  const [fileTreeManager, setFileTreeManager] = useState<FileTreeManager | null>(null);
+  const [extensions, setExtensions] = useState<ExtensionFilterType[]>([]);
+  const [gitignorePatterns, setGitignorePatterns] = useState<string[]>([]);
+  const [showExcluded, setShowExcluded] = useState(false);
+  const [output, setOutput] = useState<FormattedOutput | null>(null);
+  const [currentProvider, setCurrentProvider] = useState<GitHubProvider | LocalProvider | null>(null);
+
+  // Load files from provider
+  const loadFiles = useCallback(async (provider: GitHubProvider | LocalProvider, url: string) => {
+    try {
+      setIsLoading(true);
+      setCurrentProvider(provider);
+
+      // Fetch file tree
+      const nodes = await provider.fetchTree(url);
+
+      // Create FileTree manager
+      const manager = new FileTreeManager(nodes);
+
+      // Get available extensions
+      const extensionMap = manager.getExtensions();
+      const extensionList: ExtensionFilterType[] = Array.from(extensionMap.entries()).map(
+        ([ext, count]) => ({
+          extension: ext,
+          count,
+          selected: true, // All selected by default
+        })
+      );
+
+      setFileTreeManager(manager);
+      setTreeNodes(manager.buildTree());
+      setExtensions(extensionList);
+    } catch (error) {
+      console.error('Failed to load files:', error);
+      alert(`Error: ${error instanceof Error ? error.message : 'Failed to load files'}`);
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  // Handle GitHub submission
+  const handleGitHubSubmit = useCallback(async (url: string) => {
+    setProviderType('github');
+    setRepoUrl(url);
+
+    const provider = new GitHubProvider();
+    // Get token from sessionStorage if available
+    const token = sessionStorage.getItem('provider_token');
+    if (token) {
+      provider.setCredentials({ token });
+    }
+
+    await loadFiles(provider, url);
+  }, [loadFiles, setProviderType, setRepoUrl]);
+
+  // Handle local directory submission
+  const handleLocalDirectorySubmit = useCallback(async (files: FileList) => {
+    setProviderType('local');
+
+    const provider = new LocalProvider();
+    await provider.initialize({ source: 'directory', files });
+
+    await loadFiles(provider, 'local://directory');
+  }, [loadFiles, setProviderType]);
+
+  // Handle local zip submission
+  const handleLocalZipSubmit = useCallback(async (file: File) => {
+    setProviderType('local');
+
+    const provider = new LocalProvider();
+    await provider.initialize({ source: 'zip', zipFile: file });
+
+    await loadFiles(provider, 'local://zip');
+  }, [loadFiles, setProviderType]);
+
+  // Handle extension filter toggle
+  const handleExtensionToggle = useCallback((extension: string) => {
+    setExtensions((prev) =>
+      prev.map((ext) =>
+        ext.extension === extension ? { ...ext, selected: !ext.selected } : ext
+      )
+    );
+  }, []);
+
+  // Handle select/deselect all extensions
+  const handleSelectAllExtensions = useCallback(() => {
+    setExtensions((prev) => prev.map((ext) => ({ ...ext, selected: true })));
+  }, []);
+
+  const handleDeselectAllExtensions = useCallback(() => {
+    setExtensions((prev) => prev.map((ext) => ({ ...ext, selected: false })));
+  }, []);
+
+  // Handle gitignore pattern application
+  const handleApplyGitignore = useCallback((patterns: string[]) => {
+    setGitignorePatterns(patterns);
+  }, []);
+
+  // Handle generate output
+  const handleGenerateOutput = useCallback(async () => {
+    if (!fileTreeManager || !currentProvider) return;
+
+    try {
+      setIsLoading(true);
+
+      // Apply filters
+      const selectedExtensions = extensions
+        .filter((ext) => ext.selected)
+        .map((ext) => ext.extension);
+
+      let filteredTree = fileTreeManager.clone();
+
+      // Apply extension filter
+      if (selectedExtensions.length > 0) {
+        filteredTree = filteredTree.filterByExtension(selectedExtensions);
+      }
+
+      // Apply gitignore
+      if (gitignorePatterns.length > 0) {
+        filteredTree = filteredTree.applyGitignore(gitignorePatterns);
+      }
+
+      // Get selected nodes
+      const selectedNodes: FileNode[] = Array.from(filteredTree.nodes.values())
+        .filter((node) => node.type === 'blob' && node.visible !== false);
+
+      // Fetch file contents
+      const fileContents: FileContent[] = [];
+      for await (const content of currentProvider.fetchMultiple(selectedNodes)) {
+        fileContents.push(content);
+      }
+
+      // Format output
+      const formattedOutput = Formatter.format(filteredTree.buildTree(), fileContents);
+
+      setOutput(formattedOutput);
+    } catch (error) {
+      console.error('Failed to generate output:', error);
+      alert(`Error: ${error instanceof Error ? error.message : 'Failed to generate output'}`);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [fileTreeManager, currentProvider, extensions, gitignorePatterns]);
+
   return (
     <div className="min-h-screen flex flex-col bg-gray-50 dark:bg-gray-900">
       {/* Header */}
@@ -38,42 +199,74 @@ function App() {
 
       {/* Main Content */}
       <main className="flex-1 container mx-auto px-4 py-8">
-        <div className="max-w-4xl mx-auto">
-          <div className="text-center mb-8">
-            <h2 className="text-xl text-gray-600 dark:text-gray-400 mb-4">
-              Convert Code Repositories to Plain Text for LLM Prompts
-            </h2>
-            <p className="text-sm text-gray-500 dark:text-gray-500">
-              GitHub • Local Directories • Zip Files • GitLab • Azure DevOps
-            </p>
-          </div>
+        <div className="max-w-7xl mx-auto space-y-8">
+          {/* Provider Selection */}
+          <section>
+            <ProviderSelector
+              onGitHubSubmit={handleGitHubSubmit}
+              onLocalDirectorySubmit={handleLocalDirectorySubmit}
+              onLocalZipSubmit={handleLocalZipSubmit}
+              disabled={isLoading}
+            />
+          </section>
 
-          {/* Placeholder for future components */}
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-8 border border-gray-200 dark:border-gray-700">
-            <div className="text-center space-y-4">
-              <div className="text-6xl">🚧</div>
-              <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
-                Phase 0: Setup Complete! 🎉
-              </h3>
-              <p className="text-gray-600 dark:text-gray-400">
-                Project infrastructure is ready. Dark mode is working! ✨
-              </p>
-              <div className="pt-4 text-left">
-                <h4 className="font-semibold mb-2 text-gray-900 dark:text-gray-100">
-                  ✅ Completed:
-                </h4>
-                <ul className="list-disc list-inside space-y-1 text-sm text-gray-700 dark:text-gray-300">
-                  <li>Vite + React + TypeScript setup</li>
-                  <li>TailwindCSS with dark mode</li>
-                  <li>Testing infrastructure (Vitest + Playwright)</li>
-                  <li>ESLint + Prettier configuration</li>
-                  <li>Project structure created</li>
-                  <li>Zustand store with theme management</li>
-                  <li>Basic UI components</li>
-                </ul>
+          {/* File Tree and Filters */}
+          {treeNodes.length > 0 && (
+            <section className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              {/* File Tree */}
+              <div className="lg:col-span-2 space-y-4">
+                <div className="flex items-center justify-between">
+                  <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                    File Tree
+                  </h2>
+                  <button
+                    onClick={handleGenerateOutput}
+                    disabled={isLoading}
+                    className="inline-flex items-center justify-center rounded-md font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary-600 text-white hover:bg-primary-700 dark:bg-primary-500 dark:hover:bg-primary-600 h-10 px-4 text-sm"
+                  >
+                    <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                    </svg>
+                    Generate Output
+                  </button>
+                </div>
+
+                <FileTree nodes={treeNodes} showExcluded={showExcluded} />
               </div>
-            </div>
-          </div>
+
+              {/* Filters */}
+              <div className="space-y-6">
+                <div className="rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 p-4">
+                  <ExtensionFilter
+                    extensions={extensions}
+                    onToggle={handleExtensionToggle}
+                    onSelectAll={handleSelectAllExtensions}
+                    onDeselectAll={handleDeselectAllExtensions}
+                  />
+                </div>
+
+                <div className="rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 p-4">
+                  <GitIgnoreEditor
+                    patterns={gitignorePatterns}
+                    onApply={handleApplyGitignore}
+                    onReset={() => setGitignorePatterns([])}
+                    showExcluded={showExcluded}
+                    onToggleExcluded={setShowExcluded}
+                  />
+                </div>
+              </div>
+            </section>
+          )}
+
+          {/* Output */}
+          {(output || isLoading) && (
+            <section>
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
+                Output
+              </h2>
+              <OutputPanel output={output} isLoading={isLoading} />
+            </section>
+          )}
         </div>
       </main>
 
