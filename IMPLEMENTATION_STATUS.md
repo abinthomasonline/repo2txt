@@ -164,23 +164,33 @@
 
 ---
 
-### Phase 6: Formatter & Tokenizer (70%)
+### Phase 6: Formatter & Tokenizer (90%) ✅
 - ✅ Formatter class implemented
   - ✅ Format file contents
   - ✅ Generate ASCII directory tree structure
   - ✅ Token counting with gpt-tokenizer
   - ✅ Line counting
-- ❌ Per-file token count (Issue #18) - NOT IMPLEMENTED
+  - ✅ Async formatAsync() with Web Worker
+- ✅ Per-file token count (Issue #18) - **IMPLEMENTED**
+  - ✅ TokenizerWorker manager class
+  - ✅ tokenizer.worker.ts Web Worker
+  - ✅ FileStats component for display
+  - ✅ Progress reporting during tokenization
+  - ✅ Fallback to synchronous when Worker unavailable
 - ❌ Multiple tokenizer support (only cl100k_base)
-- ❌ Web Worker for tokenization - NOT IMPLEMENTED
-  - Current: Synchronous tokenization (blocks UI)
-  - Impact: Freezes on large files
+- ✅ Web Worker for tokenization - **IMPLEMENTED**
+  - Non-blocking tokenization
+  - No UI freezing on large files
+  - Batch processing with progress
 
 **Files:**
-- `src/lib/formatter/Formatter.ts`
-- Uses `gpt-tokenizer` package
+- `src/lib/formatter/Formatter.ts` (formatAsync method)
+- `src/lib/formatter/TokenizerWorker.ts` (worker manager)
+- `src/workers/tokenizer.worker.ts` (Web Worker)
+- `src/components/FileStats.tsx` (statistics display)
+- Tests: 15 total (9 TokenizerWorker + 6 FileStats)
 
-**Status:** Core functionality works, but needs Web Worker for performance and per-file token counts.
+**Status:** ✅ MOSTLY COMPLETE - Resolves Issue #18. Only missing multi-tokenizer support (o200k_base, etc.).
 
 ---
 
@@ -368,7 +378,7 @@
 | 3. Local Provider | ✅ Complete | 100% | - |
 | 4. UI Components | ✅ Complete | 100% | - |
 | 5. Gitignore Parser | 🚧 Partial | 60% | Medium |
-| 6. Formatter & Tokenizer | 🚧 Partial | 70% | Medium |
+| 6. Formatter & Tokenizer | ✅ Complete | 90% | - |
 | 7. Output Panel | 🚧 Partial | 80% | Low |
 | 8. Dark Mode | ✅ Complete | 100% | - |
 | 9. GitLab Provider | ❌ Not Started | 0% | High |
@@ -380,7 +390,7 @@
 | 15. Beta Deployment | ❌ Not Started | 0% | High |
 | 16. Production | ❌ Not Started | 0% | High |
 
-**Overall Completion:** ~55% (9 of 16 phases complete/mostly complete)
+**Overall Completion:** ~58% (9.5 of 16 phases complete/mostly complete)
 
 ---
 
@@ -388,16 +398,13 @@
 
 Based on priority and dependencies:
 
-### 1. **Phase 6: Complete Tokenizer with Web Worker** (High Impact)
-- **Why:** Prevents UI freezing on large files
-- **Effort:** Medium
-- **Files to create:**
-  - `src/workers/tokenizer.worker.ts`
-  - `src/lib/formatter/TokenizerWorker.ts` (wrapper)
-- **Tasks:**
-  - Move gpt-tokenizer encoding to Web Worker
-  - Add per-file token count (Issue #18)
-  - Add progress reporting
+### 1. ~~Phase 6: Complete Tokenizer with Web Worker~~ ✅ **COMPLETED**
+- ✅ Web Worker implemented
+- ✅ Per-file token counts (Issue #18)
+- ✅ Progress reporting
+- ✅ Non-blocking UI
+- ✅ Fallback for unsupported environments
+- ✅ 15 tests (all passing)
 
 ### 2. **Phase 13: E2E Tests** (High Priority)
 - **Why:** Critical for deployment confidence
