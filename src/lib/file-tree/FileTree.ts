@@ -149,23 +149,30 @@ export class FileTree {
       return /(?!)/; // Never matches
     }
 
+    const isDirectory = pattern.endsWith('/');
+    if (isDirectory) {
+      pattern = pattern.slice(0, -1); // Remove trailing slash
+    }
+
     // Escape special regex characters except * and ?
     let regexPattern = pattern
       .replace(/[.+^${}()|[\]\\]/g, '\\$&')
       .replace(/\*/g, '.*')
       .replace(/\?/g, '.');
 
-    // Handle directory patterns (ending with /)
-    if (pattern.endsWith('/')) {
-      regexPattern = regexPattern.slice(0, -2) + '(/.*)?$';
-    }
-
     // Handle root-level patterns (starting with /)
     if (pattern.startsWith('/')) {
-      regexPattern = '^' + regexPattern.slice(1);
+      regexPattern = '^' + regexPattern.slice(2); // Remove leading / and escaped slash
     } else {
       // Pattern can match anywhere in path
       regexPattern = '(^|/)' + regexPattern;
+    }
+
+    // Handle directory patterns
+    if (isDirectory) {
+      regexPattern = regexPattern + '($|/.*)';
+    } else {
+      regexPattern = regexPattern + '$';
     }
 
     try {
