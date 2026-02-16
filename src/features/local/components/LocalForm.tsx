@@ -32,6 +32,7 @@ export function LocalForm({ onDirectorySelected, onZipSelected, onTabChange, dis
       <div className="flex space-x-1 rounded-lg bg-gray-100 dark:bg-gray-800 p-1">
         <button
           onClick={() => handleTabChange('directory')}
+          data-testid="local-tab-directory"
           className={`
             flex-1 rounded-md px-3 py-2 text-sm font-medium transition-colors
             ${
@@ -53,6 +54,7 @@ export function LocalForm({ onDirectorySelected, onZipSelected, onTabChange, dis
         </button>
         <button
           onClick={() => handleTabChange('zip')}
+          data-testid="local-tab-zip"
           className={`
             flex-1 rounded-md px-3 py-2 text-sm font-medium transition-colors
             ${

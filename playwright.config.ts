@@ -11,6 +11,8 @@ export default defineConfig({
     baseURL: 'http://localhost:5173',
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
+    actionTimeout: 10000, // Increase from default 0 (no timeout) to 10s for code-split components
+    navigationTimeout: 30000, // 30s for navigation
   },
 
   projects: [

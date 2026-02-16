@@ -1,56 +1,86 @@
 import { test, expect } from '@playwright/test';
+import { testConfig } from '../test-config';
 
 test.describe('Dark Mode', () => {
   test.beforeEach(async ({ page }) => {
+    // Add GitHub token BEFORE navigating to avoid rate limiting
+    await page.addInitScript((token) => {
+      if (token) {
+        sessionStorage.setItem('github_token', token);
+      }
+    }, testConfig.githubToken);
+
     await page.goto('/');
+    // Wait for app to be fully loaded
+    await page.waitForLoadState('networkidle');
   });
 
   test('should toggle between light, dark, and system modes', async ({ page }) => {
-    // Find theme toggle button
-    const themeButton = page.getByRole('button', { name: /Current theme/i });
-    await expect(themeButton).toBeVisible();
+    // Find theme toggle button using data-testid
+    const themeButton = page.getByTestId('theme-toggle');
+    await expect(themeButton).toBeVisible({ timeout: 10000 });
 
-    // Get initial theme (should be light by default, or system)
+    // Get initial theme (defaults to system)
     const html = page.locator('html');
+    const themeLabel = page.getByTestId('theme-label');
+
+    // Verify initial state is System
+    await expect(themeLabel).toContainText(/System/);
 
     // Click to cycle through themes
+    // System → Light
+    await themeButton.click();
+    await page.waitForTimeout(300); // Wait for theme to apply
+    await expect(themeLabel).toContainText(/Light/);
+    await expect(html).toHaveClass(/light/);
+
     // Light → Dark
     await themeButton.click();
+    await page.waitForTimeout(300);
+    await expect(themeLabel).toContainText(/Dark/);
     await expect(html).toHaveClass(/dark/);
-    await expect(themeButton).toContainText(/Dark|🌙/);
 
     // Dark → System
     await themeButton.click();
-    await expect(themeButton).toContainText(/System|💻/);
-
-    // System → Light
-    await themeButton.click();
-    await expect(html).not.toHaveClass(/dark/);
-    await expect(themeButton).toContainText(/Light|☀/);
+    await page.waitForTimeout(300);
+    await expect(themeLabel).toContainText(/System/);
   });
 
   test('should persist theme preference across page reloads', async ({ page }) => {
     // Find theme toggle
-    const themeButton = page.getByRole('button', { name: /Current theme/i });
+    const themeButton = page.getByTestId('theme-toggle');
+    await expect(themeButton).toBeVisible({ timeout: 10000 });
+    const themeLabel = page.getByTestId('theme-label');
 
-    // Set to dark mode
-    await themeButton.click();
+    // Start with System, click twice to get to Dark (System → Light → Dark)
+    await themeButton.click(); // System → Light
+    await page.waitForTimeout(300);
+    await themeButton.click(); // Light → Dark
+    await page.waitForTimeout(500); // Wait for theme to apply
     const html = page.locator('html');
     await expect(html).toHaveClass(/dark/);
+    await expect(themeLabel).toContainText(/Dark/);
 
     // Reload page
     await page.reload();
+    await page.waitForLoadState('networkidle');
 
     // Verify dark mode persists
-    await expect(html).toHaveClass(/dark/);
-    const themeButtonAfterReload = page.getByRole('button', { name: /Current theme/i });
-    await expect(themeButtonAfterReload).toContainText(/Dark|🌙/);
+    await page.waitForTimeout(500); // Wait for theme to initialize
+    const htmlAfterReload = page.locator('html');
+    await expect(htmlAfterReload).toHaveClass(/dark/);
+    const themeLabelAfterReload = page.getByTestId('theme-label');
+    await expect(themeLabelAfterReload).toContainText(/Dark/);
   });
 
   test('should apply dark mode styles to all components', async ({ page }) => {
-    // Set to dark mode
-    const themeButton = page.getByRole('button', { name: /Current theme/i });
-    await themeButton.click();
+    // Set to dark mode (System → Light → Dark)
+    const themeButton = page.getByTestId('theme-toggle');
+    await expect(themeButton).toBeVisible({ timeout: 10000 });
+    await themeButton.click(); // System → Light
+    await page.waitForTimeout(300);
+    await themeButton.click(); // Light → Dark
+    await page.waitForTimeout(300); // Wait for theme to apply
 
     // Wait for dark mode to apply
     const html = page.locator('html');
@@ -67,27 +97,33 @@ test.describe('Dark Mode', () => {
     const loadButton = page.getByRole('button', { name: /Load Repository/i });
     await loadButton.click();
 
-    // Wait for file tree
-    await expect(page.getByText('File Tree')).toBeVisible({ timeout: 10000 });
+    // Wait for file tree using data-testid
+    await expect(page.getByTestId('file-tree-heading')).toBeVisible({ timeout: 15000 });
 
     // Verify file tree has dark styles
-    const fileTree = page.locator('[class*="dark:"]').first();
+    const fileTree = page.getByTestId('file-tree');
     await expect(fileTree).toBeVisible();
   });
 
   test('should maintain dark mode during navigation and interactions', async ({ page }) => {
-    // Set to dark mode
-    const themeButton = page.getByRole('button', { name: /Current theme/i });
-    await themeButton.click();
+    // Set to dark mode (System → Light → Dark)
+    const themeButton = page.getByTestId('theme-toggle');
+    await expect(themeButton).toBeVisible({ timeout: 10000 });
+    await themeButton.click(); // System → Light
+    await page.waitForTimeout(300);
+    await themeButton.click(); // Light → Dark
+    await page.waitForTimeout(300); // Wait for theme to apply
 
     const html = page.locator('html');
     await expect(html).toHaveClass(/dark/);
 
-    // Switch between providers
-    await page.getByRole('button', { name: 'Local' }).click();
+    // Switch between providers using data-testid
+    await page.getByTestId('provider-tab-local').click();
+    await page.waitForTimeout(500); // Wait for provider to load
     await expect(html).toHaveClass(/dark/); // Still dark
 
-    await page.getByRole('button', { name: 'GitHub' }).click();
+    await page.getByTestId('provider-tab-github').click();
+    await page.waitForTimeout(500); // Wait for provider to load
     await expect(html).toHaveClass(/dark/); // Still dark
 
     // Load repository
@@ -103,17 +139,26 @@ test.describe('Dark Mode', () => {
   });
 
   test('should show correct icons for each theme mode', async ({ page }) => {
-    const themeButton = page.getByRole('button', { name: /Current theme/i });
+    const themeButton = page.getByTestId('theme-toggle');
+    await expect(themeButton).toBeVisible({ timeout: 10000 });
+    const themeLabel = page.getByTestId('theme-label');
 
-    // Check light mode icon
-    await expect(themeButton).toContainText(/☀|Light/);
+    // Check initial system mode
+    await expect(themeLabel).toContainText(/System/);
+
+    // Switch to light, check icon
+    await themeButton.click();
+    await page.waitForTimeout(300);
+    await expect(themeLabel).toContainText(/Light/);
 
     // Switch to dark, check icon
     await themeButton.click();
-    await expect(themeButton).toContainText(/🌙|Dark/);
+    await page.waitForTimeout(300);
+    await expect(themeLabel).toContainText(/Dark/);
 
-    // Switch to system, check icon
+    // Switch back to system, check icon
     await themeButton.click();
-    await expect(themeButton).toContainText(/💻|System/);
+    await page.waitForTimeout(300);
+    await expect(themeLabel).toContainText(/System/);
   });
 });

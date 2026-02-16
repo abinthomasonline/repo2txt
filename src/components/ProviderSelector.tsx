@@ -45,6 +45,7 @@ export function ProviderSelector({
         <button
           onClick={() => handleProviderChange('github')}
           disabled={disabled}
+          data-testid="provider-tab-github"
           className={`
             flex-1 flex items-center justify-center gap-1.5 sm:gap-2 rounded-md px-3 sm:px-4 py-3 sm:py-2.5 text-sm font-medium transition-colors min-h-[44px] touch-manipulation
             ${
@@ -64,6 +65,7 @@ export function ProviderSelector({
         <button
           onClick={() => handleProviderChange('local')}
           disabled={disabled}
+          data-testid="provider-tab-local"
           className={`
             flex-1 flex items-center justify-center gap-1.5 sm:gap-2 rounded-md px-3 sm:px-4 py-3 sm:py-2.5 text-sm font-medium transition-colors min-h-[44px] touch-manipulation
             ${
@@ -88,6 +90,7 @@ export function ProviderSelector({
         <button
           onClick={() => handleProviderChange('gitlab')}
           disabled={disabled}
+          data-testid="provider-tab-gitlab"
           className={`
             flex-1 flex flex-col items-center justify-center gap-0.5 rounded-md px-3 sm:px-4 py-2.5 sm:py-2.5 text-sm font-medium transition-colors min-h-[44px] touch-manipulation
             ${
@@ -110,6 +113,7 @@ export function ProviderSelector({
         <button
           onClick={() => handleProviderChange('azure')}
           disabled={disabled}
+          data-testid="provider-tab-azure"
           className={`
             flex-1 flex flex-col items-center justify-center gap-0.5 rounded-md px-3 sm:px-4 py-2.5 sm:py-2.5 text-sm font-medium transition-colors min-h-[44px] touch-manipulation
             ${

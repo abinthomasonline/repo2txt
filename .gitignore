@@ -22,3 +22,11 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Test configuration with secrets
+tests/test-config.ts
+
+# Playwright test artifacts
+test-results/
+playwright-report/
+playwright/.cache/

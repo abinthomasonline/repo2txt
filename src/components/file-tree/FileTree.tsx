@@ -94,6 +94,7 @@ export function FileTree({
   return (
     <div
       ref={parentRef}
+      data-testid="file-tree"
       className="border border-gray-300 dark:border-gray-700 rounded-lg overflow-auto bg-white dark:bg-gray-900"
       style={{ maxHeight: `${maxHeight}px` }}
     >

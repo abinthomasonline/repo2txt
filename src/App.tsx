@@ -421,7 +421,7 @@ function App() {
               />
 
               {/* File Tree */}
-              <div className="space-y-4">
+              <div className="space-y-4" data-testid="file-tree-section">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <label className="flex items-center gap-2 cursor-pointer">
@@ -437,7 +437,7 @@ function App() {
                         className="rounded border-gray-300 text-primary-600 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-800"
                         aria-label="Select all files"
                       />
-                      <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                      <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100" data-testid="file-tree-heading">
                         File Tree
                       </h2>
                     </label>
@@ -445,6 +445,7 @@ function App() {
                   <button
                     onClick={handleGenerateOutput}
                     disabled={isLoading}
+                    data-testid="generate-output-button"
                     className="inline-flex items-center justify-center rounded-md font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary-600 text-white hover:bg-primary-700 dark:bg-primary-500 dark:hover:bg-primary-600 h-11 sm:h-10 px-4 sm:px-6 text-sm min-w-[44px] touch-manipulation"
                   >
                     <svg className="w-4 h-4 sm:mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">

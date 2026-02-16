@@ -33,9 +33,10 @@ export function ThemeToggle() {
       onClick={toggleTheme}
       title={`Current theme: ${getLabel()}`}
       className="gap-2"
+      data-testid="theme-toggle"
     >
-      <span className="text-lg">{getIcon()}</span>
-      <span className="hidden sm:inline">{getLabel()}</span>
+      <span className="text-lg" data-testid="theme-icon">{getIcon()}</span>
+      <span className="hidden sm:inline" data-testid="theme-label">{getLabel()}</span>
     </Button>
   );
 }
