@@ -85,25 +85,25 @@ export function OutputPanel({ output, isLoading = false }: OutputPanelProps) {
   const fullText = `${output.directoryTree}\n\n${output.fileContents}`;
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3 sm:space-y-4">
       {/* Stats */}
-      <div className="flex items-center justify-between p-4 rounded-lg border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
-        <div className="flex gap-6">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-3 sm:p-4 rounded-lg border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 gap-3 sm:gap-0">
+        <div className="flex gap-4 sm:gap-6">
           <div>
             <p className="text-xs text-gray-500 dark:text-gray-400">Lines</p>
-            <p className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+            <p className="text-base sm:text-lg font-semibold text-gray-900 dark:text-gray-100">
               {output.lineCount.toLocaleString()}
             </p>
           </div>
           <div>
             <p className="text-xs text-gray-500 dark:text-gray-400">Tokens</p>
-            <p className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+            <p className="text-base sm:text-lg font-semibold text-gray-900 dark:text-gray-100">
               {output.tokenCount.toLocaleString()}
             </p>
           </div>
         </div>
 
-        <div className="flex gap-2">
+        <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
           <Button
             variant="secondary"
             size="sm"

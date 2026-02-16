@@ -16,6 +16,7 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
           'inline-flex items-center justify-center rounded-md font-medium transition-colors',
           'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2',
           'disabled:pointer-events-none disabled:opacity-50',
+          'touch-manipulation', // Improves touch responsiveness
           {
             'bg-primary-600 text-white hover:bg-primary-700 dark:bg-primary-500 dark:hover:bg-primary-600':
               variant === 'primary',
@@ -24,9 +25,9 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
             'hover:bg-gray-100 dark:hover:bg-gray-800': variant === 'ghost',
           },
           {
-            'h-8 px-3 text-sm': size === 'sm',
-            'h-10 px-4': size === 'md',
-            'h-12 px-6 text-lg': size === 'lg',
+            'h-9 sm:h-8 px-3 text-sm min-h-[36px]': size === 'sm', // Min touch target on mobile
+            'h-11 sm:h-10 px-4 sm:px-5 min-h-[44px]': size === 'md', // 44px touch target
+            'h-12 sm:h-12 px-6 text-lg min-h-[48px]': size === 'lg',
           },
           className
         )}

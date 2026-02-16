@@ -36,14 +36,14 @@ export function ProviderSelector({
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3 sm:space-y-4">
       {/* Provider tabs */}
       <div className="flex space-x-1 rounded-lg bg-gray-100 dark:bg-gray-800 p-1">
         <button
           onClick={() => handleProviderChange('github')}
           disabled={disabled}
           className={`
-            flex-1 flex items-center justify-center gap-2 rounded-md px-4 py-2.5 text-sm font-medium transition-colors
+            flex-1 flex items-center justify-center gap-1.5 sm:gap-2 rounded-md px-3 sm:px-4 py-3 sm:py-2.5 text-sm font-medium transition-colors min-h-[44px] touch-manipulation
             ${
               activeProvider === 'github'
                 ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 shadow'
@@ -62,7 +62,7 @@ export function ProviderSelector({
           onClick={() => handleProviderChange('local')}
           disabled={disabled}
           className={`
-            flex-1 flex items-center justify-center gap-2 rounded-md px-4 py-2.5 text-sm font-medium transition-colors
+            flex-1 flex items-center justify-center gap-1.5 sm:gap-2 rounded-md px-3 sm:px-4 py-3 sm:py-2.5 text-sm font-medium transition-colors min-h-[44px] touch-manipulation
             ${
               activeProvider === 'local'
                 ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 shadow'
@@ -86,7 +86,7 @@ export function ProviderSelector({
           onClick={() => handleProviderChange('gitlab')}
           disabled={disabled}
           className={`
-            flex-1 flex flex-col items-center justify-center gap-0.5 rounded-md px-4 py-2.5 text-sm font-medium transition-colors
+            flex-1 flex flex-col items-center justify-center gap-0.5 rounded-md px-3 sm:px-4 py-2.5 sm:py-2.5 text-sm font-medium transition-colors min-h-[44px] touch-manipulation
             ${
               activeProvider === 'gitlab'
                 ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 shadow'
@@ -106,7 +106,7 @@ export function ProviderSelector({
       </div>
 
       {/* Provider form */}
-      <div className="rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 p-6">
+      <div className="rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 p-4 sm:p-6">
         {activeProvider === 'github' ? (
           <GitHubForm onSubmit={onGitHubSubmit} disabled={disabled} />
         ) : activeProvider === 'local' ? (

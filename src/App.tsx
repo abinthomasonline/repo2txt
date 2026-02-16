@@ -323,17 +323,17 @@ function App() {
     <div className="min-h-screen flex flex-col bg-gray-50 dark:bg-gray-900">
       {/* Header */}
       <header className="sticky top-0 z-50 w-full border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900">
-        <div className="container mx-auto flex h-16 items-center justify-between px-4">
-          <div className="flex items-center gap-2">
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+        <div className="container mx-auto flex h-14 sm:h-16 items-center justify-between px-3 sm:px-4 lg:px-6">
+          <div className="flex items-center gap-1.5 sm:gap-2">
+            <h1 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-900 dark:text-gray-100">
               repo2txt
             </h1>
-            <span className="rounded-full bg-primary-100 dark:bg-primary-900 px-2 py-0.5 text-xs font-semibold text-primary-700 dark:text-primary-300">
+            <span className="rounded-full bg-primary-100 dark:bg-primary-900 px-1.5 sm:px-2 py-0.5 text-[10px] sm:text-xs font-semibold text-primary-700 dark:text-primary-300">
               v2.0 Beta
             </span>
           </div>
 
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2 sm:gap-4">
             <ThemeToggle />
             <a
               href="https://github.com/abinthomasonline/repo2txt"
@@ -355,8 +355,8 @@ function App() {
       </header>
 
       {/* Main Content */}
-      <main className="flex-1 container mx-auto px-4 py-8">
-        <div className="max-w-7xl mx-auto space-y-8">
+      <main className="flex-1 container mx-auto px-3 sm:px-4 lg:px-6 py-4 sm:py-6 md:py-8">
+        <div className="max-w-7xl mx-auto space-y-4 sm:space-y-6 md:space-y-8">
           {/* Provider Selection */}
           <section>
             <ProviderSelector
@@ -410,12 +410,12 @@ function App() {
                   <button
                     onClick={handleGenerateOutput}
                     disabled={isLoading}
-                    className="inline-flex items-center justify-center rounded-md font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary-600 text-white hover:bg-primary-700 dark:bg-primary-500 dark:hover:bg-primary-600 h-10 px-4 text-sm"
+                    className="inline-flex items-center justify-center rounded-md font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary-600 text-white hover:bg-primary-700 dark:bg-primary-500 dark:hover:bg-primary-600 h-11 sm:h-10 px-4 sm:px-6 text-sm min-w-[44px] touch-manipulation"
                   >
-                    <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-4 h-4 sm:mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
                     </svg>
-                    Generate Output
+                    <span className="hidden sm:inline">Generate Output</span>
                   </button>
                 </div>
 
@@ -442,8 +442,8 @@ function App() {
       </main>
 
       {/* Footer */}
-      <footer className="border-t border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 py-6">
-        <div className="container mx-auto px-4 text-center text-sm text-gray-600 dark:text-gray-400">
+      <footer className="border-t border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 py-4 sm:py-6">
+        <div className="container mx-auto px-3 sm:px-4 lg:px-6 text-center text-xs sm:text-sm text-gray-600 dark:text-gray-400">
           <p>
             Built with ❤️ by{' '}
             <a

@@ -41,13 +41,13 @@ export function AdvancedFilters({
       {/* Header */}
       <button
         onClick={() => setIsExpanded(!isExpanded)}
-        className="w-full flex items-center justify-between p-4 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+        className="w-full flex items-center justify-between p-3 sm:p-4 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors min-h-[44px] touch-manipulation"
       >
-        <div className="flex items-center gap-2">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+        <div className="flex items-center gap-1.5 sm:gap-2">
+          <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-gray-100">
             Advanced Filters
           </h3>
-          <span className="text-xs text-gray-500 dark:text-gray-400">
+          <span className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400">
             Extension & Gitignore
           </span>
         </div>
@@ -70,8 +70,8 @@ export function AdvancedFilters({
 
       {/* Content */}
       {isExpanded && (
-        <div className="p-4 border-t border-gray-200 dark:border-gray-700">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="p-3 sm:p-4 border-t border-gray-200 dark:border-gray-700">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
             {/* Extension Filter */}
             <div className="space-y-3">
               <h4 className="text-sm font-medium text-gray-900 dark:text-gray-100">
