@@ -1,5 +1,5 @@
-import { StateCreator } from 'zustand';
-import { Theme } from '@/types';
+import type { StateCreator } from 'zustand';
+import type { Theme } from '@/types';
 
 export interface ThemeSlice {
   theme: Theme;

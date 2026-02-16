@@ -1,9 +1,13 @@
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
-import { ThemeSlice, createThemeSlice } from './slices/themeSlice';
-import { ProviderSlice, createProviderSlice } from './slices/providerSlice';
-import { FileTreeSlice, createFileTreeSlice } from './slices/fileTreeSlice';
-import { UISlice, createUISlice } from './slices/uiSlice';
+import { createThemeSlice } from './slices/themeSlice';
+import { createProviderSlice } from './slices/providerSlice';
+import { createFileTreeSlice } from './slices/fileTreeSlice';
+import { createUISlice } from './slices/uiSlice';
+import type { ThemeSlice } from './slices/themeSlice';
+import type { ProviderSlice } from './slices/providerSlice';
+import type { FileTreeSlice } from './slices/fileTreeSlice';
+import type { UISlice } from './slices/uiSlice';
 
 export type AppStore = ThemeSlice & ProviderSlice & FileTreeSlice & UISlice;
 

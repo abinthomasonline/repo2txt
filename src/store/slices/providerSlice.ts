@@ -1,5 +1,5 @@
-import { StateCreator } from 'zustand';
-import { ProviderType, ProviderCredentials, RepoMetadata } from '@/types';
+import type { StateCreator } from 'zustand';
+import type { ProviderType, ProviderCredentials, RepoMetadata } from '@/types';
 
 export interface ProviderSlice {
   providerType: ProviderType | null;

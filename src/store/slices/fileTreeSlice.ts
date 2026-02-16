@@ -1,5 +1,5 @@
-import { StateCreator } from 'zustand';
-import { FileNode, TreeNode } from '@/types';
+import type { StateCreator } from 'zustand';
+import type { FileNode, TreeNode } from '@/types';
 
 export interface FileTreeSlice {
   nodes: FileNode[];
