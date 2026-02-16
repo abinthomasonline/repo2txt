@@ -109,20 +109,26 @@ export function FileTreeNode({
         </button>
       )}
 
-      {/* Checkbox */}
-      <input
-        type="checkbox"
-        checked={checkboxState === 'checked'}
-        ref={(input) => {
-          if (input) {
-            input.indeterminate = checkboxState === 'indeterminate';
-          }
-        }}
-        onChange={handleCheckboxChange}
-        onClick={(e) => e.stopPropagation()}
-        className="flex-shrink-0 rounded border-gray-300 text-primary-600 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-800"
-        aria-label={`Select ${node.name}`}
-      />
+      {/* Checkbox - hidden for excluded files */}
+      {!isExcluded && (
+        <input
+          type="checkbox"
+          checked={checkboxState === 'checked'}
+          ref={(input) => {
+            if (input) {
+              input.indeterminate = checkboxState === 'indeterminate';
+            }
+          }}
+          onChange={handleCheckboxChange}
+          onClick={(e) => e.stopPropagation()}
+          className="flex-shrink-0 rounded border-gray-300 text-primary-600 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-800"
+          aria-label={`Select ${node.name}`}
+        />
+      )}
+      {/* Spacer for excluded files to maintain alignment */}
+      {isExcluded && (
+        <div className="w-4 h-4 flex-shrink-0" />
+      )}
 
       {/* Icon */}
       <div className="flex-shrink-0">{getFileIcon()}</div>

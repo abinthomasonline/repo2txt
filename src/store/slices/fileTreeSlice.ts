@@ -88,19 +88,21 @@ export const createFileTreeSlice: StateCreator<FileTreeSlice> = (set, get) => ({
   setTree: (tree: TreeNode[]) => set({ tree }),
 
   toggleSelection: (path: string) => {
-    const { selectedPaths, nodes } = get();
+    const { selectedPaths, nodes, excludedPaths } = get();
     const node = nodes.find((n) => n.path === path);
     if (!node) return;
 
     const newSelected = new Set(selectedPaths);
 
     if (node.type === 'tree') {
-      // Toggle directory: select/deselect all children
+      // Toggle directory: select/deselect all non-excluded children
       const isCurrentlySelected = get().getDirectorySelectionState(path) === 'checked';
       const shouldSelect = !isCurrentlySelected;
 
       nodes.forEach((n) => {
-        if (n.type === 'blob' && (n.path === path || n.path.startsWith(path + '/'))) {
+        if (n.type === 'blob' &&
+            (n.path === path || n.path.startsWith(path + '/')) &&
+            !excludedPaths.has(n.path)) {
           if (shouldSelect) {
             newSelected.add(n.path);
           } else {
@@ -109,11 +111,13 @@ export const createFileTreeSlice: StateCreator<FileTreeSlice> = (set, get) => ({
         }
       });
     } else {
-      // Toggle single file
-      if (newSelected.has(path)) {
-        newSelected.delete(path);
-      } else {
-        newSelected.add(path);
+      // Toggle single file (only if not excluded)
+      if (!excludedPaths.has(path)) {
+        if (newSelected.has(path)) {
+          newSelected.delete(path);
+        } else {
+          newSelected.add(path);
+        }
       }
     }
 
@@ -136,13 +140,16 @@ export const createFileTreeSlice: StateCreator<FileTreeSlice> = (set, get) => ({
   },
 
   toggleDirectory: (dirPath: string) => {
-    const { nodes, selectedPaths } = get();
+    const { nodes, selectedPaths, excludedPaths } = get();
     const state = get().getDirectorySelectionState(dirPath);
     const shouldSelect = state !== 'checked';
 
     const newSelected = new Set(selectedPaths);
     nodes.forEach((node) => {
-      if (node.type === 'blob' && (node.path === dirPath || node.path.startsWith(dirPath + '/'))) {
+      // Only affect non-excluded files
+      if (node.type === 'blob' &&
+          (node.path === dirPath || node.path.startsWith(dirPath + '/')) &&
+          !excludedPaths.has(node.path)) {
         if (shouldSelect) {
           newSelected.add(node.path);
         } else {
@@ -156,7 +163,7 @@ export const createFileTreeSlice: StateCreator<FileTreeSlice> = (set, get) => ({
   },
 
   toggleExtension: (extension: string) => {
-    const { nodes, extensions, selectedPaths } = get();
+    const { nodes, extensions, selectedPaths, excludedPaths } = get();
     const ext = extensions.get(extension);
     if (!ext) return;
 
@@ -167,7 +174,8 @@ export const createFileTreeSlice: StateCreator<FileTreeSlice> = (set, get) => ({
 
     const newSelected = new Set(selectedPaths);
     nodes.forEach((node) => {
-      if (node.type === 'blob') {
+      // Only affect non-excluded files
+      if (node.type === 'blob' && !excludedPaths.has(node.path)) {
         const fileExt = getFileExtension(node.path) || NO_EXT_KEY;
         if (fileExt === extension) {
           if (shouldSelect) {
@@ -232,10 +240,12 @@ export const createFileTreeSlice: StateCreator<FileTreeSlice> = (set, get) => ({
   },
 
   getDirectorySelectionState: (dirPath: string) => {
-    const { nodes, selectedPaths } = get();
+    const { nodes, selectedPaths, excludedPaths } = get();
+    // Only count non-excluded children
     const children = nodes.filter((n) =>
       n.type === 'blob' &&
-      (n.path === dirPath || n.path.startsWith(dirPath + '/'))
+      (n.path === dirPath || n.path.startsWith(dirPath + '/')) &&
+      !excludedPaths.has(n.path)
     );
 
     if (children.length === 0) return 'unchecked';
@@ -248,10 +258,12 @@ export const createFileTreeSlice: StateCreator<FileTreeSlice> = (set, get) => ({
   },
 
   getExtensionSelectionState: (extension: string) => {
-    const { nodes, selectedPaths } = get();
+    const { nodes, selectedPaths, excludedPaths } = get();
     const NO_EXT_KEY = '(no extension)';
+    // Only count non-excluded files
     const filesWithExt = nodes.filter((n) => {
       if (n.type !== 'blob') return false;
+      if (excludedPaths.has(n.path)) return false;
       const fileExt = getFileExtension(n.path) || NO_EXT_KEY;
       return fileExt === extension;
     });
@@ -281,8 +293,9 @@ export const createFileTreeSlice: StateCreator<FileTreeSlice> = (set, get) => ({
   },
 
   getGlobalSelectionState: () => {
-    const { nodes, selectedPaths } = get();
-    const files = nodes.filter((n) => n.type === 'blob');
+    const { nodes, selectedPaths, excludedPaths } = get();
+    // Only count non-excluded files
+    const files = nodes.filter((n) => n.type === 'blob' && !excludedPaths.has(n.path));
 
     if (files.length === 0) return 'unchecked';
 
@@ -294,9 +307,10 @@ export const createFileTreeSlice: StateCreator<FileTreeSlice> = (set, get) => ({
   },
 
   selectAll: () => {
-    const { nodes } = get();
+    const { nodes, excludedPaths } = get();
+    // Only select non-excluded files
     const allFilePaths = nodes
-      .filter((n) => n.type === 'blob')
+      .filter((n) => n.type === 'blob' && !excludedPaths.has(n.path))
       .map((n) => n.path);
 
     set({ selectedPaths: new Set(allFilePaths) });
@@ -308,7 +322,18 @@ export const createFileTreeSlice: StateCreator<FileTreeSlice> = (set, get) => ({
     get().updateExtensionStates();
   },
 
-  reset: () => set(initialState),
+  reset: () => {
+    set((state) => ({
+      ...state,
+      nodes: [],
+      tree: [],
+      selectedPaths: new Set<string>(),
+      expandedPaths: new Set<string>(),
+      excludedPaths: new Set<string>(),
+      extensions: new Map<string, { count: number; selected: boolean }>(),
+      gitignorePatterns: [],
+    }));
+  },
 });
 
 // Helper functions

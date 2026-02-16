@@ -10,20 +10,28 @@ import { ZipUploader } from './ZipUploader';
 interface LocalFormProps {
   onDirectorySelected?: (files: FileList) => void;
   onZipSelected?: (file: File) => void;
+  onTabChange?: (tab: TabType) => void;
   disabled?: boolean;
 }
 
 type TabType = 'directory' | 'zip';
 
-export function LocalForm({ onDirectorySelected, onZipSelected, disabled }: LocalFormProps) {
+export function LocalForm({ onDirectorySelected, onZipSelected, onTabChange, disabled }: LocalFormProps) {
   const [activeTab, setActiveTab] = useState<TabType>('directory');
+
+  const handleTabChange = (tab: TabType) => {
+    if (tab !== activeTab) {
+      setActiveTab(tab);
+      onTabChange?.(tab);
+    }
+  };
 
   return (
     <div className="space-y-4">
       {/* Tab selector */}
       <div className="flex space-x-1 rounded-lg bg-gray-100 dark:bg-gray-800 p-1">
         <button
-          onClick={() => setActiveTab('directory')}
+          onClick={() => handleTabChange('directory')}
           className={`
             flex-1 rounded-md px-3 py-2 text-sm font-medium transition-colors
             ${
@@ -44,7 +52,7 @@ export function LocalForm({ onDirectorySelected, onZipSelected, disabled }: Loca
           Directory
         </button>
         <button
-          onClick={() => setActiveTab('zip')}
+          onClick={() => handleTabChange('zip')}
           className={`
             flex-1 rounded-md px-3 py-2 text-sm font-medium transition-colors
             ${

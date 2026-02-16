@@ -12,6 +12,7 @@ interface ProviderSelectorProps {
   onGitHubSubmit?: (url: string) => void;
   onLocalDirectorySubmit?: (files: FileList) => void;
   onLocalZipSubmit?: (file: File) => void;
+  onProviderChange?: (provider: ProviderType) => void;
   disabled?: boolean;
 }
 
@@ -19,16 +20,24 @@ export function ProviderSelector({
   onGitHubSubmit,
   onLocalDirectorySubmit,
   onLocalZipSubmit,
+  onProviderChange,
   disabled = false,
 }: ProviderSelectorProps) {
   const [activeProvider, setActiveProvider] = useState<ProviderType>('github');
+
+  const handleProviderChange = (provider: ProviderType) => {
+    if (provider !== activeProvider) {
+      setActiveProvider(provider);
+      onProviderChange?.(provider);
+    }
+  };
 
   return (
     <div className="space-y-4">
       {/* Provider tabs */}
       <div className="flex space-x-1 rounded-lg bg-gray-100 dark:bg-gray-800 p-1">
         <button
-          onClick={() => setActiveProvider('github')}
+          onClick={() => handleProviderChange('github')}
           disabled={disabled}
           className={`
             flex-1 flex items-center justify-center gap-2 rounded-md px-4 py-2.5 text-sm font-medium transition-colors
@@ -47,7 +56,7 @@ export function ProviderSelector({
         </button>
 
         <button
-          onClick={() => setActiveProvider('local')}
+          onClick={() => handleProviderChange('local')}
           disabled={disabled}
           className={`
             flex-1 flex items-center justify-center gap-2 rounded-md px-4 py-2.5 text-sm font-medium transition-colors
@@ -79,6 +88,7 @@ export function ProviderSelector({
           <LocalForm
             onDirectorySelected={onLocalDirectorySubmit}
             onZipSelected={onLocalZipSubmit}
+            onTabChange={() => onProviderChange?.('local')}
             disabled={disabled}
           />
         )}

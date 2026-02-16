@@ -1,10 +1,11 @@
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import { ThemeToggle } from '@/components/ui/ThemeToggle';
+import { ErrorDialog } from '@/components/ui/ErrorDialog';
 import { ProviderSelector } from '@/components/ProviderSelector';
+import { AdvancedFilters } from '@/components/AdvancedFilters';
 import { FileTree } from '@/components/file-tree';
-import { ExtensionFilter } from '@/components/filters/ExtensionFilter';
-import { GitIgnoreEditor } from '@/components/filters/GitIgnoreEditor';
 import { OutputPanel } from '@/components/OutputPanel';
+import { ProviderError } from '@/lib/providers/types';
 import { GitHubProvider } from '@/features/github';
 import { LocalProvider } from '@/features/local';
 import { Formatter } from '@/lib/formatter';
@@ -24,6 +25,7 @@ function App() {
     extensions,
     gitignorePatterns,
     setNodes,
+    setTree,
     toggleSelection,
     toggleExpanded,
     toggleExtension,
@@ -41,6 +43,9 @@ function App() {
   const [showExcluded, setShowExcluded] = useState(false);
   const [output, setOutput] = useState<FormattedOutput | null>(null);
   const [currentProvider, setCurrentProvider] = useState<GitHubProvider | LocalProvider | null>(null);
+  const [error, setError] = useState<{ message: string; recovery?: () => void; recoveryLabel?: string } | null>(null);
+  const shouldAutoExpandRoot = useRef(false);
+  const outputRef = useRef<HTMLDivElement>(null);
 
   // Build tree from nodes with current selection/expansion state
   const tree = useMemo(() => {
@@ -79,7 +84,31 @@ function App() {
     });
   }, [extensions, getExtensionSelectionState]);
 
-  // No auto-expansion - users can expand directories as needed
+  // Reset all state (store + local)
+  const resetAll = useCallback(() => {
+    // Clear store state using setter functions
+    setNodes([]);
+    setTree([]);
+    setGitignorePatterns([]);
+
+    // Clear local state
+    setOutput(null);
+    setCurrentProvider(null);
+    setShowExcluded(false);
+  }, [setNodes, setTree, setGitignorePatterns]);
+
+  // Auto-expand root directories for local directory uploads
+  useEffect(() => {
+    if (shouldAutoExpandRoot.current && tree.length > 0) {
+      shouldAutoExpandRoot.current = false;
+      // Expand all root-level directories
+      tree.forEach((node) => {
+        if (node.type === 'directory') {
+          toggleExpanded(node.path);
+        }
+      });
+    }
+  }, [tree, toggleExpanded]);
 
   // Load files from provider
   const loadFiles = useCallback(async (provider: GitHubProvider | LocalProvider, url: string) => {
@@ -92,9 +121,20 @@ function App() {
 
       // Update store with nodes (this will auto-select code files)
       setNodes(fetchedNodes);
-    } catch (error) {
-      console.error('Failed to load files:', error);
-      alert(`Error: ${error instanceof Error ? error.message : 'Failed to load files'}`);
+    } catch (err) {
+      console.error('Failed to load files:', err);
+
+      if (err instanceof ProviderError) {
+        setError({
+          message: err.userMessage,
+          recovery: err.recovery,
+          recoveryLabel: err.recovery ? 'Create GitHub Token' : undefined,
+        });
+      } else {
+        setError({
+          message: err instanceof Error ? err.message : 'Failed to load files. Please try again.',
+        });
+      }
     } finally {
       setIsLoading(false);
     }
@@ -121,6 +161,9 @@ function App() {
 
     const provider = new LocalProvider();
     await provider.initialize({ source: 'directory', files });
+
+    // Set flag to auto-expand root after tree is built
+    shouldAutoExpandRoot.current = true;
 
     await loadFiles(provider, 'local://directory');
   }, [loadFiles, setProviderType]);
@@ -188,7 +231,9 @@ function App() {
       const selectedNodes = getSelectedNodes();
 
       if (selectedNodes.length === 0) {
-        alert('No files selected. Please select at least one file to generate output.');
+        setError({
+          message: 'No files selected.\n\nPlease select at least one file to generate output. You can:\n• Click the checkbox next to "File Tree" to select all files\n• Expand directories and select individual files\n• Use the Extension Filter to select files by type',
+        });
         return;
       }
 
@@ -207,13 +252,18 @@ function App() {
           path,
           type: 'tree' as const,
         }));
-      const allNodes: FileNode[] = [...nodes, ...newDirNodes];
+      let allNodes: FileNode[] = [...nodes, ...newDirNodes];
+
+      // Filter out excluded files and directories if showExcluded is false
+      if (!showExcluded) {
+        allNodes = allNodes.filter((n) => !excludedPaths.has(n.path));
+      }
 
       // Build tree with all directories expanded (pass all paths as expanded)
       const allDirPaths = new Set(allNodes.filter(n => n.type === 'tree').map(n => n.path));
       const fullTree = buildTree(allNodes, {
         selectedPaths,
-        excludedPaths,
+        excludedPaths: showExcluded ? excludedPaths : new Set(), // Clear excluded paths if not showing them
         expandedPaths: allDirPaths, // All directories expanded for output
         getDirectorySelectionState,
       });
@@ -222,9 +272,25 @@ function App() {
       const formattedOutput = Formatter.format(fullTree, fileContents);
 
       setOutput(formattedOutput);
-    } catch (error) {
-      console.error('Failed to generate output:', error);
-      alert(`Error: ${error instanceof Error ? error.message : 'Failed to generate output'}`);
+
+      // Scroll to output section after a brief delay to ensure rendering
+      setTimeout(() => {
+        outputRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 100);
+    } catch (err) {
+      console.error('Failed to generate output:', err);
+
+      if (err instanceof ProviderError) {
+        setError({
+          message: err.userMessage,
+          recovery: err.recovery,
+          recoveryLabel: err.recovery ? 'Create GitHub Token' : undefined,
+        });
+      } else {
+        setError({
+          message: err instanceof Error ? err.message : 'Failed to generate output. Please try again.',
+        });
+      }
     } finally {
       setIsLoading(false);
     }
@@ -274,15 +340,29 @@ function App() {
               onGitHubSubmit={handleGitHubSubmit}
               onLocalDirectorySubmit={handleLocalDirectorySubmit}
               onLocalZipSubmit={handleLocalZipSubmit}
+              onProviderChange={resetAll}
               disabled={isLoading}
             />
           </section>
 
-          {/* File Tree and Filters */}
+          {/* Filters and File Tree */}
           {tree.length > 0 && (
-            <section className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <section className="space-y-6">
+              {/* Advanced Filters - Collapsed by default */}
+              <AdvancedFilters
+                extensions={extensionList}
+                onExtensionToggle={handleExtensionToggle}
+                onSelectAllExtensions={handleSelectAllExtensions}
+                onDeselectAllExtensions={handleDeselectAllExtensions}
+                gitignorePatterns={gitignorePatterns}
+                onApplyGitignore={handleApplyGitignore}
+                onResetGitignore={() => setGitignorePatterns([])}
+                showExcluded={showExcluded}
+                onToggleExcluded={setShowExcluded}
+              />
+
               {/* File Tree */}
-              <div className="lg:col-span-2 space-y-4">
+              <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <label className="flex items-center gap-2 cursor-pointer">
@@ -322,34 +402,12 @@ function App() {
                   showExcluded={showExcluded}
                 />
               </div>
-
-              {/* Filters */}
-              <div className="space-y-6">
-                <div className="rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 p-4">
-                  <ExtensionFilter
-                    extensions={extensionList}
-                    onToggle={handleExtensionToggle}
-                    onSelectAll={handleSelectAllExtensions}
-                    onDeselectAll={handleDeselectAllExtensions}
-                  />
-                </div>
-
-                <div className="rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 p-4">
-                  <GitIgnoreEditor
-                    patterns={gitignorePatterns}
-                    onApply={handleApplyGitignore}
-                    onReset={() => setGitignorePatterns([])}
-                    showExcluded={showExcluded}
-                    onToggleExcluded={setShowExcluded}
-                  />
-                </div>
-              </div>
             </section>
           )}
 
           {/* Output */}
           {(output || isLoading) && (
-            <section>
+            <section ref={outputRef}>
               <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
                 Output
               </h2>
@@ -378,6 +436,17 @@ function App() {
           </p>
         </div>
       </footer>
+
+      {/* Error Dialog */}
+      {error && (
+        <ErrorDialog
+          title="Unable to Complete Request"
+          message={error.message}
+          onClose={() => setError(null)}
+          onAction={error.recovery}
+          actionLabel={error.recoveryLabel}
+        />
+      )}
     </div>
   );
 }

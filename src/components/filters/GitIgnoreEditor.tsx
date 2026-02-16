@@ -39,11 +39,13 @@ export function GitIgnoreEditor({
   const [patterns, setPatterns] = useState(initialPatterns.join('\n'));
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
+  const [localShowExcluded, setLocalShowExcluded] = useState(showExcluded);
 
   useEffect(() => {
     setPatterns(initialPatterns.join('\n'));
+    setLocalShowExcluded(showExcluded);
     setHasChanges(false);
-  }, [initialPatterns]);
+  }, [initialPatterns, showExcluded]);
 
   const handleApply = () => {
     const patternArray = patterns
@@ -52,11 +54,13 @@ export function GitIgnoreEditor({
       .filter((p) => p && !p.startsWith('#'));
 
     onApply?.(patternArray);
+    onToggleExcluded?.(localShowExcluded);
     setHasChanges(false);
   };
 
   const handleReset = () => {
     onReset?.();
+    setLocalShowExcluded(showExcluded);
     setHasChanges(false);
   };
 
@@ -68,7 +72,16 @@ export function GitIgnoreEditor({
 
   const handleChange = (value: string) => {
     setPatterns(value);
-    setHasChanges(true);
+    const patternsChanged = value !== initialPatterns.join('\n');
+    const checkboxChanged = localShowExcluded !== showExcluded;
+    setHasChanges(patternsChanged || checkboxChanged);
+  };
+
+  const handleCheckboxChange = (checked: boolean) => {
+    setLocalShowExcluded(checked);
+    const patternsChanged = patterns !== initialPatterns.join('\n');
+    const checkboxChanged = checked !== showExcluded;
+    setHasChanges(patternsChanged || checkboxChanged);
   };
 
   const patternCount = patterns
@@ -77,11 +90,8 @@ export function GitIgnoreEditor({
 
   return (
     <div className="space-y-3">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <h3 className="text-sm font-medium text-gray-900 dark:text-gray-100">
-          Gitignore Patterns
-        </h3>
+      {/* Summary */}
+      <div className="flex items-center justify-end">
         <span className="text-xs text-gray-500 dark:text-gray-400">
           {patternCount} {patternCount === 1 ? 'pattern' : 'patterns'}
         </span>
@@ -101,6 +111,24 @@ export function GitIgnoreEditor({
           <p>• Add <code className="bg-gray-100 dark:bg-gray-800 px-1 rounded">/</code> at the end for directories</p>
           <p>• Use <code className="bg-gray-100 dark:bg-gray-800 px-1 rounded">*</code> for wildcards</p>
         </div>
+      </div>
+
+      {/* Show excluded files toggle */}
+      <div className="space-y-1">
+        <label className="flex items-center gap-2 p-2 rounded-md hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer">
+          <input
+            type="checkbox"
+            checked={localShowExcluded}
+            onChange={(e) => handleCheckboxChange(e.target.checked)}
+            className="rounded border-gray-300 text-primary-600 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-800"
+          />
+          <span className="text-sm text-gray-900 dark:text-gray-100">
+            Show excluded files in directory tree
+          </span>
+        </label>
+        <p className="text-xs text-gray-500 dark:text-gray-400 pl-8">
+          Controls visibility in output directory tree. Excluded file contents are never included.
+        </p>
       </div>
 
       {/* Actions */}
@@ -123,19 +151,6 @@ export function GitIgnoreEditor({
           Reset
         </Button>
       </div>
-
-      {/* Show excluded files toggle */}
-      <label className="flex items-center gap-2 p-2 rounded-md hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer">
-        <input
-          type="checkbox"
-          checked={showExcluded}
-          onChange={(e) => onToggleExcluded?.(e.target.checked)}
-          className="rounded border-gray-300 text-primary-600 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-800"
-        />
-        <span className="text-sm text-gray-900 dark:text-gray-100">
-          Show excluded files
-        </span>
-      </label>
 
       {/* Pattern suggestions */}
       <div>

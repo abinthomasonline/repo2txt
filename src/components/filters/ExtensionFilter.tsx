@@ -24,11 +24,8 @@ export function ExtensionFilter({
 
   return (
     <div className="space-y-3">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <h3 className="text-sm font-medium text-gray-900 dark:text-gray-100">
-          File Extensions
-        </h3>
+      {/* Summary */}
+      <div className="flex items-center justify-end">
         <span className="text-xs text-gray-500 dark:text-gray-400">
           {selectedCount} of {totalCount} selected
         </span>
