@@ -5,7 +5,6 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import { Button } from '@/components/ui/Button';
-import { useStore } from '@/store';
 import { GitHubProvider } from '../GitHubProvider';
 
 interface GitHubUrlInputProps {
@@ -15,8 +14,7 @@ interface GitHubUrlInputProps {
 }
 
 export function GitHubUrlInput({ onValidUrl, onUrlChange, hideSubmitButton = false }: GitHubUrlInputProps) {
-  const { repoUrl } = useStore();
-  const [url, setUrl] = useState(repoUrl || '');
+  const [url, setUrl] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [isValid, setIsValid] = useState(false);
   const [showHints, setShowHints] = useState(false);
