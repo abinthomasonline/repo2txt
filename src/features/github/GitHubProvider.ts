@@ -6,7 +6,7 @@
 import { BaseProvider } from '@/lib/providers/BaseProvider';
 import { ProviderError, ErrorCode } from '@/lib/providers/types';
 import type { ParsedRepoInfo } from '@/lib/providers/types';
-import type { ProviderType, FileNode, FetchOptions, RepoMetadata } from '@/types';
+import type { ProviderType, FileNode, FetchOptions, RepoMetadata, FileContent } from '@/types';
 
 interface GitHubReferences {
   branches: string[];
