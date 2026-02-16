@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { GitHubAuth } from '../GitHubAuth';
 import { useStore } from '@/store';
@@ -15,7 +15,7 @@ describe('GitHubAuth', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     sessionStorage.clear();
-    (useStore as any).mockReturnValue({
+    (useStore as unknown as ReturnType<typeof vi.fn>).mockReturnValue({
       credentials: null,
       setCredentials: mockSetCredentials,
     });

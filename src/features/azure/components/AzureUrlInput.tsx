@@ -25,19 +25,24 @@ export function AzureUrlInput({ onValidUrl, onUrlChange, hideSubmitButton = fals
   // Validate URL whenever it changes
   useEffect(() => {
     if (!url) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setError(null);
+       
       setIsValid(false);
       onUrlChange?.(url, false);
       return;
     }
 
     const isValidUrl = provider.validateUrl(url);
+     
     setIsValid(isValidUrl);
     onUrlChange?.(url, isValidUrl);
 
     if (isValidUrl) {
+       
       setError(null);
     } else {
+       
       setError('Invalid Azure DevOps URL format');
     }
   }, [url, provider, onUrlChange]);

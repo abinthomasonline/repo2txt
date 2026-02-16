@@ -6,7 +6,7 @@
 import { BaseProvider } from '@/lib/providers/BaseProvider';
 import { ProviderError, ErrorCode } from '@/lib/providers/types';
 import type { ParsedRepoInfo } from '@/lib/providers/types';
-import type { ProviderType, FileNode, FetchOptions, RepoMetadata, FileContent } from '@/types';
+import type { ProviderType, FileNode, FetchOptions, FileContent } from '@/types';
 
 interface GitHubReferences {
   branches: string[];
@@ -16,7 +16,7 @@ interface GitHubReferences {
 export class GitHubProvider extends BaseProvider {
   private static readonly API_BASE = 'https://api.github.com';
   private static readonly URL_PATTERN =
-    /^https:\/\/github\.com\/([^\/]+)\/([^\/]+)(?:\/tree\/(.+))?$/;
+    /^https:\/\/github\.com\/([^/]+)\/([^/]+)(?:\/tree\/(.+))?$/;
 
   getType(): ProviderType {
     return 'github';
@@ -296,21 +296,6 @@ export class GitHubProvider extends BaseProvider {
     }
 
     return headers;
-  }
-
-  /**
-   * Extract branch from lastString (before first slash or entire string)
-   */
-  private extractBranchFromPath(lastString: string): string {
-    return lastString.split('/')[0];
-  }
-
-  /**
-   * Extract path from lastString (everything after branch)
-   */
-  private extractPathFromLastString(lastString: string): string {
-    const parts = lastString.split('/');
-    return parts.slice(1).join('/');
   }
 
   /**

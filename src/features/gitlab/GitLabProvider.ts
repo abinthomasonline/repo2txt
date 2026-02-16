@@ -20,7 +20,7 @@ export class GitLabProvider extends BaseProvider {
   private static readonly DEFAULT_API_BASE = 'https://gitlab.com/api/v4';
   // More specific pattern that excludes github.com
   private static readonly URL_PATTERN =
-    /^https:\/\/((?!github\.com)[^\/]+)\/([^\/]+(?:\/[^\/]+)*?)(?:\/-\/tree\/(.+))?$/;
+    /^https:\/\/((?!github\.com)[^/]+)\/([^/]+(?:\/[^/]+)*?)(?:\/-\/tree\/(.+))?$/;
 
   getType(): ProviderType {
     return 'gitlab';
@@ -105,7 +105,7 @@ export class GitLabProvider extends BaseProvider {
     }
 
     // Get instance URL and API base
-    const instanceMatch = url.match(/^https:\/\/([^\/]+)/);
+    const instanceMatch = url.match(/^https:\/\/([^/]+)/);
     const instance = instanceMatch ? instanceMatch[1] : 'gitlab.com';
     const apiBase =
       instance === 'gitlab.com'

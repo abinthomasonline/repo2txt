@@ -71,7 +71,7 @@ export function DirectoryPicker({ onDirectorySelected, disabled }: DirectoryPick
       <input
         ref={inputRef}
         type="file"
-        /* @ts-ignore - webkitdirectory is not in TypeScript types */
+        /* @ts-expect-error - webkitdirectory is not in TypeScript types */
         webkitdirectory=""
         directory=""
         multiple

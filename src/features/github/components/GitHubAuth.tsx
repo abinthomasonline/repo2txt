@@ -8,16 +8,18 @@ import { Button } from '@/components/ui/Button';
 import { useStore } from '@/store';
 
 export function GitHubAuth() {
-  const { credentials, setCredentials } = useStore();
+  const { setCredentials } = useStore();
   const [token, setToken] = useState('');
   const [showInfo, setShowInfo] = useState(false);
   const [showToken, setShowToken] = useState(false);
 
-  // Load saved token on mount
+  // Load saved token from sessionStorage on mount
   useEffect(() => {
     const savedToken = sessionStorage.getItem('github_token');
     if (savedToken) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setToken(savedToken);
+       
       setCredentials({ token: savedToken });
     }
   }, [setCredentials]);

@@ -1,5 +1,4 @@
 import { test, expect } from '@playwright/test';
-import path from 'path';
 import { testConfig } from '../test-config';
 
 test.describe('Local Flow', () => {

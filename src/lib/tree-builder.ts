@@ -34,7 +34,6 @@ export function buildTree(nodes: FileNode[], options: TreeBuilderOptions): TreeN
     const parentPath = parts.slice(0, -1).join('/');
 
     const isDirectory = node.type === 'tree';
-    const isFile = node.type === 'blob';
 
     let selected: boolean | 'indeterminate' = false;
     if (isDirectory) {

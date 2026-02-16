@@ -1,6 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
 import { DirectoryPicker } from '../DirectoryPicker';
 
 describe('DirectoryPicker', () => {
@@ -30,9 +29,13 @@ describe('DirectoryPicker', () => {
     const file2 = new File(['content2'], 'file2.txt', { type: 'text/plain' });
 
     // Create a mock FileList
-    const fileList: any = [file1, file2];
-    fileList.item = (index: number) => fileList[index];
-    fileList.length = 2;
+    const fileList = [file1, file2] as unknown as FileList;
+    Object.defineProperty(fileList, 'item', {
+      value: (index: number) => fileList[index],
+    });
+    Object.defineProperty(fileList, 'length', {
+      value: 2,
+    });
 
     // Manually trigger change event
     Object.defineProperty(input, 'files', {
@@ -52,9 +55,13 @@ describe('DirectoryPicker', () => {
     const file1 = new File(['content'], 'file1.txt');
     const file2 = new File(['content'], 'file2.txt');
 
-    const fileList: any = [file1, file2];
-    fileList.item = (index: number) => fileList[index];
-    fileList.length = 2;
+    const fileList = [file1, file2] as unknown as FileList;
+    Object.defineProperty(fileList, 'item', {
+      value: (index: number) => fileList[index],
+    });
+    Object.defineProperty(fileList, 'length', {
+      value: 2,
+    });
 
     Object.defineProperty(input, 'files', {
       value: fileList,

@@ -7,7 +7,7 @@ import JSZip from 'jszip';
 import { BaseProvider } from '@/lib/providers/BaseProvider';
 import { ProviderError, ErrorCode } from '@/lib/providers/types';
 import type { ParsedRepoInfo } from '@/lib/providers/types';
-import type { ProviderType, FileNode, FetchOptions, RepoMetadata, FileContent } from '@/types';
+import type { ProviderType, FileNode, FileContent } from '@/types';
 
 export interface LocalProviderOptions {
   source: 'directory' | 'zip';
@@ -105,7 +105,7 @@ export class LocalProvider extends BaseProvider {
   /**
    * Fetch tree from local files
    */
-  async fetchTree(url: string, options?: FetchOptions): Promise<FileNode[]> {
+  async fetchTree(): Promise<FileNode[]> {
     if (!this.options) {
       throw new ProviderError(
         'Provider not initialized',
@@ -200,7 +200,7 @@ export class LocalProvider extends BaseProvider {
     for (let i = 0; i < files.length; i++) {
       const file = files[i];
       // Use webkitRelativePath if available, otherwise use name
-      const path = (file as any).webkitRelativePath || file.name;
+      const path = (file as File & { webkitRelativePath?: string }).webkitRelativePath || file.name;
       this.fileMap.set(path, file);
     }
   }
@@ -236,7 +236,7 @@ export class LocalProvider extends BaseProvider {
     if (files.length === 0) return 'Unknown';
 
     const firstFile = files[0];
-    const relativePath = (firstFile as any).webkitRelativePath;
+    const relativePath = (firstFile as File & { webkitRelativePath?: string }).webkitRelativePath;
 
     if (relativePath) {
       const parts = relativePath.split('/');

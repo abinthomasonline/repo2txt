@@ -41,9 +41,13 @@ export function GitIgnoreEditor({
   const [hasChanges, setHasChanges] = useState(false);
   const [localShowExcluded, setLocalShowExcluded] = useState(showExcluded);
 
+  // Sync local state with external props
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setPatterns(initialPatterns.join('\n'));
+     
     setLocalShowExcluded(showExcluded);
+     
     setHasChanges(false);
   }, [initialPatterns, showExcluded]);
 

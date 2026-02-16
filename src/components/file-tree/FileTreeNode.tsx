@@ -25,11 +25,6 @@ export function FileTreeNode({
   const isExcluded = node.excluded || false;
   const isVisible = node.visible !== false;
 
-  // Don't render if not visible and showExcluded is false
-  if (!isVisible && !showExcluded) {
-    return null;
-  }
-
   const handleCheckboxChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
       e.stopPropagation();
@@ -43,6 +38,11 @@ export function FileTreeNode({
       onToggle?.(node.path);
     }
   }, [isDirectory, node.path, onToggle]);
+
+  // Don't render if not visible and showExcluded is false
+  if (!isVisible && !showExcluded) {
+    return null;
+  }
 
   const getFileIcon = () => {
     if (isDirectory) {

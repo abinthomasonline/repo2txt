@@ -22,7 +22,7 @@ export class AzureDevOpsProvider extends BaseProvider {
   // Matches: https://dev.azure.com/{org}/{project}/_git/{repo}
   // Also: {org}.visualstudio.com/{project}/_git/{repo} (legacy)
   private static readonly URL_PATTERN =
-    /^https:\/\/(?:dev\.azure\.com\/([^\/]+)\/([^\/]+)|([^\.]+)\.visualstudio\.com\/([^\/]+))\/_git\/([^\/\?]+)(?:\/?\?.*)?$/;
+    /^https:\/\/(?:dev\.azure\.com\/([^/]+)\/([^/]+)|([^.]+)\.visualstudio\.com\/([^/]+))\/_git\/([^/?]+)(?:\/?\?.*)?$/;
 
   getType(): ProviderType {
     return 'azure';

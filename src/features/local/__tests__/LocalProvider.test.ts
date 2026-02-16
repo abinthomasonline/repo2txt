@@ -1,6 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { LocalProvider } from '../LocalProvider';
-import { ErrorCode } from '@/lib/providers/types';
 import JSZip from 'jszip';
 
 // Mock File and FileList
@@ -21,10 +20,14 @@ class MockFile extends File {
 }
 
 function createMockFileList(files: MockFile[]): FileList {
-  const fileList: any = files;
-  fileList.item = (index: number) => files[index] || null;
-  fileList.length = files.length;
-  return fileList as FileList;
+  const fileList = files as unknown as FileList;
+  Object.defineProperty(fileList, 'item', {
+    value: (index: number) => files[index] || null,
+  });
+  Object.defineProperty(fileList, 'length', {
+    value: files.length,
+  });
+  return fileList;
 }
 
 describe('LocalProvider', () => {

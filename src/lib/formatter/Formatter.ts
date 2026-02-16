@@ -76,7 +76,7 @@ export class Formatter {
   private static generateDirectoryTree(nodes: TreeNode[]): string {
     const lines: string[] = ['Directory Structure:', '---'];
 
-    function traverse(nodes: TreeNode[], prefix: string = '', isLast: boolean = true) {
+    function traverse(nodes: TreeNode[], prefix: string = '') {
       nodes.forEach((node, index) => {
         const isLastNode = index === nodes.length - 1;
         const connector = isLastNode ? '└── ' : '├── ';
@@ -86,7 +86,7 @@ export class Formatter {
 
         if (node.type === 'directory' && node.children && node.children.length > 0) {
           const newPrefix = prefix + (isLastNode ? '    ' : '│   ');
-          traverse(node.children, newPrefix, isLastNode);
+          traverse(node.children, newPrefix);
         }
       });
     }

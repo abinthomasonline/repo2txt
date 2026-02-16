@@ -7,7 +7,8 @@
  */
 export function sanitizeFilename(name: string): string {
   return name
-    .replace(/[<>:"/\\|?*\x00-\x1F]/g, '-') // Replace invalid chars with dash
+    // eslint-disable-next-line no-control-regex
+    .replace(/[<>:"/\\|?*\u0000-\u001F]/g, '-') // Replace invalid chars with dash
     .replace(/\s+/g, '-') // Replace whitespace with dash
     .replace(/-+/g, '-') // Replace multiple dashes with single dash
     .replace(/^-|-$/g, ''); // Remove leading/trailing dashes

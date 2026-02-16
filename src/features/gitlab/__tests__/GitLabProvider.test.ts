@@ -111,10 +111,10 @@ describe('GitLabProvider', () => {
 
   describe('setCredentials', () => {
     it('should accept and store credentials', () => {
-      const credentials = { token: 'glpat-test-token' };
-      provider.setCredentials(credentials);
+      const token = 'glpat-test-token';
+      provider.setCredentials({ token });
       // Credentials are stored internally, no direct way to verify except through API calls
-      expect(() => provider.setCredentials(credentials)).not.toThrow();
+      expect(() => provider.setCredentials({ token })).not.toThrow();
     });
   });
 

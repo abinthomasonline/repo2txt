@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { GitHubUrlInput } from '../GitHubUrlInput';
 import { useStore } from '@/store';
@@ -15,7 +15,7 @@ describe('GitHubUrlInput', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    (useStore as any).mockReturnValue({
+    (useStore as unknown as ReturnType<typeof vi.fn>).mockReturnValue({
       repoUrl: '',
       setRepoUrl: mockSetRepoUrl,
     });

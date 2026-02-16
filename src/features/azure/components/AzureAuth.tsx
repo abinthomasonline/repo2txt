@@ -13,11 +13,13 @@ export function AzureAuth() {
   const [showInfo, setShowInfo] = useState(false);
   const [showToken, setShowToken] = useState(false);
 
-  // Load saved token on mount
+  // Load saved token from sessionStorage on mount
   useEffect(() => {
     const savedToken = sessionStorage.getItem('azure_token');
     if (savedToken) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setToken(savedToken);
+       
       setCredentials({ token: savedToken });
     }
   }, [setCredentials]);

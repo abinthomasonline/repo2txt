@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, vi, beforeAll, afterAll, afterEach } from 'vitest';
+import { describe, it, expect, beforeEach, beforeAll, afterAll, afterEach } from 'vitest';
 import { http, HttpResponse } from 'msw';
 import { setupServer } from 'msw/node';
 import { GitHubProvider } from '../GitHubProvider';
@@ -217,9 +217,10 @@ describe('GitHubProvider', () => {
       try {
         await provider.fetchTree('https://github.com/owner/repo');
         expect.fail('Should have thrown an error');
-      } catch (error: any) {
-        expect(error.code).toBe(ErrorCode.RATE_LIMITED);
-        expect(error.recovery).toBeDefined();
+      } catch (error: unknown) {
+        const providerError = error as { code: string; recovery?: () => void };
+        expect(providerError.code).toBe(ErrorCode.RATE_LIMITED);
+        expect(providerError.recovery).toBeDefined();
       }
     });
   });
