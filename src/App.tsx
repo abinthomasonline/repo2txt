@@ -12,6 +12,12 @@ import { AzureDevOpsProvider } from '@/features/azure';
 import { LocalProvider } from '@/features/local';
 import { Formatter } from '@/lib/formatter';
 import { buildTree, extractDirectories } from '@/lib/tree-builder';
+import {
+  extractGitHubRepoName,
+  extractGitLabRepoName,
+  extractAzureRepoName,
+  extractLocalName,
+} from '@/lib/utils/repoName';
 import { useStore } from '@/store';
 import type { TreeNode, FileNode, FileContent, ExtensionFilter as ExtensionFilterType, FormattedOutput } from '@/types';
 
@@ -45,6 +51,7 @@ function App() {
   const [showExcluded, setShowExcluded] = useState(false);
   const [output, setOutput] = useState<FormattedOutput | null>(null);
   const [currentProvider, setCurrentProvider] = useState<GitHubProvider | GitLabProvider | AzureDevOpsProvider | LocalProvider | null>(null);
+  const [repoName, setRepoName] = useState<string>('repo-export');
   const [error, setError] = useState<{ message: string; recovery?: () => void; recoveryLabel?: string } | null>(null);
   const shouldAutoExpandRoot = useRef(false);
   const outputRef = useRef<HTMLDivElement>(null);
@@ -146,6 +153,7 @@ function App() {
   const handleGitHubSubmit = useCallback(async (url: string) => {
     setProviderType('github');
     setRepoUrl(url);
+    setRepoName(extractGitHubRepoName(url));
 
     const provider = new GitHubProvider();
     // Get GitHub token from sessionStorage if available
@@ -161,6 +169,7 @@ function App() {
   const handleGitLabSubmit = useCallback(async (url: string) => {
     setProviderType('gitlab');
     setRepoUrl(url);
+    setRepoName(extractGitLabRepoName(url));
 
     const provider = new GitLabProvider();
     // Get GitLab token from sessionStorage if available
@@ -176,6 +185,7 @@ function App() {
   const handleAzureSubmit = useCallback(async (url: string) => {
     setProviderType('azure');
     setRepoUrl(url);
+    setRepoName(extractAzureRepoName(url));
 
     const provider = new AzureDevOpsProvider();
     // Get Azure token from sessionStorage if available
@@ -190,6 +200,7 @@ function App() {
   // Handle local directory submission
   const handleLocalDirectorySubmit = useCallback(async (files: FileList) => {
     setProviderType('local');
+    setRepoName(extractLocalName(files));
 
     const provider = new LocalProvider();
     await provider.initialize({ source: 'directory', files });
@@ -203,6 +214,7 @@ function App() {
   // Handle local zip submission
   const handleLocalZipSubmit = useCallback(async (file: File) => {
     setProviderType('local');
+    setRepoName(extractLocalName(file));
 
     const provider = new LocalProvider();
     await provider.initialize({ source: 'zip', zipFile: file });
@@ -452,7 +464,7 @@ function App() {
               <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
                 Output
               </h2>
-              <OutputPanel output={output} isLoading={isLoading} />
+              <OutputPanel output={output} isLoading={isLoading} repoName={repoName} />
             </section>
           )}
         </div>

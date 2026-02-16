@@ -4,6 +4,7 @@
  */
 
 import { useState } from 'react';
+import JSZip from 'jszip';
 import { Button } from './ui/Button';
 import { FileStats } from './FileStats';
 import type { FormattedOutput } from '@/types';
@@ -11,11 +12,13 @@ import type { FormattedOutput } from '@/types';
 interface OutputPanelProps {
   output: FormattedOutput | null;
   isLoading?: boolean;
+  repoName?: string;
 }
 
-export function OutputPanel({ output, isLoading = false }: OutputPanelProps) {
+export function OutputPanel({ output, isLoading = false, repoName = 'repo-export' }: OutputPanelProps) {
   const [copied, setCopied] = useState(false);
-  const [downloadFormat, setDownloadFormat] = useState<'txt' | 'md'>('txt');
+  const [downloadFormat, setDownloadFormat] = useState<'txt' | 'md' | 'zip'>('txt');
+  const [isDownloading, setIsDownloading] = useState(false);
 
   const handleCopy = async () => {
     if (!output) return;
@@ -31,19 +34,58 @@ export function OutputPanel({ output, isLoading = false }: OutputPanelProps) {
     }
   };
 
-  const handleDownload = () => {
+  const handleDownload = async () => {
     if (!output) return;
 
-    const fullText = `${output.directoryTree}\n\n${output.fileContents}`;
-    const blob = new Blob([fullText], { type: 'text/plain' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `repo-export.${downloadFormat}`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+    setIsDownloading(true);
+
+    try {
+      const fullText = `${output.directoryTree}\n\n${output.fileContents}`;
+
+      if (downloadFormat === 'zip') {
+        // Create ZIP file
+        const zip = new JSZip();
+
+        // Add main output file
+        zip.file(`${repoName}.txt`, fullText);
+
+        // Add metadata file
+        const metadata = {
+          generatedAt: new Date().toISOString(),
+          repository: repoName,
+          lineCount: output.lineCount,
+          tokenCount: output.tokenCount,
+          fileCount: output.files?.length || 0,
+        };
+        zip.file('metadata.json', JSON.stringify(metadata, null, 2));
+
+        // Generate and download ZIP
+        const blob = await zip.generateAsync({ type: 'blob' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${repoName}.zip`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      } else {
+        // Download as text file (txt or md)
+        const blob = new Blob([fullText], { type: 'text/plain' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${repoName}.${downloadFormat}`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      }
+    } catch (error) {
+      console.error('Failed to download:', error);
+    } finally {
+      setIsDownloading(false);
+    }
   };
 
   if (isLoading) {
@@ -136,22 +178,45 @@ export function OutputPanel({ output, isLoading = false }: OutputPanelProps) {
             )}
           </Button>
 
-          <Button
-            variant="primary"
-            size="sm"
-            onClick={handleDownload}
-            title="Download as file"
-          >
-            <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
-              />
-            </svg>
-            Download
-          </Button>
+          <div className="flex gap-2">
+            <select
+              value={downloadFormat}
+              onChange={(e) => setDownloadFormat(e.target.value as 'txt' | 'md' | 'zip')}
+              className="rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-2 py-1.5 text-sm text-gray-900 dark:text-gray-100 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-400"
+              title="Select download format"
+            >
+              <option value="txt">TXT</option>
+              <option value="md">MD</option>
+              <option value="zip">ZIP</option>
+            </select>
+
+            <Button
+              variant="primary"
+              size="sm"
+              onClick={handleDownload}
+              disabled={isDownloading}
+              title={`Download as ${downloadFormat.toUpperCase()}`}
+            >
+              {isDownloading ? (
+                <>
+                  <div className="w-4 h-4 mr-1 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  Downloading...
+                </>
+              ) : (
+                <>
+                  <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
+                    />
+                  </svg>
+                  Download
+                </>
+              )}
+            </Button>
+          </div>
         </div>
       </div>
 
