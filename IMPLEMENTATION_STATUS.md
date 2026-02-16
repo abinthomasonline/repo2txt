@@ -266,27 +266,36 @@
 
 ---
 
-### Phase 13: Testing & Quality Assurance (50%)
-- ✅ Unit tests: **182 tests passing**
+### Phase 13: Testing & Quality Assurance (70%)
+- ✅ Unit tests: **198 tests passing**
   - FileTree (23 tests)
   - FileTreeNode (13 tests)
   - ExtensionFilter (7 tests)
   - GitIgnoreEditor (9 tests)
   - GitHubProvider (24 tests)
   - LocalProvider (20 tests)
+  - TokenizerWorker (9 tests)
+  - FileStats (7 tests)
   - And more...
 - ✅ Test coverage: Good (no coverage report run yet)
-- ✅ Cross-browser compatibility: Untested
-- ❌ E2E tests: Setup done, **0 tests written**
+- ✅ E2E tests: **25+ tests written** with Playwright
+  - ✅ GitHub flow (7 tests)
+  - ✅ Local flow (6 tests)
+  - ✅ Dark mode (5 tests)
+  - ✅ Error scenarios (8 tests)
+  - ✅ Multi-browser setup (Chromium, Firefox, WebKit)
+  - ✅ Mobile testing (Pixel 5, iPhone 12)
+- ❌ Cross-browser validation: Not run yet
 - ❌ Accessibility audit - NOT DONE
 - ❌ Performance testing - NOT DONE
 - ❌ Security audit - NOT DONE
 
 **Files:**
-- Tests colocated in `__tests__/` folders
-- `tests/` directory exists with e2e, fixtures, integration, unit folders (empty)
+- Unit tests colocated in `__tests__/` folders
+- `tests/e2e/` - 4 E2E test files
+- `playwright.config.ts` - Multi-browser configuration
 
-**Status:** Strong unit test foundation, needs E2E and QA work.
+**Status:** Strong test foundation (unit + E2E). Need to run E2E validation and QA audits.
 
 ---
 
@@ -385,12 +394,12 @@
 | 10. Azure DevOps | ❌ Not Started | 0% | Medium |
 | 11. Performance | 🚧 Partial | 40% | Medium |
 | 12. Mobile | ❌ Not Started | 0% | High |
-| 13. Testing & QA | 🚧 Partial | 50% | High |
+| 13. Testing & QA | 🚧 Partial | 70% | High |
 | 14. Documentation | ❌ Not Started | 0% | Medium |
 | 15. Beta Deployment | ❌ Not Started | 0% | High |
 | 16. Production | ❌ Not Started | 0% | High |
 
-**Overall Completion:** ~58% (9.5 of 16 phases complete/mostly complete)
+**Overall Completion:** ~60% (10 of 16 phases complete/mostly complete)
 
 ---
 
