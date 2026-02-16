@@ -5,6 +5,7 @@
 
 import { useState } from 'react';
 import { Button } from './ui/Button';
+import { FileStats } from './FileStats';
 import type { FormattedOutput } from '@/types';
 
 interface OutputPanelProps {
@@ -153,6 +154,11 @@ export function OutputPanel({ output, isLoading = false }: OutputPanelProps) {
           </Button>
         </div>
       </div>
+
+      {/* Per-file statistics */}
+      {output.files && output.files.length > 0 && (
+        <FileStats files={output.files} />
+      )}
 
       {/* Output preview */}
       <div className="rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900">

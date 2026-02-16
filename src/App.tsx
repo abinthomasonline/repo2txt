@@ -268,8 +268,15 @@ function App() {
         getDirectorySelectionState,
       });
 
-      // Format output with full tree
-      const formattedOutput = Formatter.format(fullTree, fileContents);
+      // Format output with full tree (using async Web Worker for better performance)
+      const formattedOutput = await Formatter.formatAsync(
+        fullTree,
+        fileContents,
+        (progress, current, total) => {
+          // Progress callback - could show progress UI here
+          console.log(`Tokenizing: ${current}/${total} files (${progress.toFixed(1)}%)`);
+        }
+      );
 
       setOutput(formattedOutput);
 

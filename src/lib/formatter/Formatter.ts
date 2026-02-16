@@ -4,11 +4,13 @@
  */
 
 import { encode } from 'gpt-tokenizer';
+import { getTokenizerWorker } from './TokenizerWorker';
 import type { TreeNode, FileContent, FormattedOutput } from '@/types';
 
 export class Formatter {
   /**
-   * Format tree structure and file contents into output text
+   * Format tree structure and file contents into output text (synchronous)
+   * @deprecated Use formatAsync for better performance
    */
   static format(tree: TreeNode[], fileContents: FileContent[]): FormattedOutput {
     const directoryTree = this.generateDirectoryTree(tree);
@@ -21,6 +23,50 @@ export class Formatter {
       fileContents: fileContentsText,
       tokenCount: this.countTokens(fullOutput),
       lineCount: fullOutput.split('\n').length,
+    };
+  }
+
+  /**
+   * Format tree structure and file contents into output text (async with Web Worker)
+   */
+  static async formatAsync(
+    tree: TreeNode[],
+    fileContents: FileContent[],
+    onProgress?: (progress: number, current: number, total: number) => void
+  ): Promise<FormattedOutput> {
+    const directoryTree = this.generateDirectoryTree(tree);
+
+    // Tokenize files in batch using Web Worker
+    const worker = getTokenizerWorker();
+    const filesToTokenize = fileContents.map((file) => ({
+      path: file.path,
+      content: file.text,
+    }));
+
+    const { totalTokens, files } = await worker.tokenizeBatch(
+      filesToTokenize,
+      onProgress
+    );
+
+    // Update file contents with token counts
+    const updatedContents = fileContents.map((file, index) => ({
+      ...file,
+      tokenCount: files[index].tokenCount,
+      lineCount: files[index].lineCount,
+    }));
+
+    const fileContentsText = this.generateFileContents(updatedContents);
+    const fullOutput = `${directoryTree}\n\n${fileContentsText}`;
+
+    // Count tokens for directory tree (small, can be synchronous)
+    const treeTokens = this.countTokens(directoryTree);
+
+    return {
+      directoryTree,
+      fileContents: fileContentsText,
+      tokenCount: treeTokens + totalTokens,
+      lineCount: fullOutput.split('\n').length,
+      files: updatedContents,
     };
   }
 

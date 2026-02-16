@@ -74,6 +74,7 @@ export interface FormattedOutput {
   fileContents: string;
   tokenCount: number;
   lineCount: number;
+  files?: FileContent[]; // Per-file token counts (when using formatAsync)
 }
 
 export interface ErrorInfo {
