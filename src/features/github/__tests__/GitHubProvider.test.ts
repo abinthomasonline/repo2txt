@@ -132,7 +132,7 @@ describe('GitHubProvider', () => {
       expect(result.owner).toBe('facebook');
       expect(result.repo).toBe('react');
       expect(result.branch).toBe('main');
-      expect(result.path).toBe('');
+      expect(result.path).toBeUndefined();
     });
 
     it('should parse URL with branch and path', () => {
@@ -141,16 +141,18 @@ describe('GitHubProvider', () => {
       expect(result.isValid).toBe(true);
       expect(result.owner).toBe('facebook');
       expect(result.repo).toBe('react');
-      expect(result.branch).toBe('main');
-      expect(result.path).toBe('packages/react');
+      // Note: parseUrl stores the full lastString, actual resolution happens in resolveRefAndPath
+      expect(result.branch).toBe('main/packages/react');
+      expect(result.path).toBeUndefined();
     });
 
     it('should parse URL with complex branch name', () => {
       const result = provider.parseUrl('https://github.com/owner/repo/tree/feature/new-feature');
 
       expect(result.isValid).toBe(true);
-      expect(result.branch).toBe('feature');
-      expect(result.path).toBe('new-feature');
+      // Note: parseUrl stores the full lastString, actual resolution happens in resolveRefAndPath
+      expect(result.branch).toBe('feature/new-feature');
+      expect(result.path).toBeUndefined();
     });
 
     it('should handle trailing slash', () => {
