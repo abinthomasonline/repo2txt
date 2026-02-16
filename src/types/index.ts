@@ -50,7 +50,7 @@ export interface TreeNode {
   path: string;
   type: 'file' | 'directory';
   children?: TreeNode[];
-  selected?: boolean;
+  selected?: boolean | 'indeterminate';
   visible?: boolean;
   excluded?: boolean;
 }
@@ -66,6 +66,7 @@ export interface ExtensionFilter {
   extension: string;
   count: number;
   selected: boolean;
+  indeterminate?: boolean;
 }
 
 export interface FormattedOutput {

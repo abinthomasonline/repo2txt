@@ -6,7 +6,7 @@ import type { FileNode as IFileNode } from '@/types';
 import { FileNode } from './FileNode';
 
 export class FileTree {
-  private nodes: Map<string, FileNode> = new Map();
+  public nodes: Map<string, FileNode> = new Map();
 
   constructor(nodes: IFileNode[] = []) {
     this.addNodes(nodes);
@@ -115,26 +115,32 @@ export class FileTree {
   /**
    * Filter nodes by extension
    */
-  filterByExtension(extensions: string[]): void {
+  filterByExtension(extensions: string[]): FileTree {
     const extSet = new Set(extensions);
+    const newTree = this.clone();
 
-    this.getAllNodes().forEach((node) => {
+    newTree.getAllNodes().forEach((node) => {
       if (node.isFile()) {
         const ext = node.getExtension();
         node.visible = extSet.has(ext);
       }
     });
+
+    return newTree;
   }
 
   /**
    * Apply gitignore patterns
    */
-  applyGitignore(patterns: string[]): void {
+  applyGitignore(patterns: string[]): FileTree {
     const regexes = patterns.map((pattern) => this.patternToRegex(pattern));
+    const newTree = this.clone();
 
-    this.getAllNodes().forEach((node) => {
+    newTree.getAllNodes().forEach((node) => {
       node.excluded = regexes.some((regex) => regex.test(node.path));
     });
+
+    return newTree;
   }
 
   /**
@@ -195,6 +201,71 @@ export class FileTree {
     });
 
     return counts;
+  }
+
+  /**
+   * Alias for getExtensionCounts (for compatibility)
+   */
+  getExtensions(): Map<string, number> {
+    return this.getExtensionCounts();
+  }
+
+  /**
+   * Clone the tree
+   */
+  clone(): FileTree {
+    const cloned = new FileTree();
+    this.getAllNodes().forEach((node) => {
+      const clonedNode = new FileNode(node.toJSON());
+      clonedNode.selected = node.selected;
+      clonedNode.visible = node.visible;
+      clonedNode.excluded = node.excluded;
+      cloned.nodes.set(node.path, clonedNode);
+    });
+    return cloned;
+  }
+
+  /**
+   * Build hierarchical tree structure from flat nodes
+   */
+  buildTree(): import('@/types').TreeNode[] {
+    const root: import('@/types').TreeNode[] = [];
+    const dirs = new Map<string, import('@/types').TreeNode>();
+
+    // Sort nodes by path depth
+    const sortedNodes = this.getAllNodes().sort((a, b) => {
+      const depthA = a.path.split('/').length;
+      const depthB = b.path.split('/').length;
+      return depthA - depthB;
+    });
+
+    sortedNodes.forEach((node) => {
+      const parts = node.path.split('/');
+      const name = parts[parts.length - 1];
+      const parentPath = parts.slice(0, -1).join('/');
+
+      const treeNode: import('@/types').TreeNode = {
+        name,
+        path: node.path,
+        type: node.isFile() ? 'file' : 'directory',
+        selected: node.selected,
+        visible: node.visible,
+        excluded: node.excluded,
+      };
+
+      if (node.isDirectory()) {
+        treeNode.children = [];
+        dirs.set(node.path, treeNode);
+      }
+
+      if (parentPath && dirs.has(parentPath)) {
+        dirs.get(parentPath)!.children!.push(treeNode);
+      } else {
+        root.push(treeNode);
+      }
+    });
+
+    return root;
   }
 
   /**

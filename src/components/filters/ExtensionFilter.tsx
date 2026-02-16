@@ -3,7 +3,6 @@
  * Allows filtering files by extension
  */
 
-import { useState } from 'react';
 import { Button } from '../ui/Button';
 import type { ExtensionFilter as ExtensionFilterType } from '@/types';
 
@@ -12,7 +11,6 @@ interface ExtensionFilterProps {
   onToggle?: (extension: string) => void;
   onSelectAll?: () => void;
   onDeselectAll?: () => void;
-  onAddCustom?: (extension: string) => void;
 }
 
 export function ExtensionFilter({
@@ -20,23 +18,7 @@ export function ExtensionFilter({
   onToggle,
   onSelectAll,
   onDeselectAll,
-  onAddCustom,
 }: ExtensionFilterProps) {
-  const [customExtension, setCustomExtension] = useState('');
-  const [showCustomInput, setShowCustomInput] = useState(false);
-
-  const handleAddCustom = () => {
-    if (customExtension.trim()) {
-      // Ensure extension starts with a dot
-      const ext = customExtension.startsWith('.')
-        ? customExtension
-        : `.${customExtension}`;
-      onAddCustom?.(ext);
-      setCustomExtension('');
-      setShowCustomInput(false);
-    }
-  };
-
   const selectedCount = extensions.filter((e) => e.selected).length;
   const totalCount = extensions.length;
 
@@ -89,6 +71,11 @@ export function ExtensionFilter({
                   <input
                     type="checkbox"
                     checked={ext.selected}
+                    ref={(input) => {
+                      if (input) {
+                        input.indeterminate = ext.indeterminate || false;
+                      }
+                    }}
                     onChange={() => onToggle?.(ext.extension)}
                     className="rounded border-gray-300 text-primary-600 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-800"
                   />
@@ -104,58 +91,6 @@ export function ExtensionFilter({
           </div>
         )}
       </div>
-
-      {/* Custom extension input */}
-      {showCustomInput ? (
-        <div className="flex gap-2">
-          <input
-            type="text"
-            value={customExtension}
-            onChange={(e) => setCustomExtension(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') {
-                handleAddCustom();
-              } else if (e.key === 'Escape') {
-                setShowCustomInput(false);
-                setCustomExtension('');
-              }
-            }}
-            placeholder=".ext or ext"
-            className="flex-1 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-1.5 text-sm text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-400"
-            autoFocus
-          />
-          <Button variant="primary" size="sm" onClick={handleAddCustom}>
-            Add
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => {
-              setShowCustomInput(false);
-              setCustomExtension('');
-            }}
-          >
-            Cancel
-          </Button>
-        </div>
-      ) : (
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => setShowCustomInput(true)}
-          className="w-full"
-        >
-          <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M12 4v16m8-8H4"
-            />
-          </svg>
-          Add Custom Extension
-        </Button>
-      )}
     </div>
   );
 }

@@ -1,30 +1,53 @@
 import type { StateCreator } from 'zustand';
 import type { FileNode, TreeNode } from '@/types';
 
+// Common code file extensions that should be selected by default
+export const CODE_EXTENSIONS = [
+  '.js', '.jsx', '.ts', '.tsx',
+  '.py', '.java', '.cpp', '.c', '.h', '.hpp',
+  '.go', '.rs', '.rb', '.php',
+  '.html', '.css', '.scss', '.sass', '.less',
+  '.json', '.xml', '.yaml', '.yml',
+  '.sh', '.bash', '.sql',
+  '.swift', '.kt', '.scala', '.clj',
+  '.vue', '.svelte',
+];
+
 export interface FileTreeSlice {
   nodes: FileNode[];
-  tree: TreeNode | null;
+  tree: TreeNode[];
   selectedPaths: Set<string>;
   expandedPaths: Set<string>;
+  excludedPaths: Set<string>;
   extensions: Map<string, { count: number; selected: boolean }>;
   gitignorePatterns: string[];
 
   setNodes: (nodes: FileNode[]) => void;
-  setTree: (tree: TreeNode | null) => void;
+  setTree: (tree: TreeNode[]) => void;
   toggleSelection: (path: string) => void;
-  toggleDirectory: (path: string, selected: boolean) => void;
-  toggleExtension: (extension: string, selected: boolean) => void;
+  selectNode: (path: string) => void;
+  deselectNode: (path: string) => void;
+  toggleDirectory: (path: string) => void;
+  toggleExtension: (extension: string) => void;
   toggleExpanded: (path: string) => void;
   setGitignorePatterns: (patterns: string[]) => void;
+  applyGitignore: () => void;
   getSelectedNodes: () => FileNode[];
+  getDirectorySelectionState: (dirPath: string) => 'checked' | 'unchecked' | 'indeterminate';
+  getExtensionSelectionState: (extension: string) => 'checked' | 'unchecked' | 'indeterminate';
+  updateExtensionStates: () => void;
+  getGlobalSelectionState: () => 'checked' | 'unchecked' | 'indeterminate';
+  selectAll: () => void;
+  deselectAll: () => void;
   reset: () => void;
 }
 
 const initialState = {
   nodes: [],
-  tree: null,
+  tree: [],
   selectedPaths: new Set<string>(),
   expandedPaths: new Set<string>(),
+  excludedPaths: new Set<string>(),
   extensions: new Map<string, { count: number; selected: boolean }>(),
   gitignorePatterns: [],
 };
@@ -35,32 +58,26 @@ export const createFileTreeSlice: StateCreator<FileTreeSlice> = (set, get) => ({
   setNodes: (nodes: FileNode[]) => {
     // Build extensions map
     const extensionsMap = new Map<string, { count: number; selected: boolean }>();
-    const commonExtensions = ['.js', '.ts', '.jsx', '.tsx', '.py', '.java', '.cpp', '.html', '.css'];
+    const NO_EXT_KEY = '(no extension)';
 
     nodes.forEach((node) => {
       if (node.type === 'blob') {
-        const parts = node.path.split('.');
-        if (parts.length > 1) {
-          const ext = '.' + parts[parts.length - 1];
-          const current = extensionsMap.get(ext) || { count: 0, selected: false };
-          extensionsMap.set(ext, {
-            count: current.count + 1,
-            selected: commonExtensions.includes(ext),
-          });
-        }
+        const ext = getFileExtension(node.path) || NO_EXT_KEY;
+        const current = extensionsMap.get(ext) || { count: 0, selected: false };
+        extensionsMap.set(ext, {
+          count: current.count + 1,
+          selected: ext === NO_EXT_KEY ? true : CODE_EXTENSIONS.includes(ext),
+        });
       }
     });
 
-    // Auto-select common extensions
+    // Auto-select files with code extensions and files without extensions
     const selectedPaths = new Set<string>();
     nodes.forEach((node) => {
       if (node.type === 'blob') {
-        const parts = node.path.split('.');
-        if (parts.length > 1) {
-          const ext = '.' + parts[parts.length - 1];
-          if (extensionsMap.get(ext)?.selected) {
-            selectedPaths.add(node.path);
-          }
+        const ext = getFileExtension(node.path) || NO_EXT_KEY;
+        if (extensionsMap.get(ext)?.selected) {
+          selectedPaths.add(node.path);
         }
       }
     });
@@ -68,26 +85,65 @@ export const createFileTreeSlice: StateCreator<FileTreeSlice> = (set, get) => ({
     set({ nodes, extensions: extensionsMap, selectedPaths });
   },
 
-  setTree: (tree: TreeNode | null) => set({ tree }),
+  setTree: (tree: TreeNode[]) => set({ tree }),
 
   toggleSelection: (path: string) => {
+    const { selectedPaths, nodes } = get();
+    const node = nodes.find((n) => n.path === path);
+    if (!node) return;
+
+    const newSelected = new Set(selectedPaths);
+
+    if (node.type === 'tree') {
+      // Toggle directory: select/deselect all children
+      const isCurrentlySelected = get().getDirectorySelectionState(path) === 'checked';
+      const shouldSelect = !isCurrentlySelected;
+
+      nodes.forEach((n) => {
+        if (n.type === 'blob' && (n.path === path || n.path.startsWith(path + '/'))) {
+          if (shouldSelect) {
+            newSelected.add(n.path);
+          } else {
+            newSelected.delete(n.path);
+          }
+        }
+      });
+    } else {
+      // Toggle single file
+      if (newSelected.has(path)) {
+        newSelected.delete(path);
+      } else {
+        newSelected.add(path);
+      }
+    }
+
+    set({ selectedPaths: newSelected });
+    get().updateExtensionStates();
+  },
+
+  selectNode: (path: string) => {
     const { selectedPaths } = get();
     const newSelected = new Set(selectedPaths);
-    if (newSelected.has(path)) {
-      newSelected.delete(path);
-    } else {
-      newSelected.add(path);
-    }
+    newSelected.add(path);
     set({ selectedPaths: newSelected });
   },
 
-  toggleDirectory: (path: string, selected: boolean) => {
-    const { nodes, selectedPaths } = get();
+  deselectNode: (path: string) => {
+    const { selectedPaths } = get();
     const newSelected = new Set(selectedPaths);
+    newSelected.delete(path);
+    set({ selectedPaths: newSelected });
+  },
 
+  toggleDirectory: (dirPath: string) => {
+    const { nodes, selectedPaths } = get();
+    const state = get().getDirectorySelectionState(dirPath);
+    const shouldSelect = state !== 'checked';
+
+    const newSelected = new Set(selectedPaths);
     nodes.forEach((node) => {
-      if (node.path.startsWith(path)) {
-        if (selected) {
+      if (node.type === 'blob' && (node.path === dirPath || node.path.startsWith(dirPath + '/'))) {
+        if (shouldSelect) {
           newSelected.add(node.path);
         } else {
           newSelected.delete(node.path);
@@ -96,23 +152,29 @@ export const createFileTreeSlice: StateCreator<FileTreeSlice> = (set, get) => ({
     });
 
     set({ selectedPaths: newSelected });
+    get().updateExtensionStates();
   },
 
-  toggleExtension: (extension: string, selected: boolean) => {
+  toggleExtension: (extension: string) => {
     const { nodes, extensions, selectedPaths } = get();
+    const ext = extensions.get(extension);
+    if (!ext) return;
+
+    const NO_EXT_KEY = '(no extension)';
+    const shouldSelect = !ext.selected;
     const newExtensions = new Map(extensions);
-    const ext = newExtensions.get(extension);
-    if (ext) {
-      newExtensions.set(extension, { ...ext, selected });
-    }
+    newExtensions.set(extension, { ...ext, selected: shouldSelect });
 
     const newSelected = new Set(selectedPaths);
     nodes.forEach((node) => {
-      if (node.type === 'blob' && node.path.endsWith(extension)) {
-        if (selected) {
-          newSelected.add(node.path);
-        } else {
-          newSelected.delete(node.path);
+      if (node.type === 'blob') {
+        const fileExt = getFileExtension(node.path) || NO_EXT_KEY;
+        if (fileExt === extension) {
+          if (shouldSelect) {
+            newSelected.add(node.path);
+          } else {
+            newSelected.delete(node.path);
+          }
         }
       }
     });
@@ -131,12 +193,172 @@ export const createFileTreeSlice: StateCreator<FileTreeSlice> = (set, get) => ({
     set({ expandedPaths: newExpanded });
   },
 
-  setGitignorePatterns: (patterns: string[]) => set({ gitignorePatterns: patterns }),
+  setGitignorePatterns: (patterns: string[]) => {
+    set({ gitignorePatterns: patterns });
+    get().applyGitignore();
+  },
+
+  applyGitignore: () => {
+    const { nodes, gitignorePatterns } = get();
+    const excludedPaths = new Set<string>();
+
+    if (gitignorePatterns.length === 0) {
+      set({ excludedPaths });
+      return;
+    }
+
+    // Convert patterns to regex
+    const regexes = gitignorePatterns
+      .map((pattern) => patternToRegex(pattern))
+      .filter((r) => r !== null) as RegExp[];
+
+    nodes.forEach((node) => {
+      const isExcluded = regexes.some((regex) => regex.test(node.path));
+      if (isExcluded) {
+        excludedPaths.add(node.path);
+      }
+    });
+
+    set({ excludedPaths });
+  },
 
   getSelectedNodes: () => {
+    const { nodes, selectedPaths, excludedPaths } = get();
+    return nodes.filter((node) =>
+      node.type === 'blob' &&
+      selectedPaths.has(node.path) &&
+      !excludedPaths.has(node.path)
+    );
+  },
+
+  getDirectorySelectionState: (dirPath: string) => {
     const { nodes, selectedPaths } = get();
-    return nodes.filter((node) => selectedPaths.has(node.path));
+    const children = nodes.filter((n) =>
+      n.type === 'blob' &&
+      (n.path === dirPath || n.path.startsWith(dirPath + '/'))
+    );
+
+    if (children.length === 0) return 'unchecked';
+
+    const selectedCount = children.filter((n) => selectedPaths.has(n.path)).length;
+
+    if (selectedCount === 0) return 'unchecked';
+    if (selectedCount === children.length) return 'checked';
+    return 'indeterminate';
+  },
+
+  getExtensionSelectionState: (extension: string) => {
+    const { nodes, selectedPaths } = get();
+    const NO_EXT_KEY = '(no extension)';
+    const filesWithExt = nodes.filter((n) => {
+      if (n.type !== 'blob') return false;
+      const fileExt = getFileExtension(n.path) || NO_EXT_KEY;
+      return fileExt === extension;
+    });
+
+    if (filesWithExt.length === 0) return 'unchecked';
+
+    const selectedCount = filesWithExt.filter((n) => selectedPaths.has(n.path)).length;
+
+    if (selectedCount === 0) return 'unchecked';
+    if (selectedCount === filesWithExt.length) return 'checked';
+    return 'indeterminate';
+  },
+
+  updateExtensionStates: () => {
+    const { extensions } = get();
+    const newExtensions = new Map(extensions);
+
+    newExtensions.forEach((value, key) => {
+      const state = get().getExtensionSelectionState(key);
+      newExtensions.set(key, {
+        ...value,
+        selected: state === 'checked' || state === 'indeterminate',
+      });
+    });
+
+    set({ extensions: newExtensions });
+  },
+
+  getGlobalSelectionState: () => {
+    const { nodes, selectedPaths } = get();
+    const files = nodes.filter((n) => n.type === 'blob');
+
+    if (files.length === 0) return 'unchecked';
+
+    const selectedCount = files.filter((n) => selectedPaths.has(n.path)).length;
+
+    if (selectedCount === 0) return 'unchecked';
+    if (selectedCount === files.length) return 'checked';
+    return 'indeterminate';
+  },
+
+  selectAll: () => {
+    const { nodes } = get();
+    const allFilePaths = nodes
+      .filter((n) => n.type === 'blob')
+      .map((n) => n.path);
+
+    set({ selectedPaths: new Set(allFilePaths) });
+    get().updateExtensionStates();
+  },
+
+  deselectAll: () => {
+    set({ selectedPaths: new Set() });
+    get().updateExtensionStates();
   },
 
   reset: () => set(initialState),
 });
+
+// Helper functions
+function getFileExtension(path: string): string | null {
+  const parts = path.split('.');
+  if (parts.length > 1) {
+    return '.' + parts[parts.length - 1];
+  }
+  return null;
+}
+
+function patternToRegex(pattern: string): RegExp | null {
+  // Remove leading/trailing whitespace
+  pattern = pattern.trim();
+
+  // Skip empty lines and comments
+  if (!pattern || pattern.startsWith('#')) {
+    return null;
+  }
+
+  const isDirectory = pattern.endsWith('/');
+  if (isDirectory) {
+    pattern = pattern.slice(0, -1); // Remove trailing slash
+  }
+
+  // Escape special regex characters except * and ?
+  let regexPattern = pattern
+    .replace(/[.+^${}()|[\]\\]/g, '\\$&')
+    .replace(/\*/g, '.*')
+    .replace(/\?/g, '.');
+
+  // Handle root-level patterns (starting with /)
+  if (pattern.startsWith('/')) {
+    regexPattern = '^' + regexPattern.slice(2); // Remove leading / and escaped slash
+  } else {
+    // Pattern can match anywhere in path
+    regexPattern = '(^|/)' + regexPattern;
+  }
+
+  // Handle directory patterns
+  if (isDirectory) {
+    regexPattern = regexPattern + '($|/.*)';
+  } else {
+    regexPattern = regexPattern + '$';
+  }
+
+  try {
+    return new RegExp(regexPattern);
+  } catch {
+    // Invalid pattern
+    return null;
+  }
+}

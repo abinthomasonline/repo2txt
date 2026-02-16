@@ -74,7 +74,7 @@ export function ProviderSelector({
       {/* Provider form */}
       <div className="rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 p-6">
         {activeProvider === 'github' ? (
-          <GitHubForm onSubmit={onGitHubSubmit} />
+          <GitHubForm onSubmit={onGitHubSubmit} disabled={disabled} />
         ) : (
           <LocalForm
             onDirectorySelected={onLocalDirectorySubmit}

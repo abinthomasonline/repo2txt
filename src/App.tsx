@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { ThemeToggle } from '@/components/ui/ThemeToggle';
 import { ProviderSelector } from '@/components/ProviderSelector';
 import { FileTree } from '@/components/file-tree';
@@ -7,23 +7,79 @@ import { GitIgnoreEditor } from '@/components/filters/GitIgnoreEditor';
 import { OutputPanel } from '@/components/OutputPanel';
 import { GitHubProvider } from '@/features/github';
 import { LocalProvider } from '@/features/local';
-import { FileTree as FileTreeManager } from '@/lib/file-tree/FileTree';
 import { Formatter } from '@/lib/formatter';
+import { buildTree, extractDirectories } from '@/lib/tree-builder';
 import { useStore } from '@/store';
 import type { TreeNode, FileNode, FileContent, ExtensionFilter as ExtensionFilterType, FormattedOutput } from '@/types';
 
 function App() {
   const { setProviderType, setRepoUrl } = useStore();
 
-  // State
+  // Get file tree state from store
+  const {
+    nodes,
+    selectedPaths,
+    excludedPaths,
+    expandedPaths,
+    extensions,
+    gitignorePatterns,
+    setNodes,
+    toggleSelection,
+    toggleExpanded,
+    toggleExtension,
+    setGitignorePatterns,
+    getSelectedNodes,
+    getDirectorySelectionState,
+    getExtensionSelectionState,
+    getGlobalSelectionState,
+    selectAll,
+    deselectAll,
+  } = useStore((state) => state);
+
+  // Local state
   const [isLoading, setIsLoading] = useState(false);
-  const [treeNodes, setTreeNodes] = useState<TreeNode[]>([]);
-  const [fileTreeManager, setFileTreeManager] = useState<FileTreeManager | null>(null);
-  const [extensions, setExtensions] = useState<ExtensionFilterType[]>([]);
-  const [gitignorePatterns, setGitignorePatterns] = useState<string[]>([]);
   const [showExcluded, setShowExcluded] = useState(false);
   const [output, setOutput] = useState<FormattedOutput | null>(null);
   const [currentProvider, setCurrentProvider] = useState<GitHubProvider | LocalProvider | null>(null);
+
+  // Build tree from nodes with current selection/expansion state
+  const tree = useMemo(() => {
+    if (nodes.length === 0) return [];
+
+    // Extract directory paths that don't already exist as nodes
+    const existingPaths = new Set(nodes.map((n) => n.path));
+    const dirPaths = extractDirectories(nodes);
+    const newDirNodes = dirPaths
+      .filter((path) => !existingPaths.has(path))
+      .map((path) => ({
+        path,
+        type: 'tree' as const,
+      }));
+
+    const allNodes: FileNode[] = [...nodes, ...newDirNodes];
+
+    return buildTree(allNodes, {
+      selectedPaths,
+      excludedPaths,
+      expandedPaths,
+      getDirectorySelectionState,
+    });
+  }, [nodes, selectedPaths, excludedPaths, expandedPaths, getDirectorySelectionState]);
+
+  // Convert extensions map to array for ExtensionFilter component
+  const extensionList: ExtensionFilterType[] = useMemo(() => {
+    return Array.from(extensions.entries()).map(([ext, data]) => {
+      const state = getExtensionSelectionState(ext);
+      return {
+        extension: ext,
+        count: data.count,
+        selected: state === 'checked',
+        indeterminate: state === 'indeterminate',
+      };
+    });
+  }, [extensions, getExtensionSelectionState]);
+
+  // No auto-expansion - users can expand directories as needed
 
   // Load files from provider
   const loadFiles = useCallback(async (provider: GitHubProvider | LocalProvider, url: string) => {
@@ -32,31 +88,17 @@ function App() {
       setCurrentProvider(provider);
 
       // Fetch file tree
-      const nodes = await provider.fetchTree(url);
+      const fetchedNodes = await provider.fetchTree(url);
 
-      // Create FileTree manager
-      const manager = new FileTreeManager(nodes);
-
-      // Get available extensions
-      const extensionMap = manager.getExtensions();
-      const extensionList: ExtensionFilterType[] = Array.from(extensionMap.entries()).map(
-        ([ext, count]) => ({
-          extension: ext,
-          count,
-          selected: true, // All selected by default
-        })
-      );
-
-      setFileTreeManager(manager);
-      setTreeNodes(manager.buildTree());
-      setExtensions(extensionList);
+      // Update store with nodes (this will auto-select code files)
+      setNodes(fetchedNodes);
     } catch (error) {
       console.error('Failed to load files:', error);
       alert(`Error: ${error instanceof Error ? error.message : 'Failed to load files'}`);
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [setNodes]);
 
   // Handle GitHub submission
   const handleGitHubSubmit = useCallback(async (url: string) => {
@@ -95,54 +137,60 @@ function App() {
 
   // Handle extension filter toggle
   const handleExtensionToggle = useCallback((extension: string) => {
-    setExtensions((prev) =>
-      prev.map((ext) =>
-        ext.extension === extension ? { ...ext, selected: !ext.selected } : ext
-      )
-    );
-  }, []);
+    toggleExtension(extension);
+  }, [toggleExtension]);
 
   // Handle select/deselect all extensions
   const handleSelectAllExtensions = useCallback(() => {
-    setExtensions((prev) => prev.map((ext) => ({ ...ext, selected: true })));
-  }, []);
+    extensionList.forEach((ext) => {
+      if (!ext.selected) {
+        toggleExtension(ext.extension);
+      }
+    });
+  }, [extensionList, toggleExtension]);
 
   const handleDeselectAllExtensions = useCallback(() => {
-    setExtensions((prev) => prev.map((ext) => ({ ...ext, selected: false })));
-  }, []);
+    extensionList.forEach((ext) => {
+      if (ext.selected) {
+        toggleExtension(ext.extension);
+      }
+    });
+  }, [extensionList, toggleExtension]);
 
   // Handle gitignore pattern application
   const handleApplyGitignore = useCallback((patterns: string[]) => {
     setGitignorePatterns(patterns);
-  }, []);
+  }, [setGitignorePatterns]);
+
+  // Handle global checkbox toggle
+  const handleGlobalToggle = useCallback(() => {
+    const state = getGlobalSelectionState();
+    if (state === 'checked') {
+      deselectAll();
+    } else {
+      selectAll();
+    }
+  }, [getGlobalSelectionState, selectAll, deselectAll]);
+
+  // Get global checkbox state
+  const globalCheckboxState = useMemo(() => {
+    return getGlobalSelectionState();
+  }, [selectedPaths, nodes, getGlobalSelectionState]);
 
   // Handle generate output
   const handleGenerateOutput = useCallback(async () => {
-    if (!fileTreeManager || !currentProvider) return;
+    if (!currentProvider) return;
 
     try {
       setIsLoading(true);
 
-      // Apply filters
-      const selectedExtensions = extensions
-        .filter((ext) => ext.selected)
-        .map((ext) => ext.extension);
+      // Get selected and non-excluded nodes from store
+      const selectedNodes = getSelectedNodes();
 
-      let filteredTree = fileTreeManager.clone();
-
-      // Apply extension filter
-      if (selectedExtensions.length > 0) {
-        filteredTree = filteredTree.filterByExtension(selectedExtensions);
+      if (selectedNodes.length === 0) {
+        alert('No files selected. Please select at least one file to generate output.');
+        return;
       }
-
-      // Apply gitignore
-      if (gitignorePatterns.length > 0) {
-        filteredTree = filteredTree.applyGitignore(gitignorePatterns);
-      }
-
-      // Get selected nodes
-      const selectedNodes: FileNode[] = Array.from(filteredTree.nodes.values())
-        .filter((node) => node.type === 'blob' && node.visible !== false);
 
       // Fetch file contents
       const fileContents: FileContent[] = [];
@@ -150,8 +198,28 @@ function App() {
         fileContents.push(content);
       }
 
-      // Format output
-      const formattedOutput = Formatter.format(filteredTree.buildTree(), fileContents);
+      // Build a fully expanded tree for output (ignore UI expansion state)
+      const existingPaths = new Set(nodes.map((n) => n.path));
+      const dirPaths = extractDirectories(nodes);
+      const newDirNodes = dirPaths
+        .filter((path) => !existingPaths.has(path))
+        .map((path) => ({
+          path,
+          type: 'tree' as const,
+        }));
+      const allNodes: FileNode[] = [...nodes, ...newDirNodes];
+
+      // Build tree with all directories expanded (pass all paths as expanded)
+      const allDirPaths = new Set(allNodes.filter(n => n.type === 'tree').map(n => n.path));
+      const fullTree = buildTree(allNodes, {
+        selectedPaths,
+        excludedPaths,
+        expandedPaths: allDirPaths, // All directories expanded for output
+        getDirectorySelectionState,
+      });
+
+      // Format output with full tree
+      const formattedOutput = Formatter.format(fullTree, fileContents);
 
       setOutput(formattedOutput);
     } catch (error) {
@@ -160,7 +228,7 @@ function App() {
     } finally {
       setIsLoading(false);
     }
-  }, [fileTreeManager, currentProvider, extensions, gitignorePatterns]);
+  }, [currentProvider, getSelectedNodes, nodes, selectedPaths, excludedPaths, getDirectorySelectionState]);
 
   return (
     <div className="min-h-screen flex flex-col bg-gray-50 dark:bg-gray-900">
@@ -211,14 +279,30 @@ function App() {
           </section>
 
           {/* File Tree and Filters */}
-          {treeNodes.length > 0 && (
+          {tree.length > 0 && (
             <section className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               {/* File Tree */}
               <div className="lg:col-span-2 space-y-4">
                 <div className="flex items-center justify-between">
-                  <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-                    File Tree
-                  </h2>
+                  <div className="flex items-center gap-3">
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={globalCheckboxState === 'checked'}
+                        ref={(input) => {
+                          if (input) {
+                            input.indeterminate = globalCheckboxState === 'indeterminate';
+                          }
+                        }}
+                        onChange={handleGlobalToggle}
+                        className="rounded border-gray-300 text-primary-600 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-800"
+                        aria-label="Select all files"
+                      />
+                      <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                        File Tree
+                      </h2>
+                    </label>
+                  </div>
                   <button
                     onClick={handleGenerateOutput}
                     disabled={isLoading}
@@ -231,14 +315,19 @@ function App() {
                   </button>
                 </div>
 
-                <FileTree nodes={treeNodes} showExcluded={showExcluded} />
+                <FileTree
+                  nodes={tree}
+                  onToggle={toggleExpanded}
+                  onSelect={toggleSelection}
+                  showExcluded={showExcluded}
+                />
               </div>
 
               {/* Filters */}
               <div className="space-y-6">
                 <div className="rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 p-4">
                   <ExtensionFilter
-                    extensions={extensions}
+                    extensions={extensionList}
                     onToggle={handleExtensionToggle}
                     onSelectAll={handleSelectAllExtensions}
                     onDeselectAll={handleDeselectAllExtensions}

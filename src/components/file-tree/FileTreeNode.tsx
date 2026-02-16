@@ -66,9 +66,9 @@ export function FileTreeNode({
   };
 
   const getCheckboxState = (): 'checked' | 'unchecked' | 'indeterminate' => {
+    if (node.selected === 'indeterminate') return 'indeterminate';
     if (node.selected === true) return 'checked';
-    if (node.selected === false) return 'unchecked';
-    return 'indeterminate'; // For directories with some selected children
+    return 'unchecked';
   };
 
   const checkboxState = getCheckboxState();

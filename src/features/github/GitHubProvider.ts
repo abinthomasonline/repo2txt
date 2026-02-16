@@ -242,7 +242,15 @@ export class GitHubProvider extends BaseProvider {
       // GitHub returns base64-encoded content
       let text = data.content || '';
       if (data.encoding === 'base64') {
-        text = Buffer.from(text, 'base64').toString('utf-8');
+        // Remove whitespace/newlines from base64 string
+        text = text.replace(/\s/g, '');
+        // Decode base64 to binary string, then convert to UTF-8
+        const binaryString = atob(text);
+        const bytes = new Uint8Array(binaryString.length);
+        for (let i = 0; i < binaryString.length; i++) {
+          bytes[i] = binaryString.charCodeAt(i);
+        }
+        text = new TextDecoder('utf-8').decode(bytes);
       }
 
       return {
@@ -300,15 +308,29 @@ export class GitHubProvider extends BaseProvider {
     if (error instanceof Error) {
       const message = error.message;
 
-      // Check for rate limiting
-      if (message.includes('403') && message.toLowerCase().includes('rate limit')) {
+      // 403 on GitHub usually means rate limit (60 requests/hour for unauthenticated)
+      // or authentication required for private repos
+      if (message.includes('403')) {
         return new ProviderError(
           message,
           ErrorCode.RATE_LIMITED,
-          `GitHub API rate limit exceeded${contextMsg}. Please provide a Personal Access Token or wait before trying again.`,
+          `GitHub API rate limit exceeded or authentication required${contextMsg}.
+
+Unauthenticated requests are limited to 60/hour. Please add a GitHub Personal Access Token to increase the limit to 5,000/hour.
+
+Click the GitHub icon in the authentication section above to add a token.`,
           () => {
             window.open('https://github.com/settings/tokens/new?description=repo2txt&scopes=repo', '_blank');
           }
+        );
+      }
+
+      // 429 is explicit rate limiting
+      if (message.includes('429')) {
+        return new ProviderError(
+          message,
+          ErrorCode.RATE_LIMITED,
+          `GitHub API rate limit exceeded${contextMsg}. Please wait a moment and try again.`
         );
       }
     }

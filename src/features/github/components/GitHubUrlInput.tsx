@@ -3,42 +3,46 @@
  * Provides real-time URL validation and helpful hints
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Button } from '@/components/ui/Button';
 import { useStore } from '@/store';
 import { GitHubProvider } from '../GitHubProvider';
 
 interface GitHubUrlInputProps {
   onValidUrl?: (url: string) => void;
+  onUrlChange?: (url: string, isValid: boolean) => void;
+  hideSubmitButton?: boolean;
 }
 
-export function GitHubUrlInput({ onValidUrl }: GitHubUrlInputProps) {
-  const { repoUrl, setRepoUrl } = useStore();
+export function GitHubUrlInput({ onValidUrl, onUrlChange, hideSubmitButton = false }: GitHubUrlInputProps) {
+  const { repoUrl } = useStore();
   const [url, setUrl] = useState(repoUrl || '');
   const [error, setError] = useState<string | null>(null);
   const [isValid, setIsValid] = useState(false);
   const [showHints, setShowHints] = useState(false);
 
-  const provider = new GitHubProvider();
+  // Create provider once
+  const provider = useMemo(() => new GitHubProvider(), []);
 
   // Validate URL whenever it changes
   useEffect(() => {
     if (!url) {
       setError(null);
       setIsValid(false);
+      onUrlChange?.(url, false);
       return;
     }
 
     const isValidUrl = provider.validateUrl(url);
     setIsValid(isValidUrl);
+    onUrlChange?.(url, isValidUrl);
 
     if (isValidUrl) {
       setError(null);
-      setRepoUrl(url);
     } else {
       setError('Invalid GitHub URL format');
     }
-  }, [url, setRepoUrl, provider]);
+  }, [url, provider, onUrlChange]);
 
   const handleUrlChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newUrl = e.target.value;
@@ -47,7 +51,6 @@ export function GitHubUrlInput({ onValidUrl }: GitHubUrlInputProps) {
 
   const handleClearUrl = () => {
     setUrl('');
-    setRepoUrl('');
     setError(null);
     setIsValid(false);
   };
@@ -115,62 +118,78 @@ export function GitHubUrlInput({ onValidUrl }: GitHubUrlInputProps) {
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="flex gap-2">
-        <div className="flex-1">
-          <input
-            type="url"
-            id="github-url"
-            value={url}
-            onChange={handleUrlChange}
-            placeholder="https://github.com/facebook/react"
-            className={`w-full rounded-md border ${
-              error
-                ? 'border-red-300 dark:border-red-600 focus:border-red-500 focus:ring-red-500'
-                : 'border-gray-300 dark:border-gray-600 focus:border-primary-500 focus:ring-primary-500'
-            } bg-white dark:bg-gray-800 px-3 py-2 text-sm text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 dark:focus:ring-primary-400`}
-            aria-invalid={!!error}
-            aria-describedby={error ? 'url-error' : undefined}
-          />
-          {error && (
-            <p id="url-error" className="mt-1 text-xs text-red-600 dark:text-red-400 flex items-center">
-              <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+      <form onSubmit={handleSubmit} className="space-y-3">
+        <div className="flex gap-2">
+          <div className="flex-1">
+            <input
+              type="url"
+              id="github-url"
+              value={url}
+              onChange={handleUrlChange}
+              placeholder="https://github.com/facebook/react"
+              className={`w-full rounded-md border ${
+                error
+                  ? 'border-red-300 dark:border-red-600 focus:border-red-500 focus:ring-red-500'
+                  : 'border-gray-300 dark:border-gray-600 focus:border-primary-500 focus:ring-primary-500'
+              } bg-white dark:bg-gray-800 px-3 py-2 text-sm text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 dark:focus:ring-primary-400`}
+              aria-invalid={!!error}
+              aria-describedby={error ? 'url-error' : undefined}
+            />
+            {error && (
+              <p id="url-error" className="mt-1 text-xs text-red-600 dark:text-red-400 flex items-center">
+                <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                  <path
+                    fillRule="evenodd"
+                    d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+                {error}
+              </p>
+            )}
+            {isValid && !error && (
+              <p className="mt-1 text-xs text-green-600 dark:text-green-400 flex items-center">
+                <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                  <path
+                    fillRule="evenodd"
+                    d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+                Valid GitHub URL
+              </p>
+            )}
+          </div>
+          {url && (
+            <Button
+              type="button"
+              variant="secondary"
+              size="sm"
+              onClick={handleClearUrl}
+              title="Clear URL"
+            >
+              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                 <path
                   fillRule="evenodd"
-                  d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                  d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
                   clipRule="evenodd"
                 />
               </svg>
-              {error}
-            </p>
-          )}
-          {isValid && !error && (
-            <p className="mt-1 text-xs text-green-600 dark:text-green-400 flex items-center">
-              <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                <path
-                  fillRule="evenodd"
-                  d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                  clipRule="evenodd"
-                />
-              </svg>
-              Valid GitHub URL
-            </p>
+            </Button>
           )}
         </div>
-        {url && (
+        {!hideSubmitButton && (
           <Button
-            type="button"
-            variant="secondary"
-            size="sm"
-            onClick={handleClearUrl}
-            title="Clear URL"
+            type="submit"
+            variant="primary"
+            size="md"
+            disabled={!isValid}
+            className="w-full"
           >
-            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-              <path
-                fillRule="evenodd"
-                d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
-                clipRule="evenodd"
-              />
+            <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10" />
             </svg>
+            Load Repository
           </Button>
         )}
       </form>
