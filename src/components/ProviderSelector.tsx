@@ -86,28 +86,6 @@ export function ProviderSelector({
         </button>
 
         <button
-          onClick={() => handleProviderChange('azure')}
-          disabled={disabled}
-          className={`
-            flex-1 flex flex-col items-center justify-center gap-0.5 rounded-md px-3 sm:px-4 py-2.5 sm:py-2.5 text-sm font-medium transition-colors min-h-[44px] touch-manipulation
-            ${
-              activeProvider === 'azure'
-                ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 shadow'
-                : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100'
-            }
-            ${disabled ? 'opacity-50 cursor-not-allowed' : ''}
-          `}
-        >
-          <div className="flex items-center gap-1.5 sm:gap-2">
-            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M11.19 14.23l-3.47-1.85v-2.7l7.95-4.24v2.27l-5.94 3.17v.94l5.94 3.17v2.27l-7.95-4.24 3.47 1.85zm1.62 0l3.47-1.85v-2.7l-7.95-4.24v2.27l5.94 3.17v.94l-5.94 3.17v2.27l7.95-4.24-3.47 1.85z" />
-            </svg>
-            <span>Azure</span>
-          </div>
-          <span className="text-[10px] font-semibold text-orange-600 dark:text-orange-400">BETA</span>
-        </button>
-
-        <button
           onClick={() => handleProviderChange('gitlab')}
           disabled={disabled}
           className={`
@@ -128,6 +106,28 @@ export function ProviderSelector({
           </div>
           <span className="text-[10px] font-semibold text-orange-600 dark:text-orange-400">BETA</span>
         </button>
+
+        <button
+          onClick={() => handleProviderChange('azure')}
+          disabled={disabled}
+          className={`
+            flex-1 flex flex-col items-center justify-center gap-0.5 rounded-md px-3 sm:px-4 py-2.5 sm:py-2.5 text-sm font-medium transition-colors min-h-[44px] touch-manipulation
+            ${
+              activeProvider === 'azure'
+                ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 shadow'
+                : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100'
+            }
+            ${disabled ? 'opacity-50 cursor-not-allowed' : ''}
+          `}
+        >
+          <div className="flex items-center gap-1.5 sm:gap-2">
+            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M11.19 14.23l-3.47-1.85v-2.7l7.95-4.24v2.27l-5.94 3.17v.94l5.94 3.17v2.27l-7.95-4.24 3.47 1.85zm1.62 0l3.47-1.85v-2.7l-7.95-4.24v2.27l5.94 3.17v.94l-5.94 3.17v2.27l7.95-4.24-3.47 1.85z" />
+            </svg>
+            <span>Azure</span>
+          </div>
+          <span className="text-[10px] font-semibold text-orange-600 dark:text-orange-400">BETA</span>
+        </button>
       </div>
 
       {/* Provider form */}
@@ -141,10 +141,10 @@ export function ProviderSelector({
             onTabChange={() => onProviderChange?.('local')}
             disabled={disabled}
           />
-        ) : activeProvider === 'azure' ? (
-          <AzureForm onSubmit={onAzureSubmit} disabled={disabled} />
-        ) : (
+        ) : activeProvider === 'gitlab' ? (
           <GitLabForm onSubmit={onGitLabSubmit} disabled={disabled} />
+        ) : (
+          <AzureForm onSubmit={onAzureSubmit} disabled={disabled} />
         )}
       </div>
     </div>
