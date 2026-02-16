@@ -53,10 +53,10 @@ function App() {
             <div className="text-center space-y-4">
               <div className="text-6xl">🚧</div>
               <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
-                Phase 0: Setup Complete!
+                Phase 0: Setup Complete! 🎉
               </h3>
               <p className="text-gray-600 dark:text-gray-400">
-                Project infrastructure is ready. Next: Implementing core features.
+                Project infrastructure is ready. Dark mode is working! ✨
               </p>
               <div className="pt-4 text-left">
                 <h4 className="font-semibold mb-2 text-gray-900 dark:text-gray-100">
