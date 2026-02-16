@@ -401,7 +401,7 @@ function App() {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
             </svg>
             <span className="text-sm sm:text-base font-medium text-center">
-              🎨 Check out <span className="font-bold underline decoration-2 underline-offset-2 group-hover:decoration-blue-200">Forensic Sketch AI</span> - Generate realistic forensic sketches from text descriptions
+              🎨 Check out <span className="font-bold underline decoration-2 underline-offset-2 group-hover:decoration-blue-200">Forensic Sketch AI</span>
             </span>
             <svg className="w-4 h-4 flex-shrink-0 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
