@@ -61,8 +61,10 @@ export class GitHubProvider extends BaseProvider {
     return {
       owner,
       repo,
-      branch: lastString ? this.extractBranchFromPath(lastString) : undefined,
-      path: lastString ? this.extractPathFromLastString(lastString) : undefined,
+      // Store the full lastString - will be resolved later with actual branch list
+      // This supports branch names with slashes like "feature/test/branch-name"
+      branch: lastString,
+      path: undefined, // Will be resolved in resolveRefAndPath
       url,
       isValid: true,
     };
@@ -153,6 +155,7 @@ export class GitHubProvider extends BaseProvider {
 
   /**
    * Resolve ref and path from URL segment
+   * Handles branch names with slashes like "feature/test/branch-name"
    */
   private resolveRefAndPath(
     lastString: string,
@@ -160,8 +163,22 @@ export class GitHubProvider extends BaseProvider {
   ): { ref: string; path: string } {
     const allRefs = [...references.branches, ...references.tags];
 
-    // Find the longest matching ref
-    const matchingRef = allRefs.find((ref) => lastString.startsWith(ref));
+    // Sort refs by length (longest first) to match the most specific branch first
+    // This handles cases like "feature/test/branch" vs "feature/test" vs "feature"
+    const sortedRefs = allRefs.sort((a, b) => b.length - a.length);
+
+    // Find the longest matching ref that is either:
+    // 1. The entire lastString (exact branch name)
+    // 2. Followed by a "/" (branch + path)
+    const matchingRef = sortedRefs.find((ref) => {
+      if (lastString === ref) {
+        return true; // Exact match
+      }
+      if (lastString.startsWith(ref + '/')) {
+        return true; // Branch followed by path
+      }
+      return false;
+    });
 
     if (matchingRef) {
       const remainingPath = lastString.slice(matchingRef.length);
@@ -171,7 +188,8 @@ export class GitHubProvider extends BaseProvider {
       };
     }
 
-    // If no match, treat entire string as ref
+    // If no match found, treat entire string as ref
+    // This will be validated when fetching the tree
     return { ref: lastString, path: '' };
   }
 
