@@ -5,12 +5,14 @@ export interface ProviderSlice {
   providerType: ProviderType | null;
   credentials: ProviderCredentials | null;
   repoMetadata: RepoMetadata | null;
+  repoUrl: string;
   isLoading: boolean;
   error: string | null;
 
   setProviderType: (type: ProviderType) => void;
   setCredentials: (credentials: ProviderCredentials) => void;
   setRepoMetadata: (metadata: RepoMetadata) => void;
+  setRepoUrl: (url: string) => void;
   setLoading: (isLoading: boolean) => void;
   setError: (error: string | null) => void;
   reset: () => void;
@@ -20,6 +22,7 @@ const initialState = {
   providerType: null,
   credentials: null,
   repoMetadata: null,
+  repoUrl: '',
   isLoading: false,
   error: null,
 };
@@ -38,6 +41,8 @@ export const createProviderSlice: StateCreator<ProviderSlice> = (set) => ({
   },
 
   setRepoMetadata: (metadata: RepoMetadata) => set({ repoMetadata: metadata }),
+
+  setRepoUrl: (url: string) => set({ repoUrl: url }),
 
   setLoading: (isLoading: boolean) => set({ isLoading }),
 

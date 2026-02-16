@@ -84,22 +84,28 @@ export abstract class BaseProvider implements IProvider {
    */
   async *fetchMultiple(nodes: FileNode[]): AsyncGenerator<FileContent, void, unknown> {
     const queue = [...nodes];
-    const inProgress = new Set<Promise<FileContent>>();
+    const inProgress = new Map<Promise<{ content: FileContent; promise: Promise<FileContent> }>, Promise<FileContent>>();
 
     while (queue.length > 0 || inProgress.size > 0) {
       // Start new fetches up to max concurrent
       while (queue.length > 0 && inProgress.size < this.rateLimiter.maxConcurrent) {
         const node = queue.shift()!;
         const promise = this.fetchFile(node);
-        inProgress.add(promise);
-
-        // Remove from in-progress when done
-        promise.finally(() => inProgress.delete(promise));
+        // Wrap promise to include itself for tracking
+        const wrappedPromise = promise.then(content => ({ content, promise }));
+        inProgress.set(wrappedPromise, promise);
       }
 
       // Wait for at least one to complete
       if (inProgress.size > 0) {
-        const content = await Promise.race(inProgress);
+        const { content, promise } = await Promise.race(Array.from(inProgress.keys()));
+        // Remove the completed promise
+        for (const [wrapped, orig] of inProgress) {
+          if (orig === promise) {
+            inProgress.delete(wrapped);
+            break;
+          }
+        }
         yield content;
       }
     }
