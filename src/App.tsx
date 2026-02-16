@@ -8,6 +8,7 @@ import { OutputPanel } from '@/components/OutputPanel';
 import { ProviderError } from '@/lib/providers/types';
 import { GitHubProvider } from '@/features/github';
 import { GitLabProvider } from '@/features/gitlab';
+import { AzureDevOpsProvider } from '@/features/azure';
 import { LocalProvider } from '@/features/local';
 import { Formatter } from '@/lib/formatter';
 import { buildTree, extractDirectories } from '@/lib/tree-builder';
@@ -43,7 +44,7 @@ function App() {
   const [isLoading, setIsLoading] = useState(false);
   const [showExcluded, setShowExcluded] = useState(false);
   const [output, setOutput] = useState<FormattedOutput | null>(null);
-  const [currentProvider, setCurrentProvider] = useState<GitHubProvider | GitLabProvider | LocalProvider | null>(null);
+  const [currentProvider, setCurrentProvider] = useState<GitHubProvider | GitLabProvider | AzureDevOpsProvider | LocalProvider | null>(null);
   const [error, setError] = useState<{ message: string; recovery?: () => void; recoveryLabel?: string } | null>(null);
   const shouldAutoExpandRoot = useRef(false);
   const outputRef = useRef<HTMLDivElement>(null);
@@ -112,7 +113,7 @@ function App() {
   }, [tree, toggleExpanded]);
 
   // Load files from provider
-  const loadFiles = useCallback(async (provider: GitHubProvider | GitLabProvider | LocalProvider, url: string) => {
+  const loadFiles = useCallback(async (provider: GitHubProvider | GitLabProvider | AzureDevOpsProvider | LocalProvider, url: string) => {
     try {
       setIsLoading(true);
       setCurrentProvider(provider);
@@ -164,6 +165,21 @@ function App() {
     const provider = new GitLabProvider();
     // Get GitLab token from sessionStorage if available
     const token = sessionStorage.getItem('gitlab_token');
+    if (token) {
+      provider.setCredentials({ token });
+    }
+
+    await loadFiles(provider, url);
+  }, [loadFiles, setProviderType, setRepoUrl]);
+
+  // Handle Azure DevOps submission
+  const handleAzureSubmit = useCallback(async (url: string) => {
+    setProviderType('azure');
+    setRepoUrl(url);
+
+    const provider = new AzureDevOpsProvider();
+    // Get Azure token from sessionStorage if available
+    const token = sessionStorage.getItem('azure_token');
     if (token) {
       provider.setCredentials({ token });
     }
@@ -362,6 +378,7 @@ function App() {
             <ProviderSelector
               onGitHubSubmit={handleGitHubSubmit}
               onGitLabSubmit={handleGitLabSubmit}
+              onAzureSubmit={handleAzureSubmit}
               onLocalDirectorySubmit={handleLocalDirectorySubmit}
               onLocalZipSubmit={handleLocalZipSubmit}
               onProviderChange={resetAll}
