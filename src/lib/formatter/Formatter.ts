@@ -108,10 +108,6 @@ export class Formatter {
     contents.forEach((file) => {
       sections.push('');
       sections.push(`File: ${file.path}`);
-      sections.push(`Lines: ${file.lineCount}`);
-      if (file.tokenCount) {
-        sections.push(`Tokens: ${file.tokenCount}`);
-      }
       sections.push('---');
       sections.push(file.text);
       sections.push('');

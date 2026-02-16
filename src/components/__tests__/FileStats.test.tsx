@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { FileStats } from '../FileStats';
 import type { FileContent } from '@/types';
 
@@ -25,17 +26,33 @@ describe('FileStats', () => {
     },
   ];
 
-  it('should render file statistics', () => {
+  it('should render file statistics header', () => {
     render(<FileStats files={mockFiles} />);
 
     expect(screen.getByText('File Statistics')).toBeInTheDocument();
+
+    // Stats should be hidden by default (collapsed)
+    expect(screen.queryByText('3')).not.toBeInTheDocument();
+  });
+
+  it('should expand when clicked', async () => {
+    render(<FileStats files={mockFiles} />);
+
+    const header = screen.getByText('File Statistics');
+    await userEvent.click(header);
+
+    // Should now show the stats
     expect(screen.getByText('3')).toBeInTheDocument(); // File count
     expect(screen.getByText('175')).toBeInTheDocument(); // Total lines
     expect(screen.getByText('525')).toBeInTheDocument(); // Total tokens
   });
 
-  it('should render files sorted by token count', () => {
+  it('should render files sorted by token count when expanded', async () => {
     render(<FileStats files={mockFiles} />);
+
+    // Expand the component
+    const header = screen.getByText('File Statistics');
+    await userEvent.click(header);
 
     // Check that App.tsx (300 tokens) appears before index.ts (150 tokens)
     const appElement = screen.getByText('src/App.tsx');
@@ -52,8 +69,12 @@ describe('FileStats', () => {
     expect(screen.getByText('75')).toBeInTheDocument(); // utils.ts
   });
 
-  it('should display per-file statistics', () => {
+  it('should display per-file statistics when expanded', async () => {
     render(<FileStats files={mockFiles} />);
+
+    // Expand the component
+    const header = screen.getByText('File Statistics');
+    await userEvent.click(header);
 
     expect(screen.getByText('50')).toBeInTheDocument(); // index.ts lines
     expect(screen.getByText('150')).toBeInTheDocument(); // index.ts tokens
@@ -78,7 +99,7 @@ describe('FileStats', () => {
     expect(container.firstChild).toBeNull();
   });
 
-  it('should handle files without line counts', () => {
+  it('should handle files without line counts', async () => {
     const files: FileContent[] = [
       {
         path: 'src/index.ts',
@@ -91,6 +112,11 @@ describe('FileStats', () => {
     render(<FileStats files={files} />);
 
     expect(screen.getByText('File Statistics')).toBeInTheDocument();
-    // Should handle missing lineCount gracefully
+
+    // Expand to verify it handles missing lineCount gracefully
+    const header = screen.getByText('File Statistics');
+    await userEvent.click(header);
+
+    expect(screen.getByText('src/index.ts')).toBeInTheDocument();
   });
 });
