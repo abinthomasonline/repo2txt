@@ -388,6 +388,28 @@ function App() {
         </div>
       </header>
 
+      {/* Project Promotion Banner */}
+      <div className="bg-gradient-to-r from-blue-600 to-purple-600 dark:from-blue-700 dark:to-purple-700">
+        <div className="container mx-auto px-3 sm:px-4 lg:px-6 py-3">
+          <a
+            href="https://abinthomas.in/forensic-sketch-ai/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center justify-center gap-2 text-white hover:text-blue-100 transition-colors group"
+          >
+            <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+            </svg>
+            <span className="text-sm sm:text-base font-medium text-center">
+              🎨 Check out <span className="font-bold underline decoration-2 underline-offset-2 group-hover:decoration-blue-200">Forensic Sketch AI</span> - Generate realistic forensic sketches from text descriptions
+            </span>
+            <svg className="w-4 h-4 flex-shrink-0 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+            </svg>
+          </a>
+        </div>
+      </div>
+
       {/* Main Content */}
       <main className="flex-1 container mx-auto px-3 sm:px-4 lg:px-6 py-4 sm:py-6 md:py-8">
         <div className="max-w-7xl mx-auto space-y-4 sm:space-y-6 md:space-y-8">
