@@ -358,13 +358,23 @@ function App() {
       {/* Header */}
       <header className="sticky top-0 z-50 w-full border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900">
         <div className="container mx-auto flex h-14 sm:h-16 items-center justify-between px-3 sm:px-4 lg:px-6">
-          <div className="flex items-center gap-1.5 sm:gap-2">
-            <h1 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-900 dark:text-gray-100">
-              repo2txt
-            </h1>
-            <span className="rounded-full bg-primary-100 dark:bg-primary-900 px-1.5 sm:px-2 py-0.5 text-[10px] sm:text-xs font-semibold text-primary-700 dark:text-primary-300">
-              v2.0 Beta
-            </span>
+          <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
+            <div className="flex items-center gap-1.5 sm:gap-2">
+              <h1 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-900 dark:text-gray-100">
+                repo2txt
+              </h1>
+              <span className="rounded-full bg-primary-100 dark:bg-primary-900 px-1.5 sm:px-2 py-0.5 text-[10px] sm:text-xs font-semibold text-primary-700 dark:text-primary-300">
+                v2.0 Beta
+              </span>
+            </div>
+            <a
+              href="https://abinthomas.in/repo2txt-classic/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-xs sm:text-sm text-gray-600 hover:text-primary-600 dark:text-gray-400 dark:hover:text-primary-400 transition-colors underline underline-offset-2"
+            >
+              Classic Version
+            </a>
           </div>
 
           <div className="flex items-center gap-2 sm:gap-4">
