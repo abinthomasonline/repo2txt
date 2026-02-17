@@ -3,6 +3,8 @@
 [![Deploy](https://github.com/abinthomasonline/repo2txt/actions/workflows/deploy.yml/badge.svg)](https://github.com/abinthomasonline/repo2txt/actions/workflows/deploy.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
+> 💡 **Looking for the classic version?** Check out [repo2txt-classic](https://github.com/abinthomasonline/repo2txt-classic)
+
 > **Convert repositories to plain text for LLM prompts**
 > Fast, browser-based tool for AI-assisted development
 
