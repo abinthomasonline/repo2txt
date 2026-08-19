@@ -1,4 +1,6 @@
 import { useState, useCallback, useMemo, useEffect, useRef } from 'react';
+import { Button } from '@/components/ui/Button';
+import { Panel } from '@/components/ui/Panel';
 import { ThemeToggle } from '@/components/ui/ThemeToggle';
 import { ErrorDialog } from '@/components/ui/ErrorDialog';
 import { ProviderSelector } from '@/components/ProviderSelector';
@@ -16,8 +18,24 @@ import {
   extractLocalName,
 } from '@/lib/utils/repoName';
 import { useStore } from '@/store';
-import type { FileNode, FileContent, ExtensionFilter as ExtensionFilterType, FormattedOutput } from '@/types';
+import type { FileNode, FileContent, ExtensionFilter as ExtensionFilterType, FormattedOutput, ProviderType } from '@/types';
 import type { IProvider } from '@/lib/providers/types';
+
+const TOKEN_STORAGE_KEYS: Partial<Record<ProviderType, string>> = {
+  github: 'github_token',
+  gitlab: 'gitlab_token',
+  azure: 'azure_token',
+};
+
+/**
+ * Tokens can be added or cleared after a repository is loaded, so the provider
+ * is given the stored token again before each round of requests
+ */
+function applyStoredCredentials(provider: IProvider, type: ProviderType) {
+  const storageKey = TOKEN_STORAGE_KEYS[type];
+  const token = storageKey ? sessionStorage.getItem(storageKey)?.trim() : undefined;
+  provider.setCredentials({ token: token || undefined });
+}
 
 function App() {
   const { setProviderType, setRepoUrl } = useStore();
@@ -154,11 +172,7 @@ function App() {
     setRepoName(extractGitHubRepoName(url));
 
     const provider = new GitHubProvider();
-    // Get GitHub token from sessionStorage if available
-    const token = sessionStorage.getItem('github_token');
-    if (token) {
-      provider.setCredentials({ token });
-    }
+    applyStoredCredentials(provider, 'github');
 
     await loadFiles(provider, url);
   }, [loadFiles, setProviderType, setRepoUrl]);
@@ -172,11 +186,7 @@ function App() {
     // Dynamically import GitLab provider (code splitting)
     const { GitLabProvider } = await import('@/features/gitlab/GitLabProvider');
     const provider = new GitLabProvider();
-    // Get GitLab token from sessionStorage if available
-    const token = sessionStorage.getItem('gitlab_token');
-    if (token) {
-      provider.setCredentials({ token });
-    }
+    applyStoredCredentials(provider, 'gitlab');
 
     await loadFiles(provider, url);
   }, [loadFiles, setProviderType, setRepoUrl]);
@@ -190,11 +200,7 @@ function App() {
     // Dynamically import Azure provider (code splitting)
     const { AzureDevOpsProvider } = await import('@/features/azure/AzureDevOpsProvider');
     const provider = new AzureDevOpsProvider();
-    // Get Azure token from sessionStorage if available
-    const token = sessionStorage.getItem('azure_token');
-    if (token) {
-      provider.setCredentials({ token });
-    }
+    applyStoredCredentials(provider, 'azure');
 
     await loadFiles(provider, url);
   }, [loadFiles, setProviderType, setRepoUrl]);
@@ -270,19 +276,30 @@ function App() {
     return getGlobalSelectionState();
   }, [selectedPaths, nodes, getGlobalSelectionState]);
 
+  // Selection summary shown next to the generate action
+  const selectionSummary = useMemo(() => {
+    const selectable = nodes.filter(
+      (node) => node.type === 'blob' && !excludedPaths.has(node.path)
+    );
+    const selected = selectable.filter((node) => selectedPaths.has(node.path));
+    return { selected: selected.length, total: selectable.length };
+  }, [nodes, selectedPaths, excludedPaths]);
+
   // Handle generate output
   const handleGenerateOutput = useCallback(async () => {
     if (!currentProvider) return;
 
     try {
       setIsLoading(true);
+      applyStoredCredentials(currentProvider, currentProvider.getType());
 
       // Get selected and non-excluded nodes from store
       const selectedNodes = getSelectedNodes();
 
       if (selectedNodes.length === 0) {
         setError({
-          message: 'No files selected.\n\nPlease select at least one file to generate output. You can:\n• Click the checkbox next to "File Tree" to select all files\n• Expand directories and select individual files\n• Use the Extension Filter to select files by type',
+          message:
+            'No files selected. Pick at least one file in the tree, or use the checkbox beside the Files heading to take everything.',
         });
         return;
       }
@@ -355,29 +372,27 @@ function App() {
     } finally {
       setIsLoading(false);
     }
-  }, [currentProvider, getSelectedNodes, nodes, selectedPaths, excludedPaths, getDirectorySelectionState]);
+  }, [currentProvider, getSelectedNodes, nodes, selectedPaths, excludedPaths, showExcluded, getDirectorySelectionState]);
 
   return (
     <div className="min-h-screen flex flex-col bg-gray-50 dark:bg-gray-900">
       {/* Header */}
-      <header className="sticky top-0 z-50 w-full border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900">
-        <div className="container mx-auto flex h-14 sm:h-16 items-center justify-between px-3 sm:px-4 lg:px-6">
-          <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
-            <div className="flex items-center gap-1.5 sm:gap-2">
-              <h1 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-900 dark:text-gray-100">
-                repo2txt
-              </h1>
-              <span className="rounded-full bg-primary-100 dark:bg-primary-900 px-1.5 sm:px-2 py-0.5 text-[10px] sm:text-xs font-semibold text-primary-700 dark:text-primary-300">
-                v2.0 Beta
-              </span>
-            </div>
+      <header className="sticky top-0 z-50 w-full border-b border-gray-200 dark:border-gray-800 bg-white/95 backdrop-blur dark:bg-gray-900/95">
+        <div className="container mx-auto flex h-14 items-center justify-between px-3 sm:px-4 lg:px-6">
+          <div className="flex items-baseline gap-2 sm:gap-3">
+            <h1 className="text-base sm:text-lg font-semibold tracking-tight text-gray-900 dark:text-gray-100">
+              repo2txt
+            </h1>
+            <span className="rounded border border-gray-300 px-1.5 py-px text-[11px] font-medium text-gray-500 dark:border-gray-700 dark:text-gray-400">
+              v2.0 beta
+            </span>
             <a
               href="https://abinthomas.in/repo2txt-classic/"
               target="_blank"
               rel="noopener noreferrer"
-              className="text-xs sm:text-sm text-gray-600 hover:text-primary-600 dark:text-gray-400 dark:hover:text-primary-400 transition-colors underline underline-offset-2"
+              className="hidden text-xs text-gray-500 transition-colors hover:text-primary-600 dark:text-gray-400 dark:hover:text-primary-400 sm:inline"
             >
-              Classic Version
+              Classic
             </a>
           </div>
 
@@ -405,21 +420,21 @@ function App() {
       <PaperPmfPromo />
 
       {/* Main Content */}
-      <main className="flex-1 container mx-auto px-3 sm:px-4 lg:px-6 py-4 sm:py-6 md:py-8">
-        <div className="max-w-7xl mx-auto space-y-4 sm:space-y-6 md:space-y-8">
+      <main className="container mx-auto flex-1 px-3 sm:px-4 lg:px-6">
+        <div className="mx-auto max-w-4xl pb-12 sm:pb-16">
           <section
-            className="mx-auto max-w-3xl space-y-2 text-center"
+            className="mx-auto max-w-2xl space-y-3 py-10 text-center sm:py-14"
             aria-labelledby="repo2txt-intro-heading"
           >
             <h2
               id="repo2txt-intro-heading"
-              className="text-xl sm:text-2xl md:text-3xl font-bold tracking-tight text-gray-900 dark:text-gray-100"
+              className="text-2xl font-semibold tracking-tight text-gray-900 dark:text-gray-100 sm:text-3xl"
             >
               Convert repositories to plain text for LLMs
             </h2>
-            <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400 text-balance">
-              Turn GitHub, GitLab, Azure DevOps, local folders, or ZIP files into clean, copy-ready
-              context for AI tools—entirely in your browser.
+            <p className="text-balance text-sm text-gray-600 dark:text-gray-400 sm:text-base">
+              GitHub, GitLab, Azure DevOps, local folders, and ZIP files—converted entirely in your
+              browser.
             </p>
           </section>
 
@@ -438,7 +453,7 @@ function App() {
 
           {/* Filters and File Tree */}
           {tree.length > 0 && (
-            <section className="space-y-6">
+            <section className="mt-4 space-y-4">
               {/* Advanced Filters - Collapsed by default */}
               <AdvancedFilters
                 extensions={extensionList}
@@ -453,56 +468,76 @@ function App() {
               />
 
               {/* File Tree */}
-              <div className="space-y-4" data-testid="file-tree-section">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <label className="flex items-center gap-2 cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={globalCheckboxState === 'checked'}
-                        ref={(input) => {
-                          if (input) {
-                            input.indeterminate = globalCheckboxState === 'indeterminate';
-                          }
-                        }}
-                        onChange={handleGlobalToggle}
-                        className="rounded border-gray-300 text-primary-600 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-800"
-                        aria-label="Select all files"
-                      />
-                      <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100" data-testid="file-tree-heading">
-                        File Tree
-                      </h2>
-                    </label>
-                  </div>
-                  <button
-                    onClick={handleGenerateOutput}
-                    disabled={isLoading}
-                    data-testid="generate-output-button"
-                    className="inline-flex items-center justify-center rounded-md font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary-600 text-white hover:bg-primary-700 dark:bg-primary-500 dark:hover:bg-primary-600 h-11 sm:h-10 px-4 sm:px-6 text-sm min-w-[44px] touch-manipulation"
-                  >
-                    <svg className="w-4 h-4 sm:mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                    </svg>
-                    <span className="hidden sm:inline">Generate Output</span>
-                  </button>
+              <Panel data-testid="file-tree-section" className="overflow-hidden">
+                <div className="flex items-center justify-between gap-3 px-3 py-2.5">
+                  <label className="flex cursor-pointer items-center gap-2.5">
+                    <input
+                      type="checkbox"
+                      checked={globalCheckboxState === 'checked'}
+                      ref={(input) => {
+                        if (input) {
+                          input.indeterminate = globalCheckboxState === 'indeterminate';
+                        }
+                      }}
+                      onChange={handleGlobalToggle}
+                      className="h-4 w-4 cursor-pointer rounded accent-primary-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
+                      aria-label="Select all files"
+                    />
+                    <h2
+                      className="text-sm font-semibold text-gray-900 dark:text-gray-100"
+                      data-testid="file-tree-heading"
+                    >
+                      Files
+                    </h2>
+                  </label>
+                  <span className="truncate font-mono text-xs text-gray-500 dark:text-gray-400">
+                    {repoName}
+                  </span>
                 </div>
 
-                <FileTree
-                  nodes={tree}
-                  onToggle={toggleExpanded}
-                  onSelect={toggleSelection}
-                  showExcluded={showExcluded}
-                />
-              </div>
+                <div className="border-y border-gray-200 dark:border-gray-800">
+                  <FileTree
+                    nodes={tree}
+                    onToggle={toggleExpanded}
+                    onSelect={toggleSelection}
+                    showExcluded={showExcluded}
+                  />
+                </div>
+
+                <div className="flex items-center justify-between gap-3 px-3 py-2.5">
+                  <p className="text-xs tabular-nums text-gray-500 dark:text-gray-400">
+                    <span className="font-medium text-gray-900 dark:text-gray-100">
+                      {selectionSummary.selected.toLocaleString()}
+                    </span>{' '}
+                    of {selectionSummary.total.toLocaleString()} files selected
+                  </p>
+                  <Button
+                    onClick={handleGenerateOutput}
+                    disabled={isLoading}
+                    size="sm"
+                    data-testid="generate-output-button"
+                  >
+                    Generate Output
+                  </Button>
+                </div>
+              </Panel>
             </section>
           )}
 
+          {/* Busy state for the first load, before there is a tree to sit under */}
+          {isLoading && tree.length === 0 && (
+            <Panel
+              role="status"
+              className="mt-4 flex items-center justify-center gap-3 py-8 text-sm text-gray-500 dark:text-gray-400"
+            >
+              <div className="h-4 w-4 animate-spin rounded-full border-2 border-gray-300 border-t-primary-600 dark:border-gray-700 dark:border-t-primary-400" />
+              Loading repository
+            </Panel>
+          )}
+
           {/* Output */}
-          {(output || isLoading) && (
-            <section ref={outputRef}>
-              <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
-                Output
-              </h2>
+          {(output || (isLoading && tree.length > 0)) && (
+            <section ref={outputRef} className="mt-4 scroll-mt-20">
               <OutputPanel output={output} isLoading={isLoading} repoName={repoName} />
             </section>
           )}
@@ -510,29 +545,27 @@ function App() {
       </main>
 
       {/* Footer */}
-      <footer className="border-t border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 py-4 sm:py-6">
-        <div className="container mx-auto px-3 sm:px-4 lg:px-6 text-center text-xs sm:text-sm text-gray-600 dark:text-gray-400">
+      <footer className="border-t border-gray-200 bg-white py-5 dark:border-gray-800 dark:bg-gray-900">
+        <div className="container mx-auto flex flex-col items-center gap-1 px-3 text-xs text-gray-500 dark:text-gray-400 sm:flex-row sm:justify-between sm:px-4 lg:px-6">
           <p>
-            Built with ❤️ by{' '}
+            Built by{' '}
             <a
               href="https://github.com/abinthomasonline"
               target="_blank"
               rel="noopener noreferrer"
-              className="text-primary-600 dark:text-primary-400 hover:underline"
+              className="text-gray-700 underline underline-offset-2 transition-colors hover:text-primary-600 dark:text-gray-300 dark:hover:text-primary-400"
             >
               abinthomasonline
             </a>
           </p>
-          <p className="mt-2">
-            Open source under MIT License • Privacy-focused • Browser-only
-          </p>
+          <p>MIT licensed · Browser-only</p>
         </div>
       </footer>
 
       {/* Error Dialog */}
       {error && (
         <ErrorDialog
-          title="Unable to Complete Request"
+          title="Unable to complete request"
           message={error.message}
           onClose={() => setError(null)}
           onAction={error.recovery}

@@ -22,6 +22,7 @@ export function FileTreeNode({
   showExcluded = false,
 }: FileTreeNodeProps) {
   const isDirectory = node.type === 'directory';
+  const isExpanded = isDirectory && node.children !== undefined;
   const isExcluded = node.excluded || false;
   const isVisible = node.visible !== false;
 
@@ -34,10 +35,17 @@ export function FileTreeNode({
   );
 
   const handleToggle = useCallback(() => {
+    onToggle?.(node.path);
+  }, [node.path, onToggle]);
+
+  // Clicking a row expands a directory or flips a file's selection
+  const handleRowClick = useCallback(() => {
     if (isDirectory) {
-      onToggle?.(node.path);
+      handleToggle();
+    } else if (!isExcluded) {
+      onSelect?.(node.path, node.selected !== true);
     }
-  }, [isDirectory, node.path, onToggle]);
+  }, [handleToggle, isDirectory, isExcluded, node.path, node.selected, onSelect]);
 
   // Don't render if not visible and showExcluded is false
   if (!isVisible && !showExcluded) {
@@ -46,16 +54,21 @@ export function FileTreeNode({
 
   const getFileIcon = () => {
     if (isDirectory) {
-      return (
-        <svg className="w-4 h-4 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
-          <path d="M2 6a2 2 0 012-2h5l2 2h5a2 2 0 012 2v6a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" />
+      return isExpanded ? (
+        <svg className="w-4 h-4 text-gray-400 dark:text-gray-500" fill="currentColor" viewBox="0 0 20 20">
+          <path d="M2 6a2 2 0 012-2h4l2 2h4a2 2 0 012 2H4a2 2 0 00-1.94 1.515L2 9.5V6z" />
+          <path d="M4.06 9h13.38a1 1 0 01.97 1.243l-1.25 5A1 1 0 0116.19 16H2.75a1 1 0 01-.97-1.243l1.31-5.243A1 1 0 014.06 9z" />
+        </svg>
+      ) : (
+        <svg className="w-4 h-4 text-gray-400 dark:text-gray-500" fill="currentColor" viewBox="0 0 20 20">
+          <path d="M2 6a2 2 0 012-2h4l2 2h4a2 2 0 012 2v6a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" />
         </svg>
       );
     }
 
     // File icon - can be enhanced with extension-specific icons later
     return (
-      <svg className="w-4 h-4 text-gray-500" fill="currentColor" viewBox="0 0 20 20">
+      <svg className="w-4 h-4 text-gray-400 dark:text-gray-600" fill="currentColor" viewBox="0 0 20 20">
         <path
           fillRule="evenodd"
           d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z"
@@ -76,41 +89,53 @@ export function FileTreeNode({
   return (
     <div
       className={`
-        flex items-center gap-2 py-1 px-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded
+        group flex h-full items-center gap-2 pl-2 pr-3 text-sm
+        hover:bg-gray-100 dark:hover:bg-gray-800/70
         ${isExcluded ? 'opacity-50' : ''}
-        ${isDirectory ? 'cursor-pointer' : ''}
+        ${isDirectory || !isExcluded ? 'cursor-pointer' : ''}
       `}
-      style={{ paddingLeft: `${depth * 20 + 8}px` }}
-      onClick={handleToggle}
+      onClick={handleRowClick}
     >
-      {/* Expand/collapse icon for directories */}
-      {isDirectory && (
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            handleToggle();
-          }}
-          className="flex-shrink-0 p-0.5 hover:bg-gray-200 dark:hover:bg-gray-700 rounded"
-          aria-label={node.children ? 'Collapse' : 'Expand'}
-        >
-          <svg
-            className={`w-3 h-3 text-gray-500 transform transition-transform ${
-              node.children ? 'rotate-90' : ''
-            }`}
-            fill="currentColor"
-            viewBox="0 0 20 20"
+      {/* One guide per ancestor level, so files and directories share an indent */}
+      {Array.from({ length: depth }, (_, level) => (
+        <span
+          key={level}
+          data-indent-guide
+          aria-hidden="true"
+          className="h-full w-4 flex-shrink-0 border-r border-gray-200 dark:border-gray-800"
+        />
+      ))}
+
+      {/* Disclosure slot, kept for files so their content lines up with sibling directories */}
+      <span data-disclosure-slot className="flex h-5 w-5 flex-shrink-0 items-center justify-center">
+        {isDirectory && (
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              handleToggle();
+            }}
+            className="flex h-5 w-5 items-center justify-center rounded text-gray-400 transition-colors hover:bg-gray-200 hover:text-gray-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 dark:hover:bg-gray-700 dark:hover:text-gray-200"
+            aria-expanded={isExpanded}
+            aria-label={isExpanded ? 'Collapse' : 'Expand'}
           >
-            <path
-              fillRule="evenodd"
-              d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
-              clipRule="evenodd"
-            />
-          </svg>
-        </button>
-      )}
+            <svg
+              className={`w-3 h-3 transform transition-transform ${isExpanded ? 'rotate-90' : ''}`}
+              fill="currentColor"
+              viewBox="0 0 20 20"
+            >
+              <path
+                fillRule="evenodd"
+                d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
+                clipRule="evenodd"
+              />
+            </svg>
+          </button>
+        )}
+      </span>
 
       {/* Checkbox - hidden for excluded files */}
-      {!isExcluded && (
+      {!isExcluded ? (
         <input
           type="checkbox"
           checked={checkboxState === 'checked'}
@@ -121,13 +146,12 @@ export function FileTreeNode({
           }}
           onChange={handleCheckboxChange}
           onClick={(e) => e.stopPropagation()}
-          className="flex-shrink-0 rounded border-gray-300 text-primary-600 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-800"
+          className="h-4 w-4 flex-shrink-0 cursor-pointer rounded accent-primary-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
           aria-label={`Select ${node.name}`}
         />
-      )}
-      {/* Spacer for excluded files to maintain alignment */}
-      {isExcluded && (
-        <div className="w-4 h-4 flex-shrink-0" />
+      ) : (
+        /* Spacer for excluded files to maintain alignment */
+        <div className="h-4 w-4 flex-shrink-0" />
       )}
 
       {/* Icon */}
@@ -135,10 +159,10 @@ export function FileTreeNode({
 
       {/* Name */}
       <span
-        className={`flex-1 text-sm truncate ${
+        className={`flex-1 truncate ${isDirectory ? 'font-medium' : ''} ${
           isExcluded
-            ? 'text-gray-400 dark:text-gray-600 line-through'
-            : 'text-gray-900 dark:text-gray-100'
+            ? 'text-gray-400 line-through dark:text-gray-600'
+            : 'text-gray-800 dark:text-gray-200'
         }`}
         title={node.name}
       >

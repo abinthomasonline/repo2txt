@@ -29,7 +29,7 @@ describe('ExtensionFilter', () => {
   it('should show selected count', () => {
     render(<ExtensionFilter extensions={mockExtensions} />);
 
-    expect(screen.getByText('2 of 3 selected')).toBeInTheDocument();
+    expect(screen.getByText('2 of 3 included')).toBeInTheDocument();
   });
 
   it('should call onToggle when checkbox is clicked', () => {
@@ -46,7 +46,7 @@ describe('ExtensionFilter', () => {
     const onSelectAll = vi.fn();
     render(<ExtensionFilter extensions={mockExtensions} onSelectAll={onSelectAll} />);
 
-    const selectAllButton = screen.getByText('Select All');
+    const selectAllButton = screen.getByText('Select all');
     fireEvent.click(selectAllButton);
 
     expect(onSelectAll).toHaveBeenCalled();
@@ -56,7 +56,7 @@ describe('ExtensionFilter', () => {
     const onDeselectAll = vi.fn();
     render(<ExtensionFilter extensions={mockExtensions} onDeselectAll={onDeselectAll} />);
 
-    const deselectAllButton = screen.getByText('Deselect All');
+    const deselectAllButton = screen.getByText('Clear');
     fireEvent.click(deselectAllButton);
 
     expect(onDeselectAll).toHaveBeenCalled();

@@ -53,11 +53,30 @@ describe('FileTreeNode', () => {
     expect(onToggle).toHaveBeenCalledWith('src');
   });
 
-  it('should render with correct indentation', () => {
-    render(<FileTreeNode node={mockFileNode} depth={2} />);
+  it('should render one indent guide per ancestor level', () => {
+    const { container } = render(<FileTreeNode node={mockFileNode} depth={2} />);
 
-    const node = screen.getByText('test.ts').closest('div');
-    expect(node).toHaveStyle({ paddingLeft: '48px' }); // depth * 20 + 8
+    expect(container.querySelectorAll('[data-indent-guide]')).toHaveLength(2);
+  });
+
+  it('should indent files and directories at the same depth identically', () => {
+    const file = render(<FileTreeNode node={mockFileNode} depth={2} />);
+    const directory = render(<FileTreeNode node={mockDirNode} depth={2} />);
+
+    // Files keep an empty disclosure slot so their content lines up with sibling directories
+    expect(file.container.querySelectorAll('[data-indent-guide]')).toHaveLength(2);
+    expect(directory.container.querySelectorAll('[data-indent-guide]')).toHaveLength(2);
+    expect(file.container.querySelector('[data-disclosure-slot]')).toBeInTheDocument();
+    expect(directory.container.querySelector('[data-disclosure-slot]')).toBeInTheDocument();
+  });
+
+  it('should select a file when its row is clicked', () => {
+    const onSelect = vi.fn();
+    render(<FileTreeNode node={mockFileNode} depth={0} onSelect={onSelect} />);
+
+    fireEvent.click(screen.getByText('test.ts'));
+
+    expect(onSelect).toHaveBeenCalledWith('src/test.ts', true);
   });
 
   it('should render checked checkbox for selected node', () => {

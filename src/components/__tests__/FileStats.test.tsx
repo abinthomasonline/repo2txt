@@ -26,15 +26,10 @@ describe('FileStats', () => {
     },
   ];
 
-  it('should render file statistics with summary always visible', () => {
+  it('should render collapsed with per-file details hidden', () => {
     render(<FileStats files={mockFiles} />);
 
-    expect(screen.getByText('File Statistics')).toBeInTheDocument();
-
-    // Summary stats should be visible even when collapsed
-    expect(screen.getByText('3')).toBeInTheDocument(); // File count
-    expect(screen.getByText('175')).toBeInTheDocument(); // Total lines
-    expect(screen.getByText('525')).toBeInTheDocument(); // Total tokens
+    expect(screen.getByText('Largest files')).toBeInTheDocument();
 
     // But per-file details should be hidden
     expect(screen.queryByText('src/App.tsx')).not.toBeInTheDocument();
@@ -46,8 +41,8 @@ describe('FileStats', () => {
     // Per-file details should be hidden initially
     expect(screen.queryByText('src/App.tsx')).not.toBeInTheDocument();
 
-    const header = screen.getByText('File Statistics');
-    await userEvent.click(header);
+    // Expand the component
+    await userEvent.click(screen.getByText('Largest files'));
 
     // Should now show per-file details
     expect(screen.getByText('src/App.tsx')).toBeInTheDocument();
@@ -56,38 +51,28 @@ describe('FileStats', () => {
   });
 
   it('should render files sorted by token count when expanded', async () => {
-    render(<FileStats files={mockFiles} />);
+    const { container } = render(<FileStats files={mockFiles} />);
 
     // Expand the component
-    const header = screen.getByText('File Statistics');
-    await userEvent.click(header);
+    await userEvent.click(screen.getByText('Largest files'));
 
     // Check that App.tsx (300 tokens) appears before index.ts (150 tokens)
-    const appElement = screen.getByText('src/App.tsx');
-    const indexElement = screen.getByText('src/index.ts');
-    const utilsElement = screen.getByText('src/utils.ts');
-
-    expect(appElement).toBeInTheDocument();
-    expect(indexElement).toBeInTheDocument();
-    expect(utilsElement).toBeInTheDocument();
-
-    // Verify the sorting by checking token counts are in descending order
-    expect(screen.getByText('300')).toBeInTheDocument(); // App.tsx
-    expect(screen.getByText('150')).toBeInTheDocument(); // index.ts
-    expect(screen.getByText('75')).toBeInTheDocument(); // utils.ts
+    const paths = Array.from(container.querySelectorAll('[title]')).map((el) => el.textContent);
+    expect(paths).toEqual(['src/App.tsx', 'src/index.ts', 'src/utils.ts']);
   });
 
-  it('should display per-file statistics when expanded', async () => {
+  it('should display per-file token and line counts when expanded', async () => {
     render(<FileStats files={mockFiles} />);
 
     // Expand the component
-    const header = screen.getByText('File Statistics');
-    await userEvent.click(header);
+    await userEvent.click(screen.getByText('Largest files'));
 
-    expect(screen.getByText('50')).toBeInTheDocument(); // index.ts lines
-    expect(screen.getByText('150')).toBeInTheDocument(); // index.ts tokens
-    expect(screen.getByText('100')).toBeInTheDocument(); // App.tsx lines
-    expect(screen.getByText('300')).toBeInTheDocument(); // App.tsx tokens
+    expect(screen.getByTitle('src/App.tsx').parentElement?.textContent).toContain(
+      '300 tokens · 100 lines'
+    );
+    expect(screen.getByTitle('src/index.ts').parentElement?.textContent).toContain(
+      '150 tokens · 50 lines'
+    );
   });
 
   it('should not render when no files', () => {
@@ -119,12 +104,12 @@ describe('FileStats', () => {
 
     render(<FileStats files={files} />);
 
-    expect(screen.getByText('File Statistics')).toBeInTheDocument();
-
     // Expand to verify it handles missing lineCount gracefully
-    const header = screen.getByText('File Statistics');
-    await userEvent.click(header);
+    await userEvent.click(screen.getByText('Largest files'));
 
     expect(screen.getByText('src/index.ts')).toBeInTheDocument();
+    expect(screen.getByTitle('src/index.ts').parentElement?.textContent).toContain(
+      '100 tokens · — lines'
+    );
   });
 });

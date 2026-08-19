@@ -12,7 +12,7 @@ import type {
   FetchOptions,
 } from '@/types';
 import type { IProvider, ParsedRepoInfo, RateLimiterConfig } from './types';
-import { ProviderError, ErrorCode } from './types';
+import { HttpError, ProviderError, ErrorCode } from './types';
 
 export abstract class BaseProvider implements IProvider {
   protected credentials: ProviderCredentials | null = null;
@@ -134,21 +134,77 @@ export abstract class BaseProvider implements IProvider {
     options?: RequestInit,
     attempt = 1
   ): Promise<Response> {
+    const maxAttempts = this.rateLimiter.retries || 3;
+    let response: Response;
+
     try {
-      const response = await fetch(url, options);
-
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-      }
-
-      return response;
+      response = await fetch(url, options);
     } catch (error) {
-      if (attempt < (this.rateLimiter.retries || 3)) {
-        await this.delay(this.rateLimiter.retryDelayMs || 1000);
+      // Connection level failures are worth another attempt
+      if (attempt < maxAttempts) {
+        await this.delay((this.rateLimiter.retryDelayMs || 1000) * attempt);
         return this.fetchWithRetry(url, options, attempt + 1);
       }
       throw error;
     }
+
+    if (response.ok) {
+      return response;
+    }
+
+    const httpError = await this.buildHttpError(response);
+
+    // Retrying a rejected request only spends more of the quota that rejected it
+    if (this.isRetryable(httpError) && attempt < maxAttempts) {
+      const waitMs = httpError.retryAfterSeconds
+        ? httpError.retryAfterSeconds * 1000
+        : (this.rateLimiter.retryDelayMs || 1000) * attempt;
+      await this.delay(waitMs);
+      return this.fetchWithRetry(url, options, attempt + 1);
+    }
+
+    throw httpError;
+  }
+
+  /**
+   * Turn a failed response into an error that carries the status and whatever the API said
+   */
+  protected async buildHttpError(response: Response): Promise<HttpError> {
+    let apiMessage: string | undefined;
+
+    try {
+      const body = await response.text();
+      if (body) {
+        const data = JSON.parse(body);
+        if (typeof data?.message === 'string') {
+          apiMessage = data.message;
+        }
+      }
+    } catch {
+      // A body that is missing or is not JSON tells us nothing extra
+    }
+
+    const retryAfter = Number(response.headers.get('retry-after'));
+    const reset = Number(response.headers.get('x-ratelimit-reset'));
+    const remainingHeader = response.headers.get('x-ratelimit-remaining');
+    const remaining = remainingHeader === null ? NaN : Number(remainingHeader);
+
+    return new HttpError(
+      response.status,
+      apiMessage || response.statusText || undefined,
+      Number.isFinite(retryAfter) && retryAfter > 0 ? retryAfter : undefined,
+      Number.isFinite(reset) && reset > 0 ? new Date(reset * 1000) : undefined,
+      Number.isFinite(remaining) ? remaining : undefined
+    );
+  }
+
+  /**
+   * Server faults and short throttles are transient, client errors are not
+   */
+  protected isRetryable(error: HttpError): boolean {
+    // A wait the server asks for decides the matter, however the request failed
+    if (error.retryAfterSeconds !== undefined) return error.retryAfterSeconds <= 10;
+    return error.status >= 500 || error.status === 429;
   }
 
   /**
@@ -159,6 +215,56 @@ export abstract class BaseProvider implements IProvider {
 
     if (error instanceof ProviderError) {
       return error;
+    }
+
+    if (error instanceof HttpError) {
+      const detail = error.apiMessage ? `\n\n${error.apiMessage}` : '';
+
+      if (error.status === 401) {
+        return new ProviderError(
+          error.message,
+          ErrorCode.AUTH_FAILED,
+          `Authentication failed${contextMsg}. The access token is missing, expired, or lacks permission for this repository.${detail}`
+        );
+      }
+
+      if (error.status === 404) {
+        return new ProviderError(
+          error.message,
+          ErrorCode.NOT_FOUND,
+          `Resource not found${contextMsg}. Please check the URL and try again.${detail}`
+        );
+      }
+
+      if (error.status === 403) {
+        return new ProviderError(
+          error.message,
+          ErrorCode.AUTH_FAILED,
+          `Access denied${contextMsg}. Please check your credentials or token.${detail}`
+        );
+      }
+
+      if (error.status === 429) {
+        return new ProviderError(
+          error.message,
+          ErrorCode.RATE_LIMITED,
+          `Rate limit exceeded${contextMsg}. Please wait a moment and try again.${detail}`
+        );
+      }
+
+      if (error.status >= 500) {
+        return new ProviderError(
+          error.message,
+          ErrorCode.NETWORK_ERROR,
+          `The service returned an error (HTTP ${error.status})${contextMsg}. Please try again in a moment.${detail}`
+        );
+      }
+
+      return new ProviderError(
+        error.message,
+        ErrorCode.UNKNOWN,
+        `The request failed with HTTP ${error.status}${contextMsg}.${detail}`
+      );
     }
 
     if (error instanceof Error) {

@@ -3,7 +3,6 @@
  * Allows filtering files by extension
  */
 
-import { Button } from '../ui/Button';
 import type { ExtensionFilter as ExtensionFilterType } from '@/types';
 
 interface ExtensionFilterProps {
@@ -19,52 +18,47 @@ export function ExtensionFilter({
   onSelectAll,
   onDeselectAll,
 }: ExtensionFilterProps) {
-  const selectedCount = extensions.filter((e) => e.selected).length;
+  // Partially selected extensions still contribute files to the output
+  const includedCount = extensions.filter((e) => e.selected || e.indeterminate).length;
   const totalCount = extensions.length;
 
   return (
-    <div className="space-y-3">
-      {/* Summary */}
-      <div className="flex items-center justify-end">
-        <span className="text-xs text-gray-500 dark:text-gray-400">
-          {selectedCount} of {totalCount} selected
+    <div className="space-y-2">
+      <div className="flex items-center justify-between gap-3">
+        <span className="tabular-nums text-xs text-gray-500 dark:text-gray-400">
+          {includedCount} of {totalCount} included
         </span>
-      </div>
-
-      {/* Batch actions */}
-      <div className="flex gap-2">
-        <Button
-          variant="secondary"
-          size="sm"
-          onClick={onSelectAll}
-          className="flex-1"
-        >
-          Select All
-        </Button>
-        <Button
-          variant="secondary"
-          size="sm"
-          onClick={onDeselectAll}
-          className="flex-1"
-        >
-          Deselect All
-        </Button>
+        <div className="flex items-center gap-3 text-xs">
+          <button
+            onClick={onSelectAll}
+            className="text-primary-600 transition-colors hover:text-primary-700 dark:text-primary-400 dark:hover:text-primary-300"
+          >
+            Select all
+          </button>
+          <span className="text-gray-300 dark:text-gray-700">|</span>
+          <button
+            onClick={onDeselectAll}
+            className="text-gray-500 transition-colors hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100"
+          >
+            Clear
+          </button>
+        </div>
       </div>
 
       {/* Extension list */}
-      <div className="max-h-64 overflow-y-auto border border-gray-300 dark:border-gray-700 rounded-lg">
+      <div className="max-h-64 overflow-y-auto rounded-md border border-gray-200 dark:border-gray-800">
         {extensions.length === 0 ? (
           <div className="p-4 text-center text-sm text-gray-500 dark:text-gray-400">
             No file extensions found
           </div>
         ) : (
-          <div className="divide-y divide-gray-200 dark:divide-gray-700">
+          <div className="divide-y divide-gray-100 dark:divide-gray-800">
             {extensions.map((ext) => (
               <label
                 key={ext.extension}
-                className="flex items-center justify-between p-2 hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer"
+                className="flex cursor-pointer items-center justify-between gap-3 px-2.5 py-1.5 transition-colors hover:bg-gray-50 dark:hover:bg-gray-800/60"
               >
-                <div className="flex items-center gap-2 flex-1">
+                <div className="flex flex-1 items-center gap-2.5">
                   <input
                     type="checkbox"
                     checked={ext.selected}
@@ -74,13 +68,13 @@ export function ExtensionFilter({
                       }
                     }}
                     onChange={() => onToggle?.(ext.extension)}
-                    className="rounded border-gray-300 text-primary-600 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-800"
+                    className="h-4 w-4 cursor-pointer rounded accent-primary-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
                   />
-                  <span className="text-sm text-gray-900 dark:text-gray-100 font-mono">
+                  <span className="font-mono text-sm text-gray-800 dark:text-gray-200">
                     {ext.extension}
                   </span>
                 </div>
-                <span className="text-xs text-gray-500 dark:text-gray-400">
+                <span className="tabular-nums text-xs text-gray-500 dark:text-gray-400">
                   {ext.count}
                 </span>
               </label>

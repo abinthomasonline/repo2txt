@@ -104,20 +104,23 @@ export function GitHubUrlInput({ onValidUrl, onUrlChange, hideSubmitButton = fal
           <ul className="text-blue-700 dark:text-blue-300 space-y-1 list-disc list-inside">
             <li>
               <code className="text-xs bg-blue-100 dark:bg-blue-800 px-1 py-0.5 rounded">
-                https://github.com/owner/repo
+                github.com/owner/repo
               </code>
             </li>
             <li>
               <code className="text-xs bg-blue-100 dark:bg-blue-800 px-1 py-0.5 rounded">
-                https://github.com/owner/repo/tree/branch
+                github.com/owner/repo/tree/branch
               </code>
             </li>
             <li>
               <code className="text-xs bg-blue-100 dark:bg-blue-800 px-1 py-0.5 rounded">
-                https://github.com/owner/repo/tree/branch/path/to/folder
+                github.com/owner/repo/tree/branch/path/to/folder
               </code>
             </li>
           </ul>
+          <p className="text-xs text-blue-700 dark:text-blue-300">
+            The scheme is optional, and ssh remotes work too.
+          </p>
         </div>
       )}
 
@@ -125,7 +128,8 @@ export function GitHubUrlInput({ onValidUrl, onUrlChange, hideSubmitButton = fal
         <div className="flex gap-2">
           <div className="flex-1">
             <input
-              type="url"
+              type="text"
+              inputMode="url"
               id="github-url"
               value={url}
               onChange={handleUrlChange}

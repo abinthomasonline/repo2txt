@@ -112,9 +112,46 @@ describe('GitHubProvider', () => {
       expect(provider.validateUrl('not-a-url')).toBe(false);
       expect(provider.validateUrl('')).toBe(false);
     });
+
+    it('should accept a URL without a scheme', () => {
+      expect(provider.validateUrl('github.com/owner/repo')).toBe(true);
+      expect(provider.validateUrl('www.github.com/owner/repo')).toBe(true);
+      expect(provider.validateUrl('github.com/owner/repo/tree/main')).toBe(true);
+    });
+
+    it('should accept http, ssh remotes, .git suffixes and stray whitespace', () => {
+      expect(provider.validateUrl('http://github.com/owner/repo')).toBe(true);
+      expect(provider.validateUrl('git@github.com:owner/repo.git')).toBe(true);
+      expect(provider.validateUrl('https://github.com/owner/repo.git')).toBe(true);
+      expect(provider.validateUrl('  github.com/owner/repo  ')).toBe(true);
+    });
   });
 
   describe('parseUrl', () => {
+    it('should parse a URL entered without a scheme', () => {
+      const result = provider.parseUrl('github.com/owner/repo');
+
+      expect(result.isValid).toBe(true);
+      expect(result.owner).toBe('owner');
+      expect(result.repo).toBe('repo');
+    });
+
+    it('should keep a branch or path that ends in .git', () => {
+      const branch = provider.parseUrl('https://github.com/owner/repo/tree/release.git');
+      expect(branch.branch).toBe('release.git');
+
+      const path = provider.parseUrl('https://github.com/owner/repo/tree/main/vendor/foo.git');
+      expect(path.branch).toBe('main/vendor/foo.git');
+    });
+
+    it('should parse an ssh remote', () => {
+      const result = provider.parseUrl('git@github.com:owner/repo.git');
+
+      expect(result.isValid).toBe(true);
+      expect(result.owner).toBe('owner');
+      expect(result.repo).toBe('repo');
+    });
+
     it('should parse basic repo URL', () => {
       const result = provider.parseUrl('https://github.com/facebook/react');
 
@@ -204,6 +241,97 @@ describe('GitHubProvider', () => {
       );
 
       await expect(provider.fetchTree('https://github.com/owner/repo')).rejects.toThrow();
+    });
+
+    it('should report the rate limit with the reset window and how the quota is spent', async () => {
+      server.use(
+        http.get('https://api.github.com/repos/:owner/:repo/contents', () => {
+          return HttpResponse.json(
+            { message: 'API rate limit exceeded for 203.0.113.4.' },
+            {
+              status: 403,
+              headers: {
+                'x-ratelimit-remaining': '0',
+                'x-ratelimit-reset': String(Math.floor(Date.now() / 1000) + 600),
+              },
+            }
+          );
+        })
+      );
+
+      try {
+        await provider.fetchTree('https://github.com/owner/repo');
+        expect.fail('Should have thrown an error');
+      } catch (error: unknown) {
+        const providerError = error as { code: string; userMessage: string; recovery?: () => void };
+        expect(providerError.code).toBe(ErrorCode.RATE_LIMITED);
+        expect(providerError.userMessage).toContain('own API request');
+        expect(providerError.userMessage).toContain('10 minutes');
+        expect(providerError.recovery).toBeDefined();
+      }
+    });
+
+    it('should report an invalid token instead of an unexpected error', async () => {
+      server.use(
+        http.get('https://api.github.com/repos/:owner/:repo/contents', () => {
+          return HttpResponse.json({ message: 'Bad credentials' }, { status: 401 });
+        })
+      );
+
+      try {
+        await provider.fetchTree('https://github.com/owner/repo');
+        expect.fail('Should have thrown an error');
+      } catch (error: unknown) {
+        const providerError = error as { code: string; userMessage: string };
+        expect(providerError.code).toBe(ErrorCode.AUTH_FAILED);
+        expect(providerError.userMessage).toContain('Bad credentials');
+      }
+    });
+
+    it('should name the status when GitHub fails in a way we do not model', async () => {
+      server.use(
+        http.get('https://api.github.com/repos/:owner/:repo/contents', () => {
+          return HttpResponse.json({ message: 'Repository is disabled' }, { status: 451 });
+        })
+      );
+
+      try {
+        await provider.fetchTree('https://github.com/owner/repo');
+        expect.fail('Should have thrown an error');
+      } catch (error: unknown) {
+        const providerError = error as { userMessage: string };
+        expect(providerError.userMessage).toContain('HTTP 451');
+        expect(providerError.userMessage).toContain('Repository is disabled');
+      }
+    });
+
+    it('should not retry a request the API rejected outright', async () => {
+      let attempts = 0;
+      server.use(
+        http.get('https://api.github.com/repos/:owner/:repo/contents', () => {
+          attempts += 1;
+          return HttpResponse.json({ message: 'Bad credentials' }, { status: 401 });
+        })
+      );
+
+      await expect(provider.fetchTree('https://github.com/owner/repo')).rejects.toThrow();
+      expect(attempts).toBe(1);
+    });
+
+    it('should not sit through a long Retry-After on a server error', async () => {
+      let attempts = 0;
+      server.use(
+        http.get('https://api.github.com/repos/:owner/:repo/contents', () => {
+          attempts += 1;
+          return HttpResponse.json(
+            { message: 'Service unavailable' },
+            { status: 503, headers: { 'retry-after': '3600' } }
+          );
+        })
+      );
+
+      await expect(provider.fetchTree('https://github.com/owner/repo')).rejects.toThrow();
+      expect(attempts).toBe(1);
     });
 
     it('should handle rate limit errors', async () => {

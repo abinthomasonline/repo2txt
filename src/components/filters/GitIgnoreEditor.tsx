@@ -68,17 +68,22 @@ export function GitIgnoreEditor({
     setHasChanges(false);
   };
 
-  const handleAddSuggestion = (pattern: string) => {
-    const currentPatterns = patterns ? patterns + '\n' : '';
-    setPatterns(currentPatterns + pattern);
-    setHasChanges(true);
-  };
-
   const handleChange = (value: string) => {
     setPatterns(value);
     const patternsChanged = value !== initialPatterns.join('\n');
     const checkboxChanged = localShowExcluded !== showExcluded;
     setHasChanges(patternsChanged || checkboxChanged);
+  };
+
+  const handleToggleSuggestion = (pattern: string) => {
+    const lines = patterns.split('\n');
+    const isActive = lines.some((line) => line.trim() === pattern);
+
+    handleChange(
+      isActive
+        ? lines.filter((line) => line.trim() !== pattern).join('\n')
+        : [...(patterns.trim() ? [patterns.replace(/\n+$/, '')] : []), pattern].join('\n')
+    );
   };
 
   const handleCheckboxChange = (checked: boolean) => {
@@ -88,82 +93,69 @@ export function GitIgnoreEditor({
     setHasChanges(patternsChanged || checkboxChanged);
   };
 
-  const patternCount = patterns
-    .split('\n')
-    .filter((p) => p.trim() && !p.trim().startsWith('#')).length;
+  const patternLines = patterns.split('\n').map((p) => p.trim());
+  const patternCount = patternLines.filter((p) => p && !p.startsWith('#')).length;
+  const activePatterns = new Set(patternLines);
 
   return (
     <div className="space-y-3">
-      {/* Summary */}
-      <div className="flex items-center justify-end">
-        <span className="text-xs text-gray-500 dark:text-gray-400">
-          {patternCount} {patternCount === 1 ? 'pattern' : 'patterns'}
-        </span>
-      </div>
-
       {/* Pattern input */}
       <div className="space-y-2">
         <textarea
           value={patterns}
           onChange={(e) => handleChange(e.target.value)}
           placeholder="# Enter gitignore patterns (one per line)&#10;node_modules/&#10;*.log&#10;.env"
-          className="w-full h-48 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 text-sm font-mono text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-400 resize-none"
+          className="h-40 w-full resize-none rounded-md border border-gray-200 bg-white px-3 py-2 font-mono text-sm text-gray-900 placeholder-gray-400 focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500 dark:border-gray-800 dark:bg-gray-950 dark:text-gray-100 dark:placeholder-gray-600"
         />
 
-        <div className="text-xs text-gray-500 dark:text-gray-400">
-          <p>• Use <code className="bg-gray-100 dark:bg-gray-800 px-1 rounded">#</code> for comments</p>
-          <p>• Add <code className="bg-gray-100 dark:bg-gray-800 px-1 rounded">/</code> at the end for directories</p>
-          <p>• Use <code className="bg-gray-100 dark:bg-gray-800 px-1 rounded">*</code> for wildcards</p>
-        </div>
+        <p className="text-xs text-gray-500 dark:text-gray-400">
+          One per line. <code className="rounded bg-gray-100 px-1 dark:bg-gray-800">#</code> comments,{' '}
+          <code className="rounded bg-gray-100 px-1 dark:bg-gray-800">/</code> for directories,{' '}
+          <code className="rounded bg-gray-100 px-1 dark:bg-gray-800">*</code> for wildcards.
+        </p>
       </div>
 
       {/* Show excluded files toggle */}
       <div className="space-y-1">
-        <label className="flex items-center gap-2 p-2 rounded-md hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer">
+        <label className="flex cursor-pointer items-center gap-2.5 rounded-md py-1 transition-colors">
           <input
             type="checkbox"
             checked={localShowExcluded}
             onChange={(e) => handleCheckboxChange(e.target.checked)}
-            className="rounded border-gray-300 text-primary-600 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-800"
+            className="h-4 w-4 cursor-pointer rounded accent-primary-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
           />
-          <span className="text-sm text-gray-900 dark:text-gray-100">
+          <span className="text-sm text-gray-800 dark:text-gray-200">
             Show excluded files in directory tree
           </span>
         </label>
-        <p className="text-xs text-gray-500 dark:text-gray-400 pl-8">
-          Controls visibility in output directory tree. Excluded file contents are never included.
+        <p className="pl-[26px] text-xs text-gray-500 dark:text-gray-400">
+          Their contents are never included.
         </p>
       </div>
 
       {/* Actions */}
-      <div className="flex gap-2">
-        <Button
-          variant="primary"
-          size="sm"
-          onClick={handleApply}
-          disabled={!hasChanges}
-          className="flex-1"
-        >
-          Apply Patterns
-        </Button>
-        <Button
-          variant="secondary"
-          size="sm"
-          onClick={handleReset}
-          className="flex-1"
-        >
-          Reset
-        </Button>
+      <div className="flex items-center justify-between gap-3">
+        <span className="tabular-nums text-xs text-gray-500 dark:text-gray-400">
+          {patternCount} {patternCount === 1 ? 'pattern' : 'patterns'}
+        </span>
+        <div className="flex items-center gap-2">
+          <Button variant="ghost" size="sm" onClick={handleReset} className="text-gray-500 dark:text-gray-400">
+            Reset
+          </Button>
+          <Button variant="primary" size="sm" onClick={handleApply} disabled={!hasChanges}>
+            Apply Patterns
+          </Button>
+        </div>
       </div>
 
       {/* Pattern suggestions */}
       <div>
         <button
           onClick={() => setShowSuggestions(!showSuggestions)}
-          className="flex items-center gap-1 text-sm text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300"
+          className="flex items-center gap-1 text-xs text-gray-500 transition-colors hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100"
         >
           <svg
-            className={`w-4 h-4 transform transition-transform ${
+            className={`h-3 w-3 transform transition-transform ${
               showSuggestions ? 'rotate-90' : ''
             }`}
             fill="currentColor"
@@ -175,20 +167,29 @@ export function GitIgnoreEditor({
               clipRule="evenodd"
             />
           </svg>
-          Common Patterns
+          Common patterns
         </button>
 
         {showSuggestions && (
           <div className="mt-2 grid grid-cols-2 gap-1">
-            {COMMON_PATTERNS.map((pattern) => (
-              <button
-                key={pattern}
-                onClick={() => handleAddSuggestion(pattern)}
-                className="text-left px-2 py-1 text-xs font-mono rounded bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700"
-              >
-                {pattern}
-              </button>
-            ))}
+            {COMMON_PATTERNS.map((pattern) => {
+              const isActive = activePatterns.has(pattern);
+
+              return (
+                <button
+                  key={pattern}
+                  onClick={() => handleToggleSuggestion(pattern)}
+                  aria-pressed={isActive}
+                  className={`rounded border px-2 py-1 text-left font-mono text-xs transition-colors ${
+                    isActive
+                      ? 'border-primary-500 bg-primary-50 text-primary-700 dark:bg-primary-500/10 dark:text-primary-300'
+                      : 'border-gray-200 text-gray-600 hover:border-gray-300 hover:text-gray-900 dark:border-gray-800 dark:text-gray-400 dark:hover:border-gray-700 dark:hover:text-gray-100'
+                  }`}
+                >
+                  {pattern}
+                </button>
+              );
+            })}
           </div>
         )}
       </div>

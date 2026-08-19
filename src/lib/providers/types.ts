@@ -122,6 +122,23 @@ export class ProviderError extends Error {
 }
 
 /**
+ * Failed HTTP response, carrying what the API said about it
+ * The message keeps the "HTTP {status}" prefix so providers can match on it
+ */
+export class HttpError extends Error {
+  constructor(
+    public status: number,
+    public apiMessage?: string,
+    public retryAfterSeconds?: number,
+    public rateLimitReset?: Date,
+    public rateLimitRemaining?: number
+  ) {
+    super(`HTTP ${status}${apiMessage ? `: ${apiMessage}` : ''}`);
+    this.name = 'HttpError';
+  }
+}
+
+/**
  * Common error codes
  */
 export enum ErrorCode {

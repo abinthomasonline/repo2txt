@@ -2,6 +2,8 @@
  * Utility functions for extracting repository names from various sources
  */
 
+import { GitHubProvider } from '@/features/github/GitHubProvider';
+
 /**
  * Sanitize a filename by removing invalid characters
  */
@@ -23,7 +25,7 @@ export function sanitizeFilename(name: string): string {
  */
 export function extractGitHubRepoName(url: string): string {
   try {
-    const urlObj = new URL(url);
+    const urlObj = new URL(GitHubProvider.normalizeUrl(url));
     const parts = urlObj.pathname.split('/').filter(Boolean);
 
     if (parts.length >= 2) {

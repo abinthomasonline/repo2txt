@@ -6,6 +6,7 @@
 import { useState } from 'react';
 import { ExtensionFilter } from './filters/ExtensionFilter';
 import { GitIgnoreEditor } from './filters/GitIgnoreEditor';
+import { Panel } from './ui/Panel';
 import type { ExtensionFilter as ExtensionFilterType } from '@/types';
 
 interface AdvancedFiltersProps {
@@ -37,70 +38,61 @@ export function AdvancedFilters({
   const [isExpanded, setIsExpanded] = useState(false);
 
   return (
-    <div className="rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900">
+    <Panel className="overflow-hidden">
       {/* Header */}
       <button
         onClick={() => setIsExpanded(!isExpanded)}
-        className="w-full flex items-center justify-between p-3 sm:p-4 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors min-h-[44px] touch-manipulation"
+        aria-expanded={isExpanded}
+        className="flex w-full items-center justify-between gap-3 px-3 py-2.5 text-left transition-colors hover:bg-gray-50 dark:hover:bg-gray-800/60"
       >
-        <div className="flex items-center gap-1.5 sm:gap-2">
-          <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-gray-100">
-            Advanced Filters
-          </h3>
-          <span className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400">
-            Extension & Gitignore
+        <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100">Filters</h3>
+        <div className="flex items-center gap-3">
+          <span className="tabular-nums text-xs text-gray-500 dark:text-gray-400">
+            {extensions.length} types · {gitignorePatterns.length} patterns
           </span>
-        </div>
-        <svg
-          className={`w-5 h-5 text-gray-500 dark:text-gray-400 transition-transform ${
-            isExpanded ? 'rotate-180' : ''
-          }`}
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
+          <svg
+            className={`h-4 w-4 text-gray-400 transition-transform ${isExpanded ? 'rotate-180' : ''}`}
+            fill="none"
+            stroke="currentColor"
             strokeWidth={2}
-            d="M19 9l-7 7-7-7"
-          />
-        </svg>
+            viewBox="0 0 24 24"
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+          </svg>
+        </div>
       </button>
 
       {/* Content */}
       {isExpanded && (
-        <div className="p-3 sm:p-4 border-t border-gray-200 dark:border-gray-700">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
-            {/* Extension Filter */}
-            <div className="space-y-3">
-              <h4 className="text-sm font-medium text-gray-900 dark:text-gray-100">
-                File Extensions
-              </h4>
-              <ExtensionFilter
-                extensions={extensions}
-                onToggle={onExtensionToggle}
-                onSelectAll={onSelectAllExtensions}
-                onDeselectAll={onDeselectAllExtensions}
-              />
-            </div>
+        <div className="grid grid-cols-1 divide-y divide-gray-200 border-t border-gray-200 dark:divide-gray-800 dark:border-gray-800 lg:grid-cols-2 lg:divide-x lg:divide-y-0">
+          {/* Extension Filter */}
+          <div className="space-y-3 p-3 sm:p-4">
+            <h4 className="text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">
+              Extensions
+            </h4>
+            <ExtensionFilter
+              extensions={extensions}
+              onToggle={onExtensionToggle}
+              onSelectAll={onSelectAllExtensions}
+              onDeselectAll={onDeselectAllExtensions}
+            />
+          </div>
 
-            {/* Gitignore Patterns */}
-            <div className="space-y-3">
-              <h4 className="text-sm font-medium text-gray-900 dark:text-gray-100">
-                Gitignore Patterns
-              </h4>
-              <GitIgnoreEditor
-                patterns={gitignorePatterns}
-                onApply={onApplyGitignore}
-                onReset={onResetGitignore}
-                showExcluded={showExcluded}
-                onToggleExcluded={onToggleExcluded}
-              />
-            </div>
+          {/* Gitignore Patterns */}
+          <div className="space-y-3 p-3 sm:p-4">
+            <h4 className="text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">
+              Ignore patterns
+            </h4>
+            <GitIgnoreEditor
+              patterns={gitignorePatterns}
+              onApply={onApplyGitignore}
+              onReset={onResetGitignore}
+              showExcluded={showExcluded}
+              onToggleExcluded={onToggleExcluded}
+            />
           </div>
         </div>
       )}
-    </div>
+    </Panel>
   );
 }

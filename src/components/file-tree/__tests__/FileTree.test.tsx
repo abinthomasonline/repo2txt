@@ -31,11 +31,10 @@ describe('FileTree', () => {
   ];
 
   it('should render file tree', () => {
-    const { container } = render(<FileTree nodes={mockNodes} />);
+    render(<FileTree nodes={mockNodes} />);
 
     // Check that the tree container is rendered
-    const treeContainer = container.querySelector('.border');
-    expect(treeContainer).toBeInTheDocument();
+    expect(screen.getByTestId('file-tree')).toBeInTheDocument();
   });
 
   it('should render empty state when no nodes', () => {

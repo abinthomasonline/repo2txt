@@ -177,7 +177,7 @@ describe('GitHubUrlInput', () => {
 
     const input = screen.getByPlaceholderText('https://github.com/facebook/react');
     expect(input).toHaveAttribute('id', 'github-url');
-    expect(input).toHaveAttribute('type', 'url');
+    expect(input).toHaveAttribute('inputmode', 'url');
   });
 
   it('should mark input as invalid when error is present', async () => {
