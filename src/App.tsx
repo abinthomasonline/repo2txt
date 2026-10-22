@@ -5,7 +5,6 @@ import { ProviderSelector } from '@/components/ProviderSelector';
 import { AdvancedFilters } from '@/components/AdvancedFilters';
 import { FileTree } from '@/components/file-tree';
 import { OutputPanel } from '@/components/OutputPanel';
-import { PaperPmfPromo } from '@/components/PaperPmfPromo';
 import { ProviderError } from '@/lib/providers/types';
 import { GitHubProvider } from '@/features/github/GitHubProvider';
 import { buildTree, extractDirectories } from '@/lib/tree-builder';
@@ -401,8 +400,6 @@ function App() {
           </div>
         </div>
       </header>
-
-      <PaperPmfPromo />
 
       {/* Main Content */}
       <main className="flex-1 container mx-auto px-3 sm:px-4 lg:px-6 py-4 sm:py-6 md:py-8">
